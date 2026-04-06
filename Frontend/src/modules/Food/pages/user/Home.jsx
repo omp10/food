@@ -117,6 +117,8 @@ const placeholders = [
   'Search "dosa"',
 ];
 
+const STICKY_HEADER_SCROLL_COLOR = "#2979fb";
+
 const WEBVIEW_SESSION_CACHE_BUSTER = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const getRestaurantDisplayName = (restaurant) => {
@@ -638,9 +640,17 @@ export default function Home() {
         return;
       }
 
-      const heroRect = heroShell.getBoundingClientRect();
       const stickyHeight = stickyHeader?.getBoundingClientRect().height || 0;
-      setHasScrolledPastBanner(heroRect.bottom <= stickyHeight);
+      const scrollTop = window.scrollY || window.pageYOffset || 0;
+      const heroHeight = heroShell.offsetHeight || 0;
+
+      if (scrollTop <= 0 || heroHeight <= stickyHeight + 24) {
+        setHasScrolledPastBanner(false);
+        return;
+      }
+
+      const heroBottom = heroShell.offsetTop + heroShell.offsetHeight;
+      setHasScrolledPastBanner(scrollTop + stickyHeight >= heroBottom);
     };
 
     handleScroll();
@@ -2495,7 +2505,16 @@ export default function Home() {
       )}
 
       {/* Main Header - Mobile Only */}
-      <div className="md:hidden sticky top-0 overflow-x-clip z-[80]">
+      <div
+        ref={stickyHeaderRef}
+        className="md:hidden fixed top-0 left-0 right-0 overflow-x-clip z-[80] transition-colors duration-300"
+        style={{
+          backgroundColor:
+            activeTab === "food" && hasScrolledPastBanner
+              ? STICKY_HEADER_SCROLL_COLOR
+              : "transparent",
+        }}
+      >
         <HomeHeader 
           activeTab={activeTab}
           setActiveTab={handleTabChange}
@@ -2508,20 +2527,37 @@ export default function Home() {
           vegMode={vegMode}
           onVegModeChange={handleVegModeChange}
           quickThemeColor={quickThemeColor}
-          bannerContent={
-            headerVideoUrl ? (
+          compact={activeTab === "food"}
+          scrolledHeaderColor={
+            activeTab === "food" && hasScrolledPastBanner
+              ? STICKY_HEADER_SCROLL_COLOR
+              : "transparent"
+          }
+        />
+      </div>
+
+      {activeTab === "food" && (
+        <section
+          ref={heroShellRef}
+          data-home-hero-shell="true"
+          className="md:hidden relative overflow-hidden"
+          style={{ backgroundColor: "transparent" }}
+        >
+          {headerVideoUrl ? (
+            <div className="relative h-[416px] w-full overflow-hidden">
               <video
                 src={headerVideoUrl}
                 autoPlay
                 loop
                 muted
                 playsInline
-                className="h-full w-full max-w-none object-cover object-center"
+                className="h-full w-full object-cover object-center"
               />
-            ) : null
-          }
-        />
-      </div>
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/10" />
+            </div>
+          ) : null}
+        </section>
+      )}
 
       <AnimatePresence mode="wait">
         {activeTab === "food" ? (

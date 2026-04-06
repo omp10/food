@@ -77,6 +77,8 @@ export default function HomeHeader({
   onVegModeChange,
   bannerContent,
   quickThemeColor,
+  compact = false,
+  scrolledHeaderColor = "",
 }) {
   const [notifications, setNotifications] = useState(() => {
     if (typeof window === "undefined") return [];
@@ -101,6 +103,10 @@ export default function HomeHeader({
 
   const theme = activeTab === "quick" ? quickTheme(quickThemeColor) : foodTheme;
   const isFood = activeTab === "food";
+  const stickyFoodBackground =
+    compact && isFood
+      ? scrolledHeaderColor || "transparent"
+      : "transparent";
   const locationTitle =
     savedAddressText || location?.area || location?.city || "Select Location";
   const locationSubtitle =
@@ -151,11 +157,14 @@ export default function HomeHeader({
   return (
     <motion.div
       className={`relative overflow-hidden transition-all duration-700 ${
-        isFood ? "min-h-[450px]" : "min-h-[90px]"
+        isFood ? (compact ? "min-h-[96px]" : "min-h-[450px]") : "min-h-[90px]"
       }`}
-      style={{ background: isFood ? "transparent" : theme.topBg, color: theme.text }}
+      style={{
+        background: isFood ? stickyFoodBackground : theme.topBg,
+        color: theme.text,
+      }}
     >
-      {isFood && bannerContent && (
+      {isFood && !compact && bannerContent && (
         <div className="absolute inset-0 z-0 flex justify-center overflow-hidden">
           {bannerContent}
           <div className="absolute inset-0 bg-gradient-to-b from-[#7f2d25]/88 via-[#7f2d25]/18 via-[28%] to-black/22" />
@@ -163,17 +172,19 @@ export default function HomeHeader({
         </div>
       )}
 
-      <div
-        className="absolute inset-0 z-[1] opacity-[0.1] pointer-events-none"
-        style={{
-          backgroundImage: `url(${foodPattern})`,
-          backgroundSize: "200px",
-          backgroundRepeat: "repeat",
-          mixBlendMode: "soft-light",
-        }}
-      />
+      {!compact && (
+        <div
+          className="absolute inset-0 z-[1] opacity-[0.1] pointer-events-none"
+          style={{
+            backgroundImage: `url(${foodPattern})`,
+            backgroundSize: "200px",
+            backgroundRepeat: "repeat",
+            mixBlendMode: "soft-light",
+          }}
+        />
+      )}
 
-      {isFood && (
+      {isFood && !compact && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <Pizza className="absolute top-10 right-[15%] opacity-[0.10] text-[#F6881F]" size={64} />
           <Beef className="absolute top-40 left-[10%] opacity-[0.08] text-[#F6881F]" size={80} />
@@ -184,8 +195,14 @@ export default function HomeHeader({
       )}
 
       <div className="relative z-10 pt-0 pb-3">
-        {isFood && <div className="absolute inset-0 bg-gradient-to-b from-black/25 to-transparent pointer-events-none" />}
-        <div className="rounded-none border-none bg-[linear-gradient(180deg,rgba(84,20,15,0.46),rgba(22,10,8,0.26))] px-3 pt-2 pb-3 shadow-[0_16px_34px_rgba(0,0,0,0.18)] backdrop-blur-[4px]">
+        {isFood && !compact && <div className="absolute inset-0 bg-gradient-to-b from-black/25 to-transparent pointer-events-none" />}
+        <div
+          className={`rounded-none border-none px-3 pt-2 pb-3 backdrop-blur-[4px] ${
+            compact
+              ? "bg-transparent shadow-none"
+              : "bg-[linear-gradient(180deg,rgba(84,20,15,0.46),rgba(22,10,8,0.26))] shadow-[0_16px_34px_rgba(0,0,0,0.18)]"
+          }`}
+        >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-start gap-2 cursor-pointer flex-1 min-w-0" onClick={handleLocationClick}>
               {isFood ? (

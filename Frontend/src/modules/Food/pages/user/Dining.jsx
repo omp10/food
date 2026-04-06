@@ -65,6 +65,7 @@ const shimmerClassName =
 
 const loadingCategoryCards = Array.from({ length: 6 }, (_, index) => `category-skeleton-${index}`)
 const loadingRestaurantCards = Array.from({ length: 6 }, (_, index) => `restaurant-skeleton-${index}`)
+const STICKY_HEADER_SCROLL_COLOR = "#2979fb"
 
 function DiningCategorySkeleton({ index }) {
   return (
@@ -132,12 +133,15 @@ export default function Dining() {
   const [heroSearch, setHeroSearch] = useState("")
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
   const [activeFilters, setActiveFilters] = useState(new Set())
+  const [hasScrolledPastBanner, setHasScrolledPastBanner] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [activeFilterTab, setActiveFilterTab] = useState('sort')
   const [sortBy, setSortBy] = useState(null)
   const [selectedCuisine, setSelectedCuisine] = useState(null)
   const filterSectionRefs = useRef({})
   const rightContentRef = useRef(null)
+  const bannerShellRef = useRef(null)
+  const stickyHeaderRef = useRef(null)
   const { openSearch, closeSearch, setSearchValue } = useSearchOverlay()
   const { openLocationSelector } = useLocationSelector()
   const { location } = useLocationHook()
@@ -472,6 +476,39 @@ export default function Dining() {
     openSearch()
   }, [heroSearch, openSearch, setSearchValue])
 
+  useEffect(() => {
+    const handleBannerScroll = () => {
+      const bannerShell = bannerShellRef.current
+      const stickyHeader = stickyHeaderRef.current
+
+      if (!bannerShell) {
+        setHasScrolledPastBanner(false)
+        return
+      }
+
+      const stickyHeight = stickyHeader?.getBoundingClientRect().height || 0
+      const scrollTop = window.scrollY || window.pageYOffset || 0
+      const bannerHeight = bannerShell.offsetHeight || 0
+
+      if (scrollTop <= 0 || bannerHeight <= stickyHeight + 24) {
+        setHasScrolledPastBanner(false)
+        return
+      }
+
+      const bannerBottom = bannerShell.offsetTop + bannerShell.offsetHeight
+      setHasScrolledPastBanner(scrollTop + stickyHeight >= bannerBottom)
+    }
+
+    handleBannerScroll()
+    window.addEventListener("scroll", handleBannerScroll, { passive: true })
+    window.addEventListener("resize", handleBannerScroll)
+
+    return () => {
+      window.removeEventListener("scroll", handleBannerScroll)
+      window.removeEventListener("resize", handleBannerScroll)
+    }
+  }, [])
+
   return (
     <AnimatedPage className="bg-white dark:bg-[#0a0a0a]" style={{ minHeight: '100vh', paddingBottom: '80px', overflow: 'visible' }}>
       <style>{`
@@ -481,7 +518,13 @@ export default function Dining() {
           }
         }
       `}</style>
-      <div className="md:hidden sticky top-0 overflow-x-clip z-[80]">
+      <div
+        ref={stickyHeaderRef}
+        className="md:hidden fixed top-0 left-0 right-0 overflow-x-clip z-[80] transition-colors duration-300"
+        style={{
+          backgroundColor: hasScrolledPastBanner ? STICKY_HEADER_SCROLL_COLOR : "transparent",
+        }}
+      >
         <HomeHeader
           activeTab="food"
           setActiveTab={() => {}}
@@ -493,36 +536,43 @@ export default function Dining() {
           placeholders={placeholders}
           vegMode={false}
           onVegModeChange={() => {}}
-          bannerContent={
-            diningHeroBanners.length > 0 ? (
-              <div
-                className="h-full w-full"
-                onTouchStart={handleBannerTouchStart}
-                onTouchMove={handleBannerTouchMove}
-                onTouchEnd={handleBannerTouchEnd}
-              >
-                <div
-                  className="flex h-full w-full transition-transform duration-500 ease-out"
-                  style={{ transform: `translateX(-${currentBannerIndex * 100}%)` }}
-                >
-                  {diningHeroBanners.map((banner, index) => (
-                    <div key={banner.id} className="relative h-full w-full shrink-0">
-                      <OptimizedImage
-                        src={banner.imageUrl}
-                        alt={`Dining Banner ${index + 1}`}
-                        className="h-full w-full"
-                        objectFit="cover"
-                        priority={index === 0}
-                        sizes="100vw"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null
-          }
+          compact
+          scrolledHeaderColor={hasScrolledPastBanner ? STICKY_HEADER_SCROLL_COLOR : "transparent"}
         />
       </div>
+
+      <section
+        ref={bannerShellRef}
+        data-banner-shell="true"
+        className="md:hidden relative overflow-hidden"
+      >
+        {diningHeroBanners.length > 0 ? (
+          <div
+            className="h-[416px] w-full"
+            onTouchStart={handleBannerTouchStart}
+            onTouchMove={handleBannerTouchMove}
+            onTouchEnd={handleBannerTouchEnd}
+          >
+            <div
+              className="flex h-full w-full transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${currentBannerIndex * 100}%)` }}
+            >
+              {diningHeroBanners.map((banner, index) => (
+                <div key={banner.id} className="relative h-full w-full shrink-0">
+                  <OptimizedImage
+                    src={banner.imageUrl}
+                    alt={`Dining Banner ${index + 1}`}
+                    className="h-full w-full"
+                    objectFit="cover"
+                    priority={index === 0}
+                    sizes="100vw"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </section>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 pt-6 sm:pt-8 md:pt-10 lg:pt-12 pb-6 md:pb-8 lg:pb-10">

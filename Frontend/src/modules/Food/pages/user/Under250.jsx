@@ -24,6 +24,7 @@ const debugWarn = (...args) => {}
 const debugError = (...args) => {}
 const RUPEE_SYMBOL = "\u20B9"
 const UNDER_250_FILTERS_STORAGE_KEY = "food-under-250-filters"
+const STICKY_HEADER_SCROLL_COLOR = "#2979fb"
 
 const readUnder250Filters = () => {
   if (typeof window === "undefined") {
@@ -617,9 +618,17 @@ export default function Under250() {
         return
       }
 
-      const bannerRect = bannerShell.getBoundingClientRect()
       const stickyHeight = stickyHeader?.getBoundingClientRect().height || 0
-      setHasScrolledPastBanner(bannerRect.bottom <= stickyHeight)
+      const scrollTop = window.scrollY || window.pageYOffset || 0
+      const bannerHeight = bannerShell.offsetHeight || 0
+
+      if (scrollTop <= 0 || bannerHeight <= stickyHeight + 24) {
+        setHasScrolledPastBanner(false)
+        return
+      }
+
+      const bannerBottom = bannerShell.offsetTop + bannerShell.offsetHeight
+      setHasScrolledPastBanner(scrollTop + stickyHeight >= bannerBottom)
     }
 
     handleBannerScroll()
@@ -860,7 +869,13 @@ export default function Under250() {
   return (
 
     <div className={`relative min-h-screen bg-white dark:bg-[#0a0a0a] ${shouldShowGrayscale ? 'grayscale opacity-75' : ''}`}>
-      <div className="md:hidden sticky top-0 overflow-x-clip z-[80]">
+      <div
+        ref={stickyHeaderRef}
+        className="md:hidden fixed top-0 left-0 right-0 overflow-x-clip z-[80] transition-colors duration-300"
+        style={{
+          backgroundColor: hasScrolledPastBanner ? STICKY_HEADER_SCROLL_COLOR : "transparent",
+        }}
+      >
         <HomeHeader
           activeTab="food"
           setActiveTab={() => {}}
@@ -872,36 +887,43 @@ export default function Under250() {
           placeholders={placeholders}
           vegMode={false}
           onVegModeChange={() => {}}
-          bannerContent={
-            bannerImages.length > 0 ? (
-              <div
-                className="h-full w-full"
-                onTouchStart={handleBannerTouchStart}
-                onTouchMove={handleBannerTouchMove}
-                onTouchEnd={handleBannerTouchEnd}
-              >
-                <div
-                  className="flex h-full w-full transition-transform duration-500 ease-out"
-                  style={{ transform: `translateX(-${currentBannerIndex * 100}%)` }}
-                >
-                  {bannerImages.map((bannerImage, index) => (
-                    <div key={`${bannerImage}-${index}`} className="relative h-full w-full shrink-0">
-                      <OptimizedImage
-                        src={bannerImage}
-                        alt={`Under 250 Banner ${index + 1}`}
-                        className="h-full w-full"
-                        objectFit="cover"
-                        priority={index === 0}
-                        sizes="100vw"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null
-          }
+          compact
+          scrolledHeaderColor={hasScrolledPastBanner ? STICKY_HEADER_SCROLL_COLOR : "transparent"}
         />
       </div>
+
+      <section
+        ref={bannerShellRef}
+        data-banner-shell="true"
+        className="md:hidden relative overflow-hidden"
+      >
+        {bannerImages.length > 0 ? (
+          <div
+            className="h-[416px] w-full"
+            onTouchStart={handleBannerTouchStart}
+            onTouchMove={handleBannerTouchMove}
+            onTouchEnd={handleBannerTouchEnd}
+          >
+            <div
+              className="flex h-full w-full transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${currentBannerIndex * 100}%)` }}
+            >
+              {bannerImages.map((bannerImage, index) => (
+                <div key={`${bannerImage}-${index}`} className="relative h-full w-full shrink-0">
+                  <OptimizedImage
+                    src={bannerImage}
+                    alt={`Under 250 Banner ${index + 1}`}
+                    className="h-full w-full"
+                    objectFit="cover"
+                    priority={index === 0}
+                    sizes="100vw"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </section>
 
       {/* Content Section */}
       <div className="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 space-y-0 pt-2 sm:pt-3 md:pt-4 lg:pt-6 pb-6 md:pb-8 lg:pb-10">
