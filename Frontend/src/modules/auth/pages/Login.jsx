@@ -218,23 +218,16 @@ export default function UnifiedOTPFastLogin() {
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-3 shadow-xl overflow-hidden"
+            className="w-24 h-24 flex items-center justify-center mb-1 overflow-hidden"
           >
              {logoUrl ? (
-               <img src={logoUrl} alt={companyName} className="h-full w-full object-contain p-1.5" />
+               <img src={logoUrl} alt={companyName} className="h-full w-full object-contain" />
              ) : (
                <span className="text-[#CB202D] text-3xl font-black">
                  {BRAND_THEME.brandName.charAt(0)}
                </span>
              )}
           </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-2xl md:text-5xl font-black tracking-tight mb-1"
-          >
-            {companyName}
-          </motion.h1>
           <p className="text-xs md:text-base font-bold text-white/90 tracking-[0.2em] uppercase">
             Fast delivery, better cravings
           </p>
