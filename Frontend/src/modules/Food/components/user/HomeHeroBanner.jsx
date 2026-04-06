@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { HorizontalCarousel } from "@food/components/ui/horizontal-carousel";
 import OptimizedImage from "@food/components/OptimizedImage";
+import BRAND_THEME from "../../../../config/brandTheme";
 
 const HomeHeroBanner = ({ 
   loadingBanners, 
@@ -9,9 +10,10 @@ const HomeHeroBanner = ({
   currentBannerIndex, 
   onBannerClick 
 }) => {
+  const { homepage } = BRAND_THEME.tokens;
   if (loadingBanners) {
     return (
-      <div className="mx-4 mt-6 h-48 sm:h-64 bg-gray-100 dark:bg-gray-800 rounded-2xl animate-pulse" />
+      <div className={`mx-4 mt-6 h-48 sm:h-64 ${homepage.shared.shimmerBase} rounded-2xl animate-pulse`} />
     );
   }
 
@@ -41,7 +43,7 @@ const HomeHeroBanner = ({
         </AnimatePresence>
 
         {/* Dynamic Navigation Dots */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 px-3 py-1.5 bg-black/20 backdrop-blur-md rounded-full border border-white/20">
+        <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 px-3 py-1.5 rounded-full ${homepage.shared.heroDots}`}>
           {heroBannerImages.map((_, i) => (
             <div
               key={i}

@@ -5,6 +5,8 @@ import { Phone, Lock, ArrowRight, ShieldCheck, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { authAPI } from "@food/api"
 import { setAuthData } from "@food/utils/auth"
+import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
+import BRAND_THEME from "../../../config/brandTheme"
 
 export default function UnifiedOTPFastLogin() {
   const RESEND_COOLDOWN_SECONDS = 60
@@ -14,8 +16,37 @@ export default function UnifiedOTPFastLogin() {
   const [loading, setLoading] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const [resendTimer, setResendTimer] = useState(0)
+  const [logoUrl, setLogoUrl] = useState("")
+  const [companyName, setCompanyName] = useState(BRAND_THEME.brandName)
   const navigate = useNavigate()
   const submitting = useRef(false)
+
+  useEffect(() => {
+    const syncBranding = async () => {
+      try {
+        const cached = getCachedSettings()
+        if (cached?.logo?.url) setLogoUrl(cached.logo.url)
+        if (cached?.companyName) setCompanyName(cached.companyName)
+
+        const settings = await loadBusinessSettings()
+        if (settings?.logo?.url) setLogoUrl(settings.logo.url)
+        if (settings?.companyName) setCompanyName(settings.companyName)
+      } catch (error) {
+        console.warn("Failed to load auth branding:", error)
+      }
+    }
+
+    syncBranding()
+
+    const handleSettingsUpdate = () => {
+      const cached = getCachedSettings()
+      setLogoUrl(cached?.logo?.url || "")
+      setCompanyName(cached?.companyName || BRAND_THEME.brandName)
+    }
+
+    window.addEventListener("businessSettingsUpdated", handleSettingsUpdate)
+    return () => window.removeEventListener("businessSettingsUpdated", handleSettingsUpdate)
+  }, [])
 
   const normalizedPhone = () => {
     const digits = String(phoneNumber).replace(/\D/g, "").slice(-15)
@@ -187,19 +218,25 @@ export default function UnifiedOTPFastLogin() {
           <motion.div 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-3 shadow-xl"
+            className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-3 shadow-xl overflow-hidden"
           >
-             <span className="text-[#CB202D] text-3xl font-black">A</span>
+             {logoUrl ? (
+               <img src={logoUrl} alt={companyName} className="h-full w-full object-contain p-1.5" />
+             ) : (
+               <span className="text-[#CB202D] text-3xl font-black">
+                 {BRAND_THEME.brandName.charAt(0)}
+               </span>
+             )}
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-2xl md:text-5xl font-black tracking-tight mb-1"
           >
-            AppZeto <span className="text-white/80 font-normal">Master</span>
+            {companyName}
           </motion.h1>
           <p className="text-xs md:text-base font-bold text-white/90 tracking-[0.2em] uppercase">
-            Taste the best, forget the rest
+            Fast delivery, better cravings
           </p>
         </div>
       </div>

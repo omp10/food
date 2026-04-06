@@ -1,2 +1,10 @@
 import QuickHomeView from '@quickCommerce/user/components/QuickHomeView';
-export default QuickHomeView;
+import BRAND_THEME from "../../../../../config/brandTheme";
+
+export default function QuickSection(props) {
+  return (
+    <div className={BRAND_THEME.tokens.homepage.shared.pageBackground}>
+      <QuickHomeView {...props} />
+    </div>
+  );
+}

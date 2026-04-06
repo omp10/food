@@ -1,12 +1,14 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { restaurantAPI } from "@food/api";
 import { normalizeImageUrl, extractImages, calculateDistance, slugify } from "@food/utils/common";
+import BRAND_THEME from "../../../../config/brandTheme";
 
 export const useHomeData = (location, zoneId) => {
+  const homepageDefaults = BRAND_THEME.tokens.homepage.defaults;
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [landingCategories, setLandingCategories] = useState([]);
   const [exploreMoreItems, setExploreMoreItems] = useState([]);
-  const [exploreMoreHeading, setExploreMoreHeading] = useState("Explore More");
+  const [exploreMoreHeading, setExploreMoreHeading] = useState(homepageDefaults.exploreMoreHeading);
   
   const [loadingBanners, setLoadingBanners] = useState(true);
   const [heroBannerImages, setHeroBannerImages] = useState([]);
@@ -26,10 +28,10 @@ export const useHomeData = (location, zoneId) => {
     setLoadingConfig(true);
     setLandingCategories([]);
     setExploreMoreItems([]);
-    setExploreMoreHeading("Explore More");
+    setExploreMoreHeading(homepageDefaults.exploreMoreHeading);
     setRecommendedRestaurants([]);
     setLoadingConfig(false);
-  }, []);
+  }, [homepageDefaults.exploreMoreHeading]);
 
   const initBanners = useCallback(() => {
     setLoadingBanners(true);

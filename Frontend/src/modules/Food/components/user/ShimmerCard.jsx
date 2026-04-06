@@ -1,5 +1,6 @@
 // CSS-only ShimmerCard - no framer-motion, no infinite animations
 import { useState } from "react"
+import BRAND_THEME from "../../../../config/brandTheme"
 
 export default function ShimmerCard({ children, className = "", delay = 0 }) {
   const [isHovered, setIsHovered] = useState(false)
@@ -19,7 +20,7 @@ export default function ShimmerCard({ children, className = "", delay = 0 }) {
         <div
           className="absolute inset-0 -z-10 pointer-events-none"
           style={{
-            background: 'linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.1), transparent)',
+            background: `linear-gradient(90deg, transparent, ${BRAND_THEME.colors.brand.primarySoft}, transparent)`,
             backgroundSize: '200% 100%',
             animation: 'shimmer 1.5s ease-in-out infinite',
           }}

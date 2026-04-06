@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { Button } from "@food/components/ui/button";
 import { useCart } from "@food/context/CartContext";
+import BRAND_THEME from "../../../../../config/brandTheme";
 
 const RUPEE_SYMBOL = "\u20B9";
 
@@ -86,7 +87,7 @@ export default function MixedSharedCart() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28">
+    <div className={`min-h-screen ${BRAND_THEME.tokens.cart.pageBackground} pb-28`}>
       <div className="mx-auto max-w-6xl px-4 py-6 md:px-6">
         <button
           type="button"
@@ -101,7 +102,7 @@ export default function MixedSharedCart() {
           <div className="space-y-4">
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-amber-100 p-3 text-amber-700">
+                  <div className="rounded-2xl p-3" style={{ backgroundColor: BRAND_THEME.tokens.cart.primarySurface, color: BRAND_THEME.tokens.cart.primaryText }}>
                   <ShoppingBag className="h-6 w-6" />
                 </div>
                 <div>
@@ -117,7 +118,7 @@ export default function MixedSharedCart() {
               title="Food items"
               subtitle="Restaurant delivery items in your shared cart."
               items={foodItems}
-              accentClass="bg-orange-100 text-orange-700"
+              accentClass="bg-blue-100 text-blue-700"
               onIncrement={increment}
               onDecrement={decrement}
             />
@@ -154,7 +155,7 @@ export default function MixedSharedCart() {
             </div>
 
             <div className="mt-6 space-y-3">
-              <Button asChild className="h-12 w-full rounded-2xl bg-orange-500 text-white hover:bg-orange-600">
+              <Button asChild className={`h-12 w-full rounded-2xl ${BRAND_THEME.tokens.cart.primaryButton}`}>
                 <Link to="/food/user">Continue food shopping</Link>
               </Button>
               <Button asChild className="h-12 w-full rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700">

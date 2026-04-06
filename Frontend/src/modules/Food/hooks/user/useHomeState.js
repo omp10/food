@@ -1,9 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import BRAND_THEME from "../../../../config/brandTheme";
 
 export const useHomeState = () => {
+  const homepageDefaults = BRAND_THEME.tokens.homepage.defaults;
   // Sidebar & Overlay states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [activeFilterTab, setActiveFilterTab] = useState('sort');
+  const [activeFilterTab, setActiveFilterTab] = useState(homepageDefaults.initialFilterTab);
   const [isAllCategoriesOpen, setIsAllCategoriesOpen] = useState(false);
 
   // Filter selections

@@ -1,15 +1,17 @@
 import { useState, useCallback } from 'react';
+import BRAND_THEME from "../../../../config/brandTheme";
 
 export const useCategoryState = (initialCategory) => {
+  const homepageDefaults = BRAND_THEME.tokens.homepage.defaults;
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory || 'all');
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory || homepageDefaults.allCategoryId);
   const [activeFilters, setActiveFilters] = useState(new Set());
   const [favorites, setFavorites] = useState(new Set());
   const [sortBy, setSortBy] = useState(null);
   const [selectedCuisine, setSelectedCuisine] = useState(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [activeFilterTab, setActiveFilterTab] = useState('sort');
-  const [activeScrollSection, setActiveScrollSection] = useState('sort');
+  const [activeFilterTab, setActiveFilterTab] = useState(homepageDefaults.initialFilterTab);
+  const [activeScrollSection, setActiveScrollSection] = useState(homepageDefaults.initialFilterTab);
   const [isLoadingFilterResults, setIsLoadingFilterResults] = useState(false);
 
   const toggleFilter = useCallback((filterId) => {

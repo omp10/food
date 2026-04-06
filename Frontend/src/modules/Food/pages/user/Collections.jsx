@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, Share2, UtensilsCrossed, Store, X } from "lucide-react
 import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
+import BRAND_THEME from "../../../../config/brandTheme"
 
 // Import banner
 import collectionsBanner from "@food/assets/collectionspagebanner.png"
@@ -54,7 +55,7 @@ export default function Collections() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a]">
+    <div className={`min-h-screen ${BRAND_THEME.tokens.homepage.shared.pageBackground}`}>
       {/* Back Button */}
       <button
         onClick={goBack}
@@ -64,7 +65,7 @@ export default function Collections() {
       </button>
 
       {/* Banner Section - Clean without dark overlay */}
-      <div className="relative w-full overflow-hidden min-h-[25vh] md:min-h-[30vh] bg-gradient-to-b from-amber-50 to-white">
+      <div className="relative w-full overflow-hidden min-h-[25vh] md:min-h-[30vh] bg-gradient-to-b from-blue-50 to-white">
         <div className="absolute inset-0 z-0">
           <img
             src={collectionsBanner}
@@ -75,7 +76,7 @@ export default function Collections() {
       </div>
 
       {/* Tabs */}
-      <div className="sticky top-0 bg-white dark:bg-[#1a1a1a] z-10 border-b dark:border-gray-800">
+      <div className={`sticky top-0 ${BRAND_THEME.tokens.homepage.shared.surface} z-10 border-b ${BRAND_THEME.tokens.homepage.shared.border}`}>
         <div className="flex">
           <button
             onClick={() => setActiveTab("delivery")}
@@ -84,7 +85,7 @@ export default function Collections() {
           >
             Delivery
             {activeTab === "delivery" && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-1 bg-[#EB590E] rounded-full" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-1 bg-[#2979FB] rounded-full" />
             )}
           </button>
         </div>
@@ -156,8 +157,8 @@ export default function Collections() {
               onClick={() => setIsCreateDialogOpen(true)}
               className="bg-white dark:bg-[#1a1a1a] border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-4 h-48 flex flex-col items-center justify-center gap-3 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
-              <div className="w-12 h-12 rounded-full bg-[#FFF2EB] dark:bg-[#EB590E]/20 flex items-center justify-center border-2 border-[#EB590E]/30 dark:border-[#EB590E]/40">
-                <Plus className="h-6 w-6 text-[#EB590E] dark:text-[#EB590E]" />
+              <div className="w-12 h-12 rounded-full bg-[#EAF2FF] dark:bg-blue-950/30 flex items-center justify-center border-2 border-[#2979FB]/30 dark:border-[#2979FB]/40">
+                <Plus className="h-6 w-6 text-[#2979FB]" />
               </div>
               <div className="text-center">
                 <p className="text-gray-700 dark:text-gray-300 font-semibold">Create a new</p>
@@ -208,7 +209,7 @@ export default function Collections() {
                     handleCreateCollection()
                   }
                 }}
-                className="w-full h-12 text-base border-2 border-gray-200 dark:border-gray-700 focus:border-[#EB590E] dark:focus:border-[#EB590E] rounded-xl bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                className="w-full h-12 text-base border-2 border-gray-200 dark:border-gray-700 focus:border-[#2979FB] dark:focus:border-[#2979FB] rounded-xl bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 autoFocus
               />
 
@@ -236,7 +237,7 @@ export default function Collections() {
               <Button
                 onClick={handleCreateCollection}
                 disabled={!newCollectionName.trim()}
-                className="flex-1 h-11 bg-[#EB590E] hover:bg-[#D94F0C] text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 h-11 bg-[#2979FB] hover:bg-[#1E5ED8] text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create Collection
               </Button>

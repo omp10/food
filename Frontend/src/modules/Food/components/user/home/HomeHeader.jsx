@@ -27,6 +27,7 @@ import { Badge } from "@food/components/ui/badge";
 import foodPattern from "@food/assets/food_pattern_background.png";
 import useNotificationInbox from "@food/hooks/useNotificationInbox";
 import { useCart } from "@food/context/CartContext";
+import BRAND_THEME from "../../../../../config/brandTheme";
 
 const normalizeHex = (hex, fallback = "#8e24aa") => {
   const value = String(hex || "").trim();
@@ -56,10 +57,10 @@ const quickTheme = (baseColor) => {
 
 const foodTheme = {
   topBg: "transparent",
-  accent: "#F6881F",
+  accent: BRAND_THEME.colors.brand.primary,
   text: "#ffffff",
   activeBg: "#ffffff",
-  activeText: "#C4510A",
+  activeText: BRAND_THEME.colors.brand.primary,
   inactiveBg: "rgba(255,255,255,0.14)",
   inactiveBorder: "rgba(255,255,255,0.12)",
 };
@@ -103,6 +104,11 @@ export default function HomeHeader({
 
   const theme = activeTab === "quick" ? quickTheme(quickThemeColor) : foodTheme;
   const isFood = activeTab === "food";
+  const isScrolledFoodHeader =
+    compact &&
+    isFood &&
+    Boolean(scrolledHeaderColor) &&
+    scrolledHeaderColor !== "transparent";
   const stickyFoodBackground =
     compact && isFood
       ? scrolledHeaderColor || "transparent"
@@ -111,6 +117,14 @@ export default function HomeHeader({
     savedAddressText || location?.area || location?.city || "Select Location";
   const locationSubtitle =
     location?.address || location?.city || "Tap to choose delivery location";
+  const headerTextClass = isScrolledFoodHeader ? "text-slate-900" : "text-white";
+  const headerSubtleTextClass = isScrolledFoodHeader ? "text-slate-500" : "text-white/80";
+  const floatingIconButtonClass = isScrolledFoodHeader
+    ? "bg-slate-100 border border-slate-200"
+    : "bg-black/18 border border-white/18";
+  const floatingIconClass = isScrolledFoodHeader ? "text-slate-700" : "text-white";
+  const { brand, semantic } = BRAND_THEME.colors;
+  const { header, searchOverlay } = BRAND_THEME.tokens;
 
   const mergedNotifications = useMemo(() => {
     const localItems = Array.isArray(notifications)
@@ -161,7 +175,9 @@ export default function HomeHeader({
       }`}
       style={{
         background: isFood ? stickyFoodBackground : theme.topBg,
-        color: theme.text,
+        color: isScrolledFoodHeader
+          ? BRAND_THEME.colors.neutral.textPrimary
+          : theme.text,
       }}
     >
       {isFood && !compact && bannerContent && (
@@ -180,17 +196,18 @@ export default function HomeHeader({
             backgroundSize: "200px",
             backgroundRepeat: "repeat",
             mixBlendMode: "soft-light",
+            color: brand.primary,
           }}
         />
       )}
 
       {isFood && !compact && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <Pizza className="absolute top-10 right-[15%] opacity-[0.10] text-[#F6881F]" size={64} />
-          <Beef className="absolute top-40 left-[10%] opacity-[0.08] text-[#F6881F]" size={80} />
-          <ChefHat className="absolute bottom-[20%] right-[20%] opacity-[0.08] text-[#F6881F]" size={56} />
-          <Coffee className="absolute top-20 left-[30%] opacity-[0.08] text-[#F6881F]" size={48} />
-          <Soup className="absolute bottom-[40%] left-[5%] opacity-[0.05] text-[#F6881F]" size={72} />
+          <Pizza className="absolute top-10 right-[15%] opacity-[0.10]" size={64} style={{ color: brand.primary }} />
+          <Beef className="absolute top-40 left-[10%] opacity-[0.08]" size={80} style={{ color: brand.primary }} />
+          <ChefHat className="absolute bottom-[20%] right-[20%] opacity-[0.08]" size={56} style={{ color: brand.primary }} />
+          <Coffee className="absolute top-20 left-[30%] opacity-[0.08]" size={48} style={{ color: brand.primary }} />
+          <Soup className="absolute bottom-[40%] left-[5%] opacity-[0.05]" size={72} style={{ color: brand.primary }} />
         </div>
       )}
 
@@ -200,7 +217,7 @@ export default function HomeHeader({
           className={`rounded-none border-none px-3 pt-2 pb-3 backdrop-blur-[4px] ${
             compact
               ? "bg-transparent shadow-none"
-              : "bg-[linear-gradient(180deg,rgba(84,20,15,0.46),rgba(22,10,8,0.26))] shadow-[0_16px_34px_rgba(0,0,0,0.18)]"
+              : BRAND_THEME.tokens.homepage.header.heroOverlay
           }`}
         >
           <div className="flex items-center justify-between mb-3">
@@ -214,12 +231,12 @@ export default function HomeHeader({
                   />
                   <div className="flex min-w-0 max-w-[190px] flex-col">
                     <div className="flex items-center gap-[3px]">
-                      <span className="truncate text-[16px] font-extrabold tracking-[-0.3px]">
+                      <span className={`truncate text-[16px] font-extrabold tracking-[-0.3px] ${headerTextClass}`}>
                         {locationTitle}
                       </span>
-                      <ChevronDown className="h-[14px] w-[14px] shrink-0 opacity-80" strokeWidth={3} />
+                      <ChevronDown className={`h-[14px] w-[14px] shrink-0 opacity-80 ${headerTextClass}`} strokeWidth={3} />
                     </div>
-                    <span className="max-w-[190px] truncate text-[11px] font-medium text-white/75">
+                    <span className={`max-w-[190px] truncate text-[11px] font-medium ${headerSubtleTextClass}`}>
                       {locationSubtitle}
                     </span>
                   </div>
@@ -227,7 +244,7 @@ export default function HomeHeader({
               ) : (
                 <div className="flex flex-col min-w-0">
                   <span className="text-[22px] font-black tracking-tighter leading-none mb-1">15 mins</span>
-                  <span className="text-[11px] font-bold truncate opacity-70">To {locationTitle}</span>
+                  <span className={`text-[11px] font-bold truncate opacity-80 ${headerTextClass}`}>To {locationTitle}</span>
                 </div>
               )}
             </div>
@@ -237,41 +254,41 @@ export default function HomeHeader({
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className="relative h-[38px] w-[38px] rounded-full bg-black/18 border border-white/18 flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.12)] backdrop-blur-[6px]"
+                    className={`relative h-[38px] w-[38px] rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.12)] backdrop-blur-[6px] ${floatingIconButtonClass}`}
                   >
-                    <Bell className="h-[18px] w-[18px] text-white" />
+                    <Bell className={`h-[18px] w-[18px] ${floatingIconClass}`} />
                     {unreadCount > 0 && (
                       <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-yellow-400 border border-white" />
                     )}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-0 overflow-hidden border-none shadow-2xl rounded-2xl mt-2" align="end">
-                  <div className="bg-white">
-                    <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                      <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <div className={searchOverlay.headerSurface}>
+                    <div className={`p-4 border-b ${searchOverlay.headerBorder} flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50`}>
+                      <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         Notifications
                         {unreadCount > 0 && (
-                          <Badge variant="secondary" className="bg-orange-100 text-orange-600 border-none text-[10px] h-4">
+                          <Badge variant="secondary" className="border-none text-[10px] h-4 bg-blue-100 text-[#2979FB]">
                             {unreadCount} New
                           </Badge>
                         )}
                       </h3>
-                      <Link to="/food/user/notifications" className="text-xs font-bold text-orange-600">
+                      <Link to="/food/user/notifications" className="text-xs font-bold text-[#2979FB]">
                         {mergedNotifications.length > 0 ? "View All" : ""}
                       </Link>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
                       {mergedNotifications.length > 0 ? (
                         mergedNotifications.slice(0, 5).map((item) => (
-                          <div key={item.id} className="p-4 flex items-start gap-3 border-b border-gray-50 last:border-0">
-                            <div className="mt-1 p-2 rounded-full bg-orange-100/50 text-orange-600">
+                          <div key={item.id} className="p-4 flex items-start gap-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                            <div className="mt-1 p-2 rounded-full bg-blue-100/60 text-[#2979FB]">
                               <Bell className="h-4 w-4" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2 mb-0.5">
-                                <span className="text-sm font-bold text-gray-900 truncate">{item.title}</span>
+                                <span className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.title}</span>
                                 <div className="flex items-center gap-1">
-                                  <span className="text-[10px] text-gray-400 whitespace-nowrap">{item.time}</span>
+                                  <span className="text-[10px] text-slate-400 whitespace-nowrap">{item.time}</span>
                                   <button
                                     type="button"
                                     onClick={(event) => {
@@ -279,20 +296,20 @@ export default function HomeHeader({
                                       event.stopPropagation();
                                       removeNotification(item.id, item.source);
                                     }}
-                                    className="rounded-full p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                    className="rounded-full p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                                   >
                                     <X className="h-3.5 w-3.5" />
                                   </button>
                                 </div>
                               </div>
-                              <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{item.message}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{item.message}</p>
                             </div>
                           </div>
                         ))
                       ) : (
                         <div className="p-8 text-center flex flex-col items-center gap-2">
-                          <BellOff className="h-10 w-10 text-gray-200" />
-                          <p className="text-xs text-gray-400 font-medium">All caught up!</p>
+                          <BellOff className="h-10 w-10 text-slate-200 dark:text-slate-700" />
+                          <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">All caught up!</p>
                         </div>
                       )}
                     </div>
@@ -302,11 +319,14 @@ export default function HomeHeader({
 
               <Link
                 to="/cart"
-                className="relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-white/18 bg-black/18 shadow-[0_4px_12px_rgba(0,0,0,0.12)] backdrop-blur-[6px]"
+                className={`relative flex h-[38px] w-[38px] items-center justify-center rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.12)] backdrop-blur-[6px] ${floatingIconButtonClass}`}
               >
-                <ShoppingCart className="h-[18px] w-[18px] text-white" strokeWidth={2.2} />
+                <ShoppingCart className={`h-[18px] w-[18px] ${floatingIconClass}`} strokeWidth={2.2} />
                 {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-[#F6881F] px-1 py-[1px] text-center text-[10px] font-bold leading-none text-white">
+                  <span
+                    className="absolute -right-1 -top-1 min-w-[18px] rounded-full px-1 py-[1px] text-center text-[10px] font-bold leading-none text-white"
+                    style={{ backgroundColor: BRAND_THEME.tokens.homepage.header.cartBadgeBackground }}
+                  >
                     {cartCount > 99 ? "99+" : cartCount}
                   </span>
                 )}
@@ -319,8 +339,11 @@ export default function HomeHeader({
             className="flex-1 rounded-[12px] h-[46px] flex items-center px-3 cursor-pointer relative overflow-hidden bg-white shadow-[0_6px_18px_rgba(15,23,42,0.10)]"
             onClick={handleSearchFocus}
           >
-            <div className="absolute left-0 top-0 bottom-0 w-[2.5px] rounded-l-[12px] bg-gradient-to-b from-[#F6881F] to-[#FF5E3A]" />
-            <Search className="h-[16px] w-[16px] ml-1.5 mr-2 flex-shrink-0 text-[#F6881F]" strokeWidth={2.3} />
+            <div
+              className="absolute left-0 top-0 bottom-0 w-[2.5px] rounded-l-[12px]"
+              style={{ background: `linear-gradient(180deg, ${brand.primary} 0%, ${brand.primaryDark} 100%)` }}
+            />
+            <Search className="h-[16px] w-[16px] ml-1.5 mr-2 flex-shrink-0" strokeWidth={2.3} style={{ color: header.searchIcon }} />
             <div className="flex-1 overflow-hidden relative h-[20px]">
               <AnimatePresence mode="wait">
                 <motion.span
@@ -329,16 +352,16 @@ export default function HomeHeader({
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -12, opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="absolute inset-0 whitespace-nowrap leading-[22px] text-[12.5px] font-medium text-gray-400"
+                  className="absolute inset-0 whitespace-nowrap leading-[22px] text-[12.5px] font-medium text-slate-400"
                 >
                   {placeholders?.[placeholderIndex] || "Search for food..."}
                 </motion.span>
               </AnimatePresence>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-[1px] h-[16px] bg-orange-200" />
-              <div className="h-[28px] w-[28px] rounded-full flex items-center justify-center bg-orange-50">
-                <Mic className="h-[14px] w-[14px] text-[#F6881F]" strokeWidth={2.3} />
+              <div className="w-[1px] h-[16px] bg-blue-200" />
+              <div className="h-[28px] w-[28px] rounded-full flex items-center justify-center bg-blue-50">
+                <Mic className="h-[14px] w-[14px]" strokeWidth={2.3} style={{ color: header.searchIcon }} />
               </div>
             </div>
           </div>
@@ -348,7 +371,7 @@ export default function HomeHeader({
               onClick={() => onVegModeChange?.(!vegMode)}
               className="h-[46px] min-w-[54px] px-1 flex flex-col items-center justify-center cursor-pointer"
             >
-              <span className="text-[10px] font-black tracking-[0.4px] text-[#22C55E] mb-1 leading-none">VEG MODE</span>
+              <span className="text-[10px] font-black tracking-[0.4px] mb-1 leading-none" style={{ color: semantic.veg }}>VEG MODE</span>
               <div className="scale-[0.82]">
                 <Switch
                   checked={vegMode}

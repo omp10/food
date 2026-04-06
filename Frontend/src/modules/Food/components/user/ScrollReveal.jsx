@@ -58,9 +58,12 @@
 //     </div>
 //   )
 // }
+import FloatingElement from "./FloatingElement"
 
-
-
-export default function ScrollReveal({ children, className = "" }) {
-  return <div className={className}>{children}</div>
+export default function ScrollReveal({ children, className = "", delay = 0 }) {
+  return (
+    <FloatingElement className={className} delay={delay}>
+      {children}
+    </FloatingElement>
+  )
 }

@@ -3,6 +3,7 @@ import { MapPin, X } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@food/components/ui/card"
 import { Button } from "@food/components/ui/button"
 import { useLocation } from "@food/hooks/useLocation"
+import BRAND_THEME from "../../../../config/brandTheme"
 
 export default function LocationPrompt() {
   const { location, loading, permissionGranted, requestLocation } = useLocation()
@@ -89,7 +90,7 @@ export default function LocationPrompt() {
   if (!showPrompt) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+    <div className="fixed inset-0 backdrop-blur-sm z-[100] flex items-center justify-center p-4" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: BRAND_THEME.tokens.location.promptOverlay }}>
       <Card
         ref={cardRef}
         className="w-full max-w-md border-2 border-gray-200 shadow-2xl mx-auto my-auto"
@@ -104,8 +105,8 @@ export default function LocationPrompt() {
             <X className="h-4 w-4" />
           </Button>
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
-              <MapPin className="h-6 w-6 text-primary-orange" />
+            <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: BRAND_THEME.tokens.location.iconSoft }}>
+              <MapPin className="h-6 w-6" style={{ color: BRAND_THEME.tokens.location.icon }} />
             </div>
             <div>
               <CardTitle>Enable Location Services</CardTitle>
@@ -131,7 +132,7 @@ export default function LocationPrompt() {
             </Button>
             <Button
               onClick={handleAllow}
-              className="flex-1 bg-primary-orange hover:opacity-90 text-white"
+              className={`flex-1 ${BRAND_THEME.tokens.productDetail.primaryButton}`}
               disabled={loading}
             >
               {loading ? "Getting location..." : "Allow Location"}

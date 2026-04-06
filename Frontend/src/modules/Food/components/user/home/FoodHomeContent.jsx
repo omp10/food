@@ -24,6 +24,7 @@ import {
 import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability";
 import foodPattern from "@food/assets/food_pattern_background.png";
 import discoveryBg from "@food/assets/food_discovery_bg.png";
+import BRAND_THEME from "../../../../../config/brandTheme";
 
 const PRIMARY_FILTERS = [
   { id: "delivery-under-30", label: "Under 30 mins" },
@@ -194,6 +195,7 @@ function FoodHomeContent({
   hasMoreRestaurants,
   restaurantLoadMoreRef,
 }) {
+  const { homepage } = BRAND_THEME.tokens;
   return (
     <motion.div
       key="food-content"
@@ -201,7 +203,7 @@ function FoodHomeContent({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-white"
+      className={homepage.shared.pageBackground}
     >
       <div className="relative">
         <PromoRow
@@ -212,18 +214,18 @@ function FoodHomeContent({
         />
       </div>
 
-      <div className="relative overflow-hidden rounded-[40px] mx-4 mt-2 px-6 py-10 shadow-[inset_0_-10px_40px_rgba(0,0,0,0.02)] border border-gray-100/50">
+      <div className={`relative overflow-hidden rounded-[40px] mx-4 mt-2 px-6 py-10 shadow-[inset_0_-10px_40px_rgba(0,0,0,0.02)] border ${homepage.shared.border}/50 ${homepage.shared.surface}`}>
         <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: `url(${foodPattern})`, backgroundSize: '150px' }} />
         <div className="absolute inset-x-0 bottom-0 top-0 bg-gradient-to-t from-green-50/20 via-transparent to-transparent pointer-events-none" />
         
         <div className="relative z-10 flex min-w-0 items-center justify-between gap-2 mb-8">
-          <h2 className="shrink-0 text-xl font-black italic tracking-tighter text-gray-900 sm:text-2xl uppercase">
+          <h2 className={`shrink-0 text-xl font-black italic tracking-tighter ${homepage.shared.title} sm:text-2xl uppercase`}>
             What's on your mind today?
           </h2>
           <div className="hidden h-[1.5px] flex-1 bg-gradient-to-r from-gray-200 to-transparent sm:block mx-4" />
           <Link
             to="/user/categories"
-            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-black text-[#ef4f5f] sm:text-sm bg-[#ef4f5f]/10 px-4 py-2 rounded-full hover:bg-[#ef4f5f]/20 transition-all"
+            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-black sm:text-sm px-4 py-2 rounded-full transition-all ${homepage.shared.accentSoft}`}
           >
             Explore <ArrowDownUp className="h-3 w-3 rotate-90" />
           </Link>
@@ -236,7 +238,7 @@ function FoodHomeContent({
               to={`/user/category/${category.slug}`}
               className="group flex flex-col items-center gap-4"
             >
-              <div className="relative aspect-square w-[76px] sm:w-[88px] overflow-hidden rounded-full border-[3px] border-white ring-1 ring-gray-100 bg-white shadow-lg transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-2xl group-active:scale-95 group-hover:border-[#ef4f5f]/20">
+              <div className={`relative aspect-square w-[76px] sm:w-[88px] overflow-hidden rounded-full border-[3px] border-white ring-1 ring-gray-100 bg-white shadow-lg transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-2xl group-active:scale-95 ${homepage.shared.accentBorder}`}>
                 <OptimizedImage
                   src={category.image}
                   alt={category.name}
@@ -245,7 +247,7 @@ function FoodHomeContent({
                  {/* Shiny overlay on hover */}
                  <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <span className="text-center text-[12px] font-black leading-tight text-gray-800 tracking-tighter opacity-70 group-hover:opacity-100 group-hover:text-[#ef4f5f] transition-all">
+              <span className={`text-center text-[12px] font-black leading-tight text-gray-800 dark:text-gray-200 tracking-tighter opacity-70 group-hover:opacity-100 ${homepage.home.restaurantCard.nameHover} transition-all`}>
                 {category.name}
               </span>
             </Link>
@@ -264,7 +266,7 @@ function FoodHomeContent({
             <Button
               variant="outline"
               onClick={onOpenFilter}
-              className="flex h-7 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border border-gray-200 bg-white px-2 font-medium text-gray-700 transition-all hover:bg-gray-50 dark:border-gray-800 dark:bg-[#1a1a1a] dark:text-white dark:hover:bg-gray-800 sm:h-8 sm:px-3"
+              className={`flex h-7 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border ${homepage.shared.border} ${homepage.shared.surface} px-2 font-medium ${homepage.shared.bodyText} transition-all hover:bg-slate-50 dark:hover:bg-slate-800 sm:h-8 sm:px-3`}
             >
               <SlidersHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="text-xs font-bold text-black dark:text-white sm:text-sm">Filters</span>
@@ -290,8 +292,8 @@ function FoodHomeContent({
                   onClick={() => onTogglePrimaryFilter(filter.id)}
                   className={`flex h-7 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2 font-medium transition-all sm:h-8 sm:px-3 ${
                     isActive
-                      ? "border border-green-600 bg-green-600 text-white hover:bg-green-600/90"
-                      : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-800 dark:bg-[#1a1a1a] dark:text-gray-300 dark:hover:bg-gray-800"
+                      ? `${homepage.filters.primaryButton} border border-[#2979FB]`
+                      : `border ${homepage.shared.border} ${homepage.shared.surface} ${homepage.shared.mutedText} hover:bg-slate-50 dark:hover:bg-slate-800`
                   }`}
                 >
                   {Icon && <Icon className={`h-3 w-3 sm:h-4 sm:w-4 ${isActive ? "fill-white" : ""}`} />}
@@ -305,7 +307,7 @@ function FoodHomeContent({
 
       {recommendedForYouRestaurants.length > 0 && (
         <motion.section className="content-auto pt-1 sm:pt-2" initial={false} animate={{ opacity: 1, y: 0 }}>
-          <h2 className="mb-2 px-4 text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 sm:mb-3 sm:text-sm lg:text-base">
+          <h2 className={`mb-2 px-4 text-xs font-semibold uppercase tracking-widest ${homepage.shared.heading} sm:mb-3 sm:text-sm lg:text-base`}>
             Recommended For You
           </h2>
 
@@ -322,7 +324,7 @@ function FoodHomeContent({
                 >
                   <Link
                     to={`/user/restaurants/${restaurantSlug}`}
-                    className="block overflow-hidden rounded-[20px] border border-gray-100 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-gray-800 dark:bg-[#1a1a1a]"
+                    className={`block overflow-hidden rounded-[20px] border ${homepage.shared.border} ${homepage.shared.surface} shadow-sm transition-shadow hover:shadow-md`}
                   >
                     <div className="relative h-24 bg-gray-50 sm:h-28 md:h-32">
                       <img
@@ -342,11 +344,11 @@ function FoodHomeContent({
                       </div>
                     </div>
                     <div className="p-2.5">
-                      <p className="truncate text-sm font-semibold tracking-tight text-gray-900 dark:text-white">
+                      <p className={`truncate text-sm font-semibold tracking-tight ${homepage.shared.title}`}>
                         {restaurant.name}
                       </p>
-                      <p className="mt-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-600">
-                        <Flame className="h-3.5 w-3.5 fill-orange-600" />
+                      <p className={`mt-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${homepage.shared.accentText}`}>
+                        <Flame className="h-3.5 w-3.5 fill-current" />
                         Near & Fast
                       </p>
                     </div>
@@ -359,10 +361,10 @@ function FoodHomeContent({
       )}
 
       <motion.section className="content-auto px-4 pt-4" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-        <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-gray-200/20 via-white to-gray-200/10 py-10 border border-gray-100/50 shadow-sm">
+        <div className={`relative overflow-hidden rounded-[32px] bg-gradient-to-br from-slate-200/20 via-white to-slate-200/10 dark:from-slate-900 dark:via-[#1a1a1a] dark:to-slate-900/60 py-10 border ${homepage.shared.border}/50 shadow-sm`}>
           <div className="absolute inset-0 opacity-05 pointer-events-none" style={{ backgroundImage: `url(${discoveryBg})`, backgroundSize: '350px' }} />
           
-          <h2 className="mb-8 px-8 text-sm font-black uppercase tracking-[0.2em] text-gray-500/70 relative z-10">
+          <h2 className={`mb-8 px-8 text-sm font-black uppercase tracking-[0.2em] ${homepage.shared.mutedText} relative z-10`}>
             {exploreMoreHeading}
           </h2>
           <div
@@ -386,7 +388,7 @@ function FoodHomeContent({
               >
                 <Link to={item.href} className="flex-shrink-0">
                   <div className="group flex w-24 flex-col items-center gap-3 sm:w-28">
-                    <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border border-gray-100 bg-white p-3 shadow-[0_4px_15px_-3px_rgba(0,0,0,0.08)] transition-all duration-500 group-hover:border-orange-500/30 group-hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.12)] dark:border-gray-800 dark:bg-[#1a1a1a] sm:h-24 sm:w-24">
+                    <div className={`relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border ${homepage.shared.border} ${homepage.shared.surface} p-3 shadow-[0_4px_15px_-3px_rgba(0,0,0,0.08)] transition-all duration-500 ${homepage.home.exploreHoverBorder} group-hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.12)] sm:h-24 sm:w-24`}>
                       <div
                         className={`absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-10 bg-gradient-to-br ${
                           index % 3 === 0
@@ -413,7 +415,7 @@ function FoodHomeContent({
                         height={112}
                       />
                     </div>
-                    <span className="text-center text-[11px] font-medium tracking-wide text-gray-600 transition-colors group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white">
+                    <span className={`text-center text-[11px] font-medium tracking-wide ${homepage.shared.mutedText} transition-colors group-hover:text-slate-900 dark:group-hover:text-white`}>
                       {item.label}
                     </span>
                   </div>
@@ -428,10 +430,10 @@ function FoodHomeContent({
       <motion.section className="content-auto space-y-0 pb-8 pt-3 sm:pt-4 md:pb-10 lg:pt-6" initial={false} animate={{ opacity: 1 }}>
         <div className="mb-3 px-4 lg:mb-4">
           <div className="flex flex-col gap-0.5 lg:gap-1">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 sm:text-sm lg:text-base">
+            <h2 className={`text-xs font-semibold uppercase tracking-widest ${homepage.shared.heading} sm:text-sm lg:text-base`}>
               {filteredRestaurants.length} Restaurants Delivering to You
             </h2>
-            <span className="text-base font-normal text-gray-500 sm:text-lg lg:text-2xl">Featured</span>
+            <span className={`text-base font-normal ${homepage.shared.mutedText} sm:text-lg lg:text-2xl`}>Featured</span>
           </div>
         </div>
         <div className={`relative ${showRestaurantSkeleton ? "min-h-[360px] sm:min-h-[420px]" : ""}`}>
@@ -477,7 +479,7 @@ function FoodHomeContent({
             <Button
               variant="outline"
               onClick={loadMoreRestaurants}
-              className="border-gray-300 text-sm font-medium hover:border-gray-400"
+              className="border-gray-300 text-sm font-medium hover:border-[#2979FB] hover:text-[#2979FB]"
             >
               Load more restaurants
             </Button>

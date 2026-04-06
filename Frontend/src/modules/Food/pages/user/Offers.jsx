@@ -8,6 +8,7 @@ import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import { toast } from "sonner"
 import { RestaurantGridSkeleton } from "@food/components/ui/loading-skeletons"
 import { useDelayedLoading } from "@food/hooks/useDelayedLoading"
+import BRAND_THEME from "../../../../config/brandTheme"
 
 // Import banner image
 import offerBanner from "@food/assets/offerpagebanner.png"
@@ -53,7 +54,7 @@ export default function Offers() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a]">
+    <div className={`min-h-screen ${BRAND_THEME.tokens.homepage.shared.pageBackground}`}>
       {/* Banner Section */}
       <div className="relative w-full overflow-hidden min-h-[25vh] md:min-h-[30vh]">
         {/* Back Button */}
@@ -94,7 +95,7 @@ export default function Offers() {
             {/* Grouped Offers Sections */}
             {Object.keys(groupedOffers).length > 0 && Object.entries(groupedOffers).map(([offerText, dishes]) => (
               <section key={offerText}>
-                <h2 className="text-2xl sm:text-3xl font-black text-red-500 dark:text-red-400 text-center mb-4 tracking-wide">
+                  <h2 className="text-2xl sm:text-3xl font-black text-[#FA0000] dark:text-red-400 text-center mb-4 tracking-wide">
                   {offerText}
                 </h2>
                 
@@ -117,7 +118,7 @@ export default function Offers() {
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           {/* Offer Badge */}
-                          <div className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] sm:text-xs font-semibold px-2 py-1 rounded">
+                          <div className="absolute top-2 left-2 bg-[#2979FB] text-white text-[10px] sm:text-xs font-semibold px-2 py-1 rounded">
                             {dish.offer}
                           </div>
                         </div>
@@ -156,7 +157,7 @@ export default function Offers() {
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {offers.map((o) => (
-                    <Card key={o.id || o.offerId} className="border border-slate-200 shadow-sm">
+                    <Card key={o.id || o.offerId} className={`border ${BRAND_THEME.tokens.homepage.shared.border} shadow-sm`}>
                       <CardContent className="p-4 space-y-2">
                         <div className="flex items-start justify-between gap-3">
                           <div>
@@ -165,7 +166,7 @@ export default function Offers() {
                               {o.couponCode || "-"}
                             </p>
                           </div>
-                          <span className="px-2 py-1 rounded-md text-xs font-semibold bg-blue-600 text-white">
+                          <span className="px-2 py-1 rounded-md text-xs font-semibold bg-[#2979FB] text-white">
                             {o.title || "Offer"}
                           </span>
                         </div>

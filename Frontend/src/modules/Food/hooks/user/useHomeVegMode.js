@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import BRAND_THEME from "../../../../config/brandTheme";
 
 export const useHomeVegMode = ({
   vegMode,
@@ -6,6 +7,8 @@ export const useHomeVegMode = ({
   setShowVegModePopup,
   setShowSwitchOffPopup,
 }) => {
+  const semanticVeg = BRAND_THEME.colors.semantic.veg;
+
   const handleVegModeToggle = useCallback((e) => {
     // If e is an event, prevent propagation if needed, but here we just need to know the next state
     // If it's becoming true, show popup. If it's becoming false, show confirmation.
@@ -27,6 +30,7 @@ export const useHomeVegMode = ({
   }, [setVegMode, setShowSwitchOffPopup]);
 
   return {
+    semanticVeg,
     handleVegModeToggle,
     confirmSwitchOff
   };

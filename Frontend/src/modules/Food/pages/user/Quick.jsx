@@ -5,6 +5,7 @@ import { LocationProvider as QuickLocationProvider } from "../../../quickCommerc
 import { ProductDetailProvider as QuickProductDetailProvider } from "../../../quickCommerce/user/context/ProductDetailContext";
 import { WishlistProvider as QuickWishlistProvider } from "../../../quickCommerce/user/context/WishlistContext";
 import { CartAnimationProvider as QuickCartAnimationProvider } from "../../../quickCommerce/user/context/CartAnimationContext";
+import BRAND_THEME from "../../../config/brandTheme";
 
 export default function Quick({ onThemeChange, embeddedHeaderColor }) {
   useLayoutEffect(() => {
@@ -49,7 +50,7 @@ export default function Quick({ onThemeChange, embeddedHeaderColor }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className={`min-h-screen ${BRAND_THEME.tokens.app.pageBackground === "#F8FAFC" ? "bg-slate-50 dark:bg-[#0a0a0a]" : "bg-white"}`}>
       <QuickLocationProvider>
         <QuickWishlistProvider>
           <QuickCartProvider>

@@ -9,6 +9,7 @@ import { useProfile } from "@food/context/ProfileContext";
 import { orderAPI } from "@food/api";
 import { initRazorpayPayment } from "@food/utils/razorpay";
 import { useCompanyName } from "@food/hooks/useCompanyName";
+import BRAND_THEME from "../../../../../config/brandTheme";
 
 const RUPEE_SYMBOL = "\u20B9";
 
@@ -227,14 +228,15 @@ export default function QuickSharedCart() {
 
   if (quickCart.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 px-4 py-10">
+      <div className={`min-h-screen ${BRAND_THEME.tokens.cart.pageBackground} px-4 py-10`}>
         <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <ShoppingBag className="mx-auto h-12 w-12 text-emerald-600" />
+          <ShoppingBag className="mx-auto h-12 w-12" style={{ color: BRAND_THEME.tokens.cart.primaryText }} />
           <h1 className="mt-4 text-2xl font-black text-slate-900">Your quick cart is empty</h1>
           <p className="mt-2 text-sm text-slate-500">Add a few essentials and come back here for checkout.</p>
           <Link
             to="/food/user/quick"
-            className="mt-6 inline-flex rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white"
+            className="mt-6 inline-flex rounded-full px-5 py-3 text-sm font-bold text-white"
+            style={{ backgroundColor: BRAND_THEME.tokens.cart.primaryText }}
           >
             Continue shopping
           </Link>
@@ -244,7 +246,7 @@ export default function QuickSharedCart() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28">
+    <div className={`min-h-screen ${BRAND_THEME.tokens.cart.pageBackground} pb-28`}>
       <div className="mx-auto max-w-6xl px-4 py-6 md:px-6">
         <button
           type="button"
@@ -260,7 +262,7 @@ export default function QuickSharedCart() {
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.24em] text-emerald-600">Shared Cart</p>
+                  <p className="text-xs font-black uppercase tracking-[0.24em]" style={{ color: BRAND_THEME.tokens.cart.primaryText }}>Shared Cart</p>
                   <h1 className="mt-1 text-2xl font-black text-slate-900">Quick checkout in the food flow</h1>
                 </div>
                 <button
@@ -286,7 +288,7 @@ export default function QuickSharedCart() {
                       className="h-20 w-20 rounded-2xl object-cover bg-slate-100"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">
+                      <p className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: BRAND_THEME.tokens.cart.primaryText }}>
                         {item.quickStoreName || "Quick Commerce"}
                       </p>
                       <h2 className="mt-1 truncate text-lg font-black text-slate-900">{item.name}</h2>
@@ -329,12 +331,13 @@ export default function QuickSharedCart() {
                     {selectedAddress ? formatFullAddress(selectedAddress) : "Add a delivery address"}
                   </p>
                 </div>
-                <MapPin className="h-5 w-5 text-emerald-600" />
+                <MapPin className="h-5 w-5" style={{ color: BRAND_THEME.tokens.cart.primaryText }} />
               </div>
               <button
                 type="button"
                 onClick={() => navigate("/food/user/cart/address-selector")}
-                className="mt-4 text-sm font-bold text-emerald-700"
+                className="mt-4 text-sm font-bold"
+                style={{ color: BRAND_THEME.tokens.cart.primaryText }}
               >
                 {selectedAddress ? "Change address" : "Select address"}
               </button>
@@ -348,7 +351,7 @@ export default function QuickSharedCart() {
                   onClick={() => setSelectedPaymentMethod("cash")}
                   className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left ${
                     selectedPaymentMethod === "cash"
-                      ? "border-emerald-500 bg-emerald-50"
+                      ? "border-[#2979FB] bg-blue-50"
                       : "border-slate-200"
                   }`}
                 >
@@ -364,7 +367,7 @@ export default function QuickSharedCart() {
                   onClick={() => setSelectedPaymentMethod("razorpay")}
                   className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left ${
                     selectedPaymentMethod === "razorpay"
-                      ? "border-emerald-500 bg-emerald-50"
+                      ? "border-[#2979FB] bg-blue-50"
                       : "border-slate-200"
                   }`}
                 >
@@ -378,7 +381,7 @@ export default function QuickSharedCart() {
             </div>
 
             <div className="rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm">
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-emerald-300">Summary</p>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-blue-300">Summary</p>
               <div className="mt-4 space-y-3 text-sm text-white/80">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
@@ -407,7 +410,8 @@ export default function QuickSharedCart() {
               <Button
                 onClick={handlePlaceOrder}
                 disabled={isPlacingOrder || isPricingLoading}
-                className="mt-5 h-12 w-full rounded-full bg-emerald-400 text-slate-950 hover:bg-emerald-300"
+                className="mt-5 h-12 w-full rounded-full text-white"
+                style={{ backgroundColor: BRAND_THEME.tokens.cart.primaryText }}
               >
                 {isPlacingOrder ? "Placing order..." : isPricingLoading ? "Refreshing total..." : "Place quick order"}
               </Button>

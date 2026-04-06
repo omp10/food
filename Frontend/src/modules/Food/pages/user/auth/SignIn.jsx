@@ -6,6 +6,8 @@ import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
 import { authAPI } from "@food/api"
 import loginBanner from "@food/assets/loginbanner.png"
+import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
+import BRAND_THEME from "../../../../../config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -22,6 +24,8 @@ export default function SignIn() {
 
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [logoUrl, setLogoUrl] = useState("")
+  const [companyName, setCompanyName] = useState(BRAND_THEME.brandName)
   const submittingRef = useRef(false)
 
   useEffect(() => {
@@ -39,6 +43,43 @@ export default function SignIn() {
       }))
     } catch (err) {
       debugError("Error parsing stored auth data:", err)
+    }
+  }, [])
+
+  useEffect(() => {
+    const syncBranding = async () => {
+      try {
+        const cached = getCachedSettings()
+        if (cached?.logo?.url) {
+          setLogoUrl(cached.logo.url)
+        }
+        if (cached?.companyName) {
+          setCompanyName(cached.companyName)
+        }
+
+        const settings = await loadBusinessSettings()
+        if (settings?.logo?.url) {
+          setLogoUrl(settings.logo.url)
+        }
+        if (settings?.companyName) {
+          setCompanyName(settings.companyName)
+        }
+      } catch (err) {
+        debugWarn("Failed to load sign-in branding:", err)
+      }
+    }
+
+    syncBranding()
+
+    const handleSettingsUpdate = () => {
+      const cached = getCachedSettings()
+      setLogoUrl(cached?.logo?.url || "")
+      setCompanyName(cached?.companyName || BRAND_THEME.brandName)
+    }
+
+    window.addEventListener("businessSettingsUpdated", handleSettingsUpdate)
+    return () => {
+      window.removeEventListener("businessSettingsUpdated", handleSettingsUpdate)
     }
   }, [])
 
@@ -120,7 +161,30 @@ export default function SignIn() {
         {/* Banner (Mobile Only) */}
         <div className="md:hidden w-full h-[180px] relative">
           <img src={loginBanner} alt="Food Banner" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#1a1a1a] to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#1a1a1a] via-white/10 to-transparent" />
+          <div className="absolute inset-x-0 top-6 flex flex-col items-center justify-center px-6 text-center">
+            <div
+              className="flex h-20 w-20 items-center justify-center rounded-3xl border border-white/30 bg-white/90 shadow-lg backdrop-blur-md overflow-hidden"
+            >
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={companyName}
+                  className="h-full w-full object-contain p-2"
+                />
+              ) : (
+                <span className="text-3xl font-black" style={{ color: BRAND_THEME.colors.brand.primary }}>
+                  {BRAND_THEME.brandName.charAt(0)}
+                </span>
+              )}
+            </div>
+            <p className="mt-3 text-2xl font-black tracking-tight text-white drop-shadow-sm">
+              {companyName || BRAND_THEME.brandName}
+            </p>
+            <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/90">
+              Fast delivery, better cravings
+            </p>
+          </div>
         </div>
 
         <div className="p-6 sm:p-8 md:p-10 space-y-6 md:space-y-8">
@@ -149,7 +213,7 @@ export default function SignIn() {
                   placeholder="Phone number"
                   value={formData.phone}
                   onChange={handleChange}
-                  className={`flex-1 h-12 md:h-14 text-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 rounded-lg rounded-l-none focus-visible:ring-1 focus-visible:ring-[#EB590E] focus-visible:border-[#EB590E] ${error ? "border-red-500" : ""} transition-all`}
+                  className={`flex-1 h-12 md:h-14 text-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 rounded-lg rounded-l-none focus-visible:ring-1 focus-visible:ring-[#2979FB] focus-visible:border-[#2979FB] ${error ? "border-red-500" : ""} transition-all`}
                   aria-invalid={error ? "true" : "false"}
                 />
               </div>
@@ -165,7 +229,7 @@ export default function SignIn() {
             <Button
               type="submit"
               form="user-signin-form"
-              className="w-full h-12 md:h-14 bg-[#EB590E] hover:bg-[#D94F0C] text-white font-bold text-base md:text-lg rounded-lg transition-all hover:shadow-lg active:scale-[0.98]"
+              className="w-full h-12 md:h-14 bg-[#2979FB] hover:bg-[#1E5ED8] text-white font-bold text-base md:text-lg rounded-lg transition-all hover:shadow-lg active:scale-[0.98]"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -240,4 +304,5 @@ export default function SignIn() {
     </AnimatedPage>
   )
 }
+
 

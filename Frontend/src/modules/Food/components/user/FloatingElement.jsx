@@ -1,9 +1,11 @@
 // CSS-only FloatingElement - no framer-motion
 import { useEffect, useRef, useState } from "react"
+import BRAND_THEME from "../../../../config/brandTheme"
 
 export default function FloatingElement({ children, delay = 0, className = "" }) {
   const ref = useRef(null)
   const [isVisible, setIsVisible] = useState(false)
+  const motion = BRAND_THEME.tokens.motion
 
   useEffect(() => {
     const element = ref.current
@@ -42,9 +44,12 @@ export default function FloatingElement({ children, delay = 0, className = "" })
   return (
     <div
       ref={ref}
+      className={className}
       style={{
         opacity: isVisible ? 1 : 0,
-        transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+        transform: isVisible ? "translateY(0)" : `translateY(${motion.distance.floatY})`,
+        transition: `opacity ${motion.duration.slow} ${motion.easing.standard} ${delay}s, transform ${motion.duration.slow} ${motion.easing.standard} ${delay}s`,
+        willChange: "opacity, transform",
       }}
     >
       {children}

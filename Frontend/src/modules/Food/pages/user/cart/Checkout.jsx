@@ -13,6 +13,7 @@ import { Badge } from "@food/components/ui/badge"
 import { useCart } from "@food/context/CartContext"
 import { useProfile } from "@food/context/ProfileContext"
 import { useOrders } from "@food/context/OrdersContext"
+import BRAND_THEME from "../../../../../config/brandTheme"
 
 export default function Checkout() {
   const navigate = useNavigate()
@@ -81,7 +82,7 @@ export default function Checkout() {
 
   if (cart.length === 0) {
     return (
-      <AnimatedPage className="min-h-screen bg-linear-to-b from-orange-50/30 via-white to-orange-50/20 p-4">
+      <AnimatedPage className={`min-h-screen ${BRAND_THEME.tokens.cart.pageBackground} p-4`}>
         <div className="max-w-4xl mx-auto space-y-6">
           <Card>
             <CardHeader>
@@ -102,7 +103,7 @@ export default function Checkout() {
   }
 
   return (
-    <AnimatedPage className="min-h-screen bg-linear-to-b from-orange-50/30 via-white to-orange-50/20 dark:from-[#0a0a0a] dark:via-[#1a1a1a] dark:to-[#0a0a0a] p-4 sm:p-6 md:p-8">
+    <AnimatedPage className={`min-h-screen ${BRAND_THEME.tokens.cart.pageBackground} p-4 sm:p-6 md:p-8`}>
       <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
         <ScrollReveal>
           <div className="flex items-center gap-4 mb-6 md:mb-8">
@@ -123,7 +124,7 @@ export default function Checkout() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-[#EB590E]" />
+                    <MapPin className="h-5 w-5" style={{ color: BRAND_THEME.tokens.cart.primaryText }} />
                     Delivery Address
                   </CardTitle>
                 </CardHeader>
@@ -143,8 +144,8 @@ export default function Checkout() {
                           <div
                             key={addressId || `${address.label}-${address.street}-${address.city}`}
                             className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${isSelected
-                                ? "border-[#EB590E] bg-orange-50"
-                                : "border-gray-200 hover:border-orange-300"
+                                ? "border-[#2979FB] bg-blue-50"
+                                : "border-gray-200 hover:border-blue-300"
                               }`}
                             onClick={() => {
                               setSelectedAddressId(addressId)
@@ -154,12 +155,12 @@ export default function Checkout() {
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
                                 {address.isDefault && (
-                                  <Badge className="mb-2 bg-[#EB590E] text-white">Default</Badge>
+                                  <Badge className={`mb-2 ${BRAND_THEME.tokens.cart.primaryButton}`}>Default</Badge>
                                 )}
                                 <p className="text-sm font-medium">{addressString}</p>
                               </div>
                               {isSelected && (
-                                <CheckCircle className="h-5 w-5 text-[#EB590E]" />
+                                <CheckCircle className="h-5 w-5" style={{ color: BRAND_THEME.tokens.cart.primaryText }} />
                               )}
                             </div>
                           </div>
@@ -187,7 +188,7 @@ export default function Checkout() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-[#EB590E]" />
+                    <CreditCard className="h-5 w-5" style={{ color: BRAND_THEME.tokens.cart.primaryText }} />
                     Payment Method
                   </CardTitle>
                 </CardHeader>
@@ -202,8 +203,8 @@ export default function Checkout() {
                           <div
                             key={payment.id}
                             className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${isSelected
-                                ? "border-[#EB590E] bg-orange-50"
-                                : "border-gray-200 hover:border-orange-300"
+                                ? "border-[#2979FB] bg-blue-50"
+                                : "border-gray-200 hover:border-blue-300"
                               }`}
                             onClick={() => setSelectedPayment(payment.id)}
                           >
@@ -211,7 +212,7 @@ export default function Checkout() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                   {payment.isDefault && (
-                                    <Badge className="bg-[#EB590E] text-white">Default</Badge>
+                                    <Badge className={BRAND_THEME.tokens.cart.primaryButton}>Default</Badge>
                                   )}
                                   <Badge variant="outline" className="capitalize">
                                     {payment.type}
@@ -223,7 +224,7 @@ export default function Checkout() {
                                 </p>
                               </div>
                               {isSelected && (
-                                <CheckCircle className="h-5 w-5 text-[#EB590E]" />
+                                <CheckCircle className="h-5 w-5" style={{ color: BRAND_THEME.tokens.cart.primaryText }} />
                               )}
                             </div>
                           </div>
@@ -295,12 +296,12 @@ export default function Checkout() {
                     </div>
                     <div className="flex justify-between font-bold text-lg md:text-xl lg:text-2xl pt-2 md:pt-3 border-t dark:border-gray-700">
                       <span className="dark:text-white">Total</span>
-                      <span className="text-[#EB590E] dark:text-orange-400">₹{total.toFixed(0)}</span>
+                      <span style={{ color: BRAND_THEME.tokens.cart.primaryText }}>₹{total.toFixed(0)}</span>
                     </div>
                   </div>
 
                   <Button
-                    className="w-full bg-[#EB590E] hover:bg-[#D94F0C] text-white mt-4 md:mt-6 h-11 md:h-12 text-sm md:text-base border-none"
+                    className={`w-full ${BRAND_THEME.tokens.cart.primaryButton} mt-4 md:mt-6 h-11 md:h-12 text-sm md:text-base border-none`}
                     onClick={handlePlaceOrder}
                     disabled={isPlacingOrder || !selectedAddress || !selectedPayment}
                   >

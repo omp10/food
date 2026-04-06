@@ -6,6 +6,7 @@
 import apiClient from "@food/api/axios";
 import { API_ENDPOINTS } from "@food/api/config";
 import { publicGetOnce } from "@food/api";
+import BRAND_THEME from "../../../config/brandTheme";
 
 const SETTINGS_KEY = 'food_business_settings';
 
@@ -136,22 +137,22 @@ export const getCachedSettings = () => {
 
 /**
  * Get company name from business settings with fallback
- * @returns {string} Company name or default "Appzeto Food"
+ * @returns {string} Company name or configured brand fallback
  */
 export const getCompanyName = () => {
   const settings = getCachedSettings();
-  return settings?.companyName || "Appzeto";
+  return settings?.companyName || BRAND_THEME.brandName;
 };
 
 /**
  * Get company name asynchronously (loads if not cached)
- * @returns {Promise<string>} Company name or default "Appzeto Food"
+ * @returns {Promise<string>} Company name or configured brand fallback
  */
 export const getCompanyNameAsync = async () => {
   try {
     const settings = await loadBusinessSettings();
-    return settings?.companyName || "Appzeto";
+    return settings?.companyName || BRAND_THEME.brandName;
   } catch (error) {
-    return "Appzeto";
+    return BRAND_THEME.brandName;
   }
 };

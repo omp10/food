@@ -1,9 +1,11 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { adminAPI, restaurantAPI } from "@food/api";
 import { foodImages } from "@food/constants/images";
 import { normalizeImageUrl } from "@food/utils/common";
+import BRAND_THEME from "../../../../config/brandTheme";
 
 export const useCategoryData = (zoneId) => {
+  const homepageDefaults = BRAND_THEME.tokens.homepage.defaults;
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [restaurantsData, setRestaurantsData] = useState([]);
@@ -17,7 +19,7 @@ export const useCategoryData = (zoneId) => {
       if (response.data?.success) {
         const cats = response.data.data.categories || [];
         const transformed = [
-          { id: 'all', name: "All", image: null, slug: 'all' },
+          { id: homepageDefaults.allCategoryId, name: "All", image: null, slug: homepageDefaults.allCategoryId },
           ...cats.map((cat) => ({
             id: cat.slug || cat._id,
             name: cat.name,
@@ -41,7 +43,7 @@ export const useCategoryData = (zoneId) => {
     } finally {
       setLoadingCategories(false);
     }
-  }, [zoneId]);
+  }, [homepageDefaults.allCategoryId, zoneId]);
 
   const fetchRestaurants = useCallback(async () => {
     try {

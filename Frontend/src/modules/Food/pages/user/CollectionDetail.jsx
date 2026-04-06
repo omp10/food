@@ -8,6 +8,7 @@ import { Button } from "@food/components/ui/button"
 import { Badge } from "@food/components/ui/badge"
 import { useProfile } from "@food/context/ProfileContext"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
+import BRAND_THEME from "../../../../config/brandTheme"
 
 export default function CollectionDetail() {
   const { id } = useParams()
@@ -56,7 +57,7 @@ export default function CollectionDetail() {
 
   if (collection.items.length === 0) {
     return (
-      <AnimatedPage className="min-h-screen bg-gradient-to-b from-yellow-50/30 via-white to-orange-50/20 p-4">
+      <AnimatedPage className="min-h-screen bg-gradient-to-b from-blue-50/30 via-white to-blue-100/20 p-4">
         <div className="max-w-4xl mx-auto space-y-6">
           <ScrollReveal>
             <div className="flex items-center gap-3 sm:gap-4">
@@ -76,7 +77,7 @@ export default function CollectionDetail() {
               <Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-lg mb-4">This collection is empty</p>
               <Link to="/user">
-                <Button className="bg-gradient-to-r bg-primary-orange hover:opacity-90 text-white">
+                <Button className="bg-[#2979FB] hover:bg-[#1E5ED8] text-white">
                   Explore Restaurants
                 </Button>
               </Link>
@@ -88,7 +89,7 @@ export default function CollectionDetail() {
   }
 
   return (
-    <AnimatedPage className="min-h-screen bg-gradient-to-b from-yellow-50/30 via-white to-orange-50/20 p-4">
+    <AnimatedPage className="min-h-screen bg-gradient-to-b from-blue-50/30 via-white to-blue-100/20 p-4">
       <div className="max-w-6xl mx-auto space-y-6">
         <ScrollReveal>
           <div className="flex items-center justify-between mb-4">

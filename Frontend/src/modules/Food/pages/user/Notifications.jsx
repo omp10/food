@@ -6,6 +6,7 @@ import { Button } from "@food/components/ui/button"
 import { Card, CardContent } from "@food/components/ui/card"
 import { Badge } from "@food/components/ui/badge"
 import useNotificationInbox from "@food/hooks/useNotificationInbox"
+import BRAND_THEME from "../../../../config/brandTheme"
 
 // Initial mock notification data (fallback if localStorage is empty)
 const DEFAULT_NOTIFICATIONS = [
@@ -18,7 +19,7 @@ const DEFAULT_NOTIFICATIONS = [
     timestamp: Date.now() - 120000,
     read: false,
     icon: "CheckCircle2",
-    iconColor: "text-[#EB590E]"
+    iconColor: BRAND_THEME.tokens.notifications.headerIcon
   },
   {
     id: "2",
@@ -29,7 +30,7 @@ const DEFAULT_NOTIFICATIONS = [
     timestamp: Date.now() - 3600000,
     read: false,
     icon: "Tag",
-    iconColor: "text-[#EB590E]"
+    iconColor: BRAND_THEME.tokens.notifications.offerIcon
   }
 ]
 
@@ -76,7 +77,7 @@ export default function Notifications() {
         timestamp: Date.now(),
         read: false,
         icon: isCancelled ? "AlertCircle" : "CheckCircle2",
-        iconColor: isCancelled ? "text-red-600" : "text-[#EB590E]"
+        iconColor: isCancelled ? "text-red-600" : BRAND_THEME.tokens.notifications.headerIcon
       }
       setNotificationsList(prev => [newNotification, ...prev])
     }
@@ -126,7 +127,7 @@ export default function Notifications() {
         : "Just now",
       timestamp: item.createdAt || Date.now(),
       icon: "Bell",
-      iconColor: "text-blue-600",
+      iconColor: BRAND_THEME.tokens.notifications.broadcastIcon,
     }))
 
     return [...broadcastItems, ...localItems].sort(
@@ -162,7 +163,7 @@ export default function Notifications() {
   }
 
   return (
-    <AnimatedPage className="min-h-screen bg-white dark:bg-[#0a0a0a]">
+    <AnimatedPage className={BRAND_THEME.tokens.wallet.pageBackground}>
       <div className="max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {/* Header */}
         <div className="flex items-center gap-3 sm:gap-4 mb-4 md:mb-6 lg:mb-8">
@@ -172,10 +173,10 @@ export default function Notifications() {
             </Button>
           </Link>
           <div className="flex items-center gap-2 sm:gap-3 flex-1">
-            <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-[#EB590E] fill-[#EB590E]" />
+            <Bell className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: BRAND_THEME.tokens.notifications.headerIcon, fill: BRAND_THEME.tokens.notifications.headerIcon }} />
             <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white">Notifications</h1>
             {unreadCount > 0 && (
-              <Badge className="bg-[#EB590E] text-white text-xs md:text-sm">
+              <Badge className="text-white text-xs md:text-sm" style={{ backgroundColor: BRAND_THEME.tokens.notifications.countBadge }}>
                 {unreadCount}
               </Badge>
             )}
@@ -201,12 +202,12 @@ export default function Notifications() {
               <Card
                 key={notification.id}
                 onClick={() => handleMarkAsRead(notification.id, notification.source)}
-                className={`relative cursor-pointer transition-all duration-200 py-1 hover:shadow-md ${!notification.read ? "bg-red-50/50 dark:bg-red-900/20 border-red-200 dark:border-red-800" : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                className={`relative cursor-pointer transition-all duration-200 py-1 hover:shadow-md ${!notification.read ? BRAND_THEME.tokens.notifications.unreadBackground : BRAND_THEME.tokens.notifications.readBackground
                   }`}
               >
                 {/* Unread Dot - Top Right */}
                 {!notification.read && (
-                  <div className="absolute top-2 right-2 w-2.5 h-2.5 md:w-3 md:h-3 bg-[#EB590E] rounded-full" />
+                  <div className="absolute top-2 right-2 w-2.5 h-2.5 md:w-3 md:h-3 rounded-full" style={{ backgroundColor: BRAND_THEME.tokens.notifications.unreadDot }} />
                 )}
 
                 <CardContent className="p-3 md:p-4 lg:p-5">

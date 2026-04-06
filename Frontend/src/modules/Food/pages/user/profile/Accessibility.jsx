@@ -6,6 +6,7 @@ import { Card, CardContent } from "@food/components/ui/card"
 import { Switch } from "@food/components/ui/switch"
 import { Label } from "@food/components/ui/label"
 import { useState } from "react"
+import BRAND_THEME from "../../../../../config/brandTheme"
 
 export default function Accessibility() {
   const [largeText, setLargeText] = useState(false)
@@ -14,7 +15,7 @@ export default function Accessibility() {
   const [reduceMotion, setReduceMotion] = useState(false)
 
   return (
-    <AnimatedPage className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a]">
+    <AnimatedPage className={`min-h-screen ${BRAND_THEME.tokens.profile.pageBackground}`}>
       <div className="max-w-md md:max-w-2xl lg:max-w-3xl mx-auto px-4 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8">
         {/* Header */}
         <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-6 lg:mb-8">
@@ -154,7 +155,7 @@ export default function Accessibility() {
               If you need additional accessibility features or have suggestions, please contact our support team.
             </p>
             <Link to="/user/help">
-              <Button variant="outline" className="w-full text-sm md:text-base h-10 md:h-12">
+              <Button variant="outline" className={`w-full text-sm md:text-base h-10 md:h-12 ${BRAND_THEME.tokens.profile.primaryButtonSoft}`}>
                 Contact Support
               </Button>
             </Link>

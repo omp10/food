@@ -26,6 +26,8 @@ import { toast } from "sonner"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import { ImageSourcePicker } from "@food/components/ImageSourcePicker"
 import { isFlutterBridgeAvailable } from "@food/utils/imageUploadUtils"
+import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
+import BRAND_THEME from "../../../../../config/brandTheme"
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
@@ -133,6 +135,7 @@ export default function EditProfile() {
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [profileImage, setProfileImage] = useState(initialProfile?.profileImage || "")
   const [imagePreview, setImagePreview] = useState(initialProfile?.profileImage || "")
+  const [brandLogoUrl, setBrandLogoUrl] = useState("")
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({
     mobile: "",
@@ -171,8 +174,36 @@ export default function EditProfile() {
     })
   }, [formData, profileImage])
 
+  useEffect(() => {
+    const syncBranding = async () => {
+      try {
+        const cached = getCachedSettings()
+        if (cached?.logo?.url) {
+          setBrandLogoUrl(cached.logo.url)
+          return
+        }
+        const settings = await loadBusinessSettings()
+        if (settings?.logo?.url) {
+          setBrandLogoUrl(settings.logo.url)
+        }
+      } catch (error) {
+        debugWarn("Failed to load edit profile branding logo:", error)
+      }
+    }
+
+    syncBranding()
+
+    const handleSettingsUpdate = () => {
+      const cached = getCachedSettings()
+      setBrandLogoUrl(cached?.logo?.url || "")
+    }
+
+    window.addEventListener("businessSettingsUpdated", handleSettingsUpdate)
+    return () => window.removeEventListener("businessSettingsUpdated", handleSettingsUpdate)
+  }, [])
+
   // Get avatar initial
-  const avatarInitial = formData.name?.charAt(0).toUpperCase() || 'A'
+  const avatarInitial = formData.name?.charAt(0).toUpperCase() || BRAND_THEME.brandName.charAt(0).toUpperCase()
 
   // Check if form has changes
   useEffect(() => {
@@ -395,7 +426,7 @@ export default function EditProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a]">
+    <div className={`min-h-screen ${BRAND_THEME.tokens.profile.pageBackground}`}>
       {/* Header */}
       <div className="bg-white dark:bg-[#1a1a1a] sticky top-0 z-10 border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-7xl mx-auto flex items-center gap-3 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-4 md:py-5 lg:py-6">
@@ -414,22 +445,33 @@ export default function EditProfile() {
         {/* Avatar Section */}
         <div className="flex justify-center">
           <div className="relative">
-            <Avatar className="h-24 w-24 bg-[#EB590E] border-0">
+            <Avatar className="h-24 w-24 border-0" style={{ backgroundColor: BRAND_THEME.tokens.profile.avatarBackground }}>
               {imagePreview && (
                 <AvatarImage
                   src={imagePreview}
                   alt={formData.name || 'User'}
                 />
               )}
-              <AvatarFallback className="bg-[#EB590E] text-white text-3xl font-semibold">
-                {avatarInitial}
+              <AvatarFallback
+                className="text-white text-3xl font-semibold overflow-hidden"
+                style={{ backgroundColor: BRAND_THEME.tokens.profile.avatarBackground }}
+              >
+                {brandLogoUrl ? (
+                  <img
+                    src={brandLogoUrl}
+                    alt={BRAND_THEME.brandName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  avatarInitial
+                )}
               </AvatarFallback>
             </Avatar>
             {/* Edit Icon */}
             <button
               onClick={handleProfileImageAction}
               disabled={isUploadingImage}
-              className="absolute bottom-0 right-0 w-8 h-8 bg-[#EB590E] rounded-full flex items-center justify-center shadow-lg border-2 border-white hover:bg-[#D94F0C] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg border-2 border-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${BRAND_THEME.tokens.profile.avatarEditButton}`}
             >
               {isUploadingImage ? (
                 <Loader2 className="h-4 w-4 text-white animate-spin" />
@@ -461,7 +503,8 @@ export default function EditProfile() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  className="pr-10 h-12 text-base border border-gray-300 dark:border-gray-700 focus:border-[#EB590E] focus:ring-1 focus:ring-[#EB590E] rounded-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white"
+                  className="pr-10 h-12 text-base border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white"
+                  style={{ "--tw-ring-color": BRAND_THEME.tokens.profile.fieldFocus, "--tw-border-opacity": 1, borderColor: undefined }}
                   placeholder="Name"
                 />
                 {formData.name && (
@@ -487,7 +530,7 @@ export default function EditProfile() {
                   type="tel"
                   value={formData.mobile}
                   onChange={(e) => handleChange('mobile', e.target.value)}
-                  className="flex-1 h-12 text-base  border border-gray-300 dark:border-gray-700 focus:border-[#EB590E] focus:ring-1 focus:ring-[#EB590E] rounded-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white"
+                  className="flex-1 h-12 text-base border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white"
                   placeholder="Mobile"
                 />
               </div>
@@ -507,7 +550,7 @@ export default function EditProfile() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
-                  className="flex-1 h-12 text-base border border-gray-300 dark:border-gray-700 focus:border-[#EB590E] focus:ring-1 focus:ring-[#EB590E] rounded-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white"
+                  className="flex-1 h-12 text-base border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white"
                   placeholder="Email"
                 />
               </div>
@@ -540,7 +583,7 @@ export default function EditProfile() {
                             borderColor: '#9ca3af',
                           },
                           '&.Mui-focused fieldset': {
-                            borderColor: '#EB590E',
+                            borderColor: BRAND_THEME.tokens.profile.fieldFocus,
                             borderWidth: '1px',
                           },
                         },
@@ -581,7 +624,7 @@ export default function EditProfile() {
                             borderColor: '#9ca3af',
                           },
                           '&.Mui-focused fieldset': {
-                            borderColor: '#EB590E',
+                            borderColor: BRAND_THEME.tokens.profile.fieldFocus,
                             borderWidth: '1px',
                           },
                         },
@@ -605,7 +648,7 @@ export default function EditProfile() {
                 value={formData.gender || ""}
                 onValueChange={(value) => handleChange('gender', value)}
               >
-                <SelectTrigger className="h-12 text-base border border-gray-300 dark:border-gray-700 focus:border-[#EB590E] focus:ring-1 focus:ring-[#EB590E] rounded-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white">
+                <SelectTrigger className="h-12 text-base border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white">
                   <SelectValue placeholder="Gender" />
                 </SelectTrigger>
                 <SelectContent>
@@ -625,7 +668,7 @@ export default function EditProfile() {
           onClick={handleUpdate}
           disabled={!hasChanges || isSaving || isUploadingImage}
           className={`w-full h-14 rounded-xl font-semibold text-base transition-all mb-2 ${hasChanges && !isSaving && !isUploadingImage
-              ? 'bg-[#EB590E] hover:bg-[#D94F0C] text-white'
+              ? BRAND_THEME.tokens.profile.primaryButton
               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}
         >

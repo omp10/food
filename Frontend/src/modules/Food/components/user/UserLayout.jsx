@@ -12,6 +12,7 @@ import SearchOverlay from "./SearchOverlay"
 import BottomNavigation from "./BottomNavigation"
 import DesktopNavbar from "./DesktopNavbar"
 import { useUserNotifications } from "../../hooks/useUserNotifications"
+import BRAND_THEME from "../../../../config/brandTheme"
 
 // Create SearchOverlay context with default value
 const SearchOverlayContext = createContext({
@@ -140,7 +141,12 @@ export default function UserLayout() {
   const isUnder250 = normalizedPath === "/under-250" || normalizedPath === "/user/under-250"
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a] transition-colors duration-200">
+    <div
+      className="min-h-screen transition-colors duration-200"
+      style={{
+        backgroundColor: BRAND_THEME.tokens.app.pageBackground,
+      }}
+    >
       <CartProvider>
         <ProfileProvider>
           <OrdersProvider>

@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { loadBusinessSettings, getCachedSettings, getCompanyName } from '@food/utils/businessSettings';
+import BRAND_THEME from "../../../config/brandTheme";
 
 /**
  * Custom hook to get company name from business settings
- * @returns {string} Company name with fallback to "Appzeto Food"
+ * @returns {string} Company name with fallback to the configured brand name
  */
 export const useCompanyName = () => {
   const [companyName, setCompanyName] = useState(() => {
     // Initialize with cached value if available
     const cached = getCachedSettings();
-    return cached?.companyName || 'Appzeto Food';
+    return cached?.companyName || BRAND_THEME.brandName;
   });
 
   useEffect(() => {

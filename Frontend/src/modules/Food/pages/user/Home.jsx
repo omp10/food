@@ -94,6 +94,7 @@ import OptimizedImage from "@food/components/OptimizedImage";
 import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability";
 import HomeHeader from "@food/components/user/home/HomeHeader";
 import PromoRow from "@food/components/user/home/PromoRow";
+import BRAND_THEME from "../../../../config/brandTheme";
 // import FestBanner from "@food/components/user/home/FestBanner";
 
 // Explore More Icons
@@ -117,7 +118,14 @@ const placeholders = [
   'Search "dosa"',
 ];
 
-const STICKY_HEADER_SCROLL_COLOR = "#2979fb";
+const STICKY_HEADER_SCROLL_COLOR =
+  BRAND_THEME.tokens.homepage.home.stickyHeaderScrollColor;
+const HOME_FILTER_ACTIVE_CARD_CLASS = BRAND_THEME.tokens.homepage.filters.activeCard;
+const HOME_FILTER_INACTIVE_CARD_CLASS = BRAND_THEME.tokens.homepage.filters.inactiveCard;
+const HOME_FILTER_ACTIVE_TEXT_CLASS = BRAND_THEME.tokens.homepage.filters.activeText;
+const HOME_FILTER_ACTIVE_ICON_CLASS = BRAND_THEME.tokens.homepage.filters.activeIcon;
+const HOME_FILTER_ACTIVE_ICON_FILL_CLASS =
+  BRAND_THEME.tokens.homepage.filters.activeIconFill;
 
 const WEBVIEW_SESSION_CACHE_BUSTER = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -2440,11 +2448,14 @@ export default function Home() {
             className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95"
             onClick={() => navigate("/user/under-250")}
           >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#EB590E] rounded-b-full rounded-t-sm shadow-md border-t-4 border-orange-200 flex flex-col items-center justify-center p-1">
+            <div
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-b-full rounded-t-sm shadow-md border-t-4 border-blue-200 flex flex-col items-center justify-center p-1"
+              style={{ backgroundColor: BRAND_THEME.tokens.homepage.home.promoBadgeBackground }}
+            >
               <span className="text-[10px] sm:text-xs font-bold text-white text-center leading-tight">UNDER</span>
               <span className="text-sm sm:text-base font-extrabold text-white">₹200</span>
               <div className="w-10 h-3.5 bg-white rounded-full mt-1 flex items-center justify-center">
-                <span className="text-[8px] font-bold text-[#EB590E]">Explore</span>
+                <span className="text-[8px] font-bold" style={{ color: BRAND_THEME.tokens.homepage.home.promoBadgeText }}>Explore</span>
               </div>
             </div>
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Offers</span>
@@ -2460,7 +2471,7 @@ export default function Home() {
                 className="flex-shrink-0 flex flex-col items-center gap-2 group transition-all duration-300 hover:-translate-y-1"
                 style={{ animation: `fade-in-up 0.5s ease-out forwards ${index * 0.05}s`, opacity: 0 }}
               >
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 group-hover:border-[#EB590E] transition-colors">
+                <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 ${BRAND_THEME.tokens.homepage.home.chipHoverBorder} transition-colors`}>
                   <OptimizedImage
                     src={category.image}
                     alt={category.name}
@@ -2480,8 +2491,8 @@ export default function Home() {
               className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer group"
               onClick={() => setShowAllCategoriesModal(true)}
             >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-orange-50 dark:bg-orange-950 flex items-center justify-center border border-orange-100 group-hover:border-[#EB590E] transition-all">
-                <Plus className="w-6 h-6 text-[#EB590E]" />
+              <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full ${BRAND_THEME.tokens.homepage.home.chipMoreBackground} flex items-center justify-center border ${BRAND_THEME.tokens.homepage.home.chipMoreBorder} transition-all`}>
+                <Plus className={`w-6 h-6 ${BRAND_THEME.tokens.homepage.home.chipMoreIcon}`} />
               </div>
               <span className="text-xs font-medium text-gray-700">See All</span>
             </div>
@@ -2492,7 +2503,7 @@ export default function Home() {
   }, [displayCategories, showCategorySkeleton, navigate]);
 
   return (
-    <div className="relative min-h-screen bg-white dark:bg-[#0a0a0a] pb-16 md:pb-6 overflow-x-clip">
+    <div className={`relative min-h-screen ${BRAND_THEME.tokens.homepage.shared.pageBackground} pb-16 md:pb-6 overflow-x-clip`}>
       {shouldShowOutOfZoneHome && (
         <div className="fixed inset-0 z-[90] pointer-events-none">
           <div className="absolute inset-0 bg-slate-300/35 backdrop-blur-[1px]" />
@@ -2577,7 +2588,7 @@ export default function Home() {
                   initial={false}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <h2 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-400 dark:text-gray-500 tracking-widest uppercase mb-2 sm:mb-3 px-4">
+                  <h2 className={`text-xs sm:text-sm lg:text-base font-semibold ${BRAND_THEME.tokens.homepage.shared.heading} tracking-widest uppercase mb-2 sm:mb-3 px-4`}>
                     Recommended For You
                   </h2>
 
@@ -2611,11 +2622,11 @@ export default function Home() {
                               </div>
                             </div>
                             <div className="p-2.5">
-                              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate tracking-tight">
+                              <p className={`text-sm font-semibold ${BRAND_THEME.tokens.homepage.shared.title} truncate tracking-tight`}>
                                 {restaurant.name}
                               </p>
-                              <p className="text-[10px] text-orange-600 font-bold mt-1 flex items-center gap-1 uppercase tracking-wider">
-                                <Flame className="w-3.5 h-3.5 fill-orange-600" />
+                              <p className={`text-[10px] font-bold mt-1 flex items-center gap-1 uppercase tracking-wider ${BRAND_THEME.tokens.homepage.home.promoAccentText}`}>
+                                <Flame className={`w-3.5 h-3.5 ${BRAND_THEME.tokens.homepage.home.promoAccentFill}`} />
                                 Near & Fast
                               </p>
                             </div>
@@ -2632,7 +2643,7 @@ export default function Home() {
                 initial={false}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <h2 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-400 dark:text-gray-500 tracking-widest uppercase mb-2 sm:mb-3 lg:mb-4 px-4">
+                <h2 className={`text-xs sm:text-sm lg:text-base font-semibold ${BRAND_THEME.tokens.homepage.shared.heading} tracking-widest uppercase mb-2 sm:mb-3 lg:mb-4 px-4`}>
                   {exploreMoreHeading}
                 </h2>
                 <div
@@ -2662,8 +2673,8 @@ export default function Home() {
                       >
                         <Link to={item.href} className="flex-shrink-0">
                           <div className="flex flex-col items-center gap-3 w-24 sm:w-28 group">
-                            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white dark:bg-[#1a1a1a] flex items-center justify-center shadow-[0_4px_15px_-3px_rgba(0,0,0,0.08)] group-hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.12)] transition-all duration-500 overflow-hidden p-3 border border-gray-100 dark:border-gray-800 group-hover:border-orange-500/30">
-                              <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-br ${index % 3 === 0 ? 'from-orange-500 to-red-500' : index % 3 === 1 ? 'from-blue-500 to-purple-500' : 'from-green-500 to-teal-500'}`} />
+                            <div className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white dark:bg-[#1a1a1a] flex items-center justify-center shadow-[0_4px_15px_-3px_rgba(0,0,0,0.08)] group-hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.12)] transition-all duration-500 overflow-hidden p-3 border border-gray-100 dark:border-gray-800 ${BRAND_THEME.tokens.homepage.home.exploreHoverBorder}`}>
+                              <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-br ${BRAND_THEME.tokens.homepage.home.exploreOverlayPalette[index % BRAND_THEME.tokens.homepage.home.exploreOverlayPalette.length]}`} />
 
                               <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
                                 <motion.div
@@ -2701,7 +2712,7 @@ export default function Home() {
             animate={{ opacity: 1 }}>
             <div className="px-4 mb-3 lg:mb-4">
               <div className="flex flex-col gap-0.5 lg:gap-1">
-                <h2 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-400 tracking-widest uppercase">
+                <h2 className={`text-xs sm:text-sm lg:text-base font-semibold ${BRAND_THEME.tokens.homepage.shared.heading} tracking-widest uppercase`}>
                   {filteredRestaurants.length} Restaurants Delivering to You
                 </h2>
                 <span className="text-base sm:text-lg lg:text-2xl text-gray-500 font-normal">
@@ -2824,7 +2835,7 @@ export default function Home() {
 
                               {/* Featured Dish Badge - Top Left */}
                               <div className="absolute top-4 left-4 flex items-center z-10 transform transition-transform duration-300 group-hover:scale-105">
-                                <div className="bg-black/70 backdrop-blur-lg text-white px-4 py-1.5 rounded-full text-[11px] font-medium tracking-tight flex items-center shadow-2xl border border-white/20">
+                                <div className={`px-4 py-1.5 rounded-full text-[11px] font-medium tracking-tight flex items-center shadow-2xl ${BRAND_THEME.tokens.homepage.home.restaurantCard.featuredDishBadge}`}>
                                   {restaurant.featuredDish} â€¢ â‚¹
                                   {restaurant.featuredPrice}
                                 </div>
@@ -2843,8 +2854,8 @@ export default function Home() {
                                   }
                                   className={`h-11 w-11 rounded-[20px] shadow-xl flex items-center justify-center transition-all duration-300 ${
                                     favorite
-                                      ? "bg-red-500 text-white"
-                                      : "bg-white/90 backdrop-blur-sm text-gray-800 hover:bg-white"
+                                      ? BRAND_THEME.tokens.homepage.home.restaurantCard.bookmarkActive
+                                      : BRAND_THEME.tokens.homepage.home.restaurantCard.bookmarkIdle
                                   }`}>
                                   <Bookmark
                                     className={`h-5 w-5 transition-all duration-300 ${
@@ -2861,7 +2872,7 @@ export default function Home() {
                                 {/* Restaurant Name & Rating */}
                                 <div className="flex items-start justify-between gap-2 mb-2 lg:mb-3">
                                   <div className="flex-1 min-w-0">
-                                    <h3 className="text-lg lg:text-2xl font-medium text-gray-950 dark:text-white line-clamp-1 leading-tight tracking-tight transition-colors duration-300 group-hover:text-[#ef4f5f]">
+                                    <h3 className={`text-lg lg:text-2xl font-medium text-gray-950 dark:text-white line-clamp-1 leading-tight tracking-tight transition-colors duration-300 ${BRAND_THEME.tokens.homepage.home.restaurantCard.nameHover}`}>
                                       {restaurant.name}
                                     </h3>
                                     <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -2873,7 +2884,7 @@ export default function Home() {
                                       </span>
                                       {availability.isOpen &&
                                         availability.closingCountdownLabel && (
-                                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-medium uppercase tracking-wide">
+                                          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-wide ${BRAND_THEME.tokens.homepage.home.restaurantCard.closingBadge}`}>
                                             <Timer
                                               className="h-3 w-3 flex-shrink-0"
                                               strokeWidth={2.5}
@@ -2885,7 +2896,7 @@ export default function Home() {
                                         )}
                                     </div>
                                   </div>
-                                  <div className={`flex-shrink-0 ${Number(restaurant.rating) > 0 ? "bg-[#259539]" : "bg-gray-400"} text-white px-3 py-1.5 rounded-2xl flex items-center gap-1.5 shadow-md transform transition-transform duration-300 group-hover:scale-110`}>
+                                  <div className={`flex-shrink-0 ${Number(restaurant.rating) > 0 ? BRAND_THEME.tokens.homepage.home.restaurantCard.ratingActive : BRAND_THEME.tokens.homepage.home.restaurantCard.ratingIdle} px-3 py-1.5 rounded-2xl flex items-center gap-1.5 shadow-md transform transition-transform duration-300 group-hover:scale-110`}>
                                     <span className="text-sm lg:text-lg font-medium tracking-tight">
                                       {Number(restaurant.rating) > 0 ? Number(restaurant.rating).toFixed(1) : "NEW"}
                                     </span>
@@ -2896,7 +2907,7 @@ export default function Home() {
                                 {/* Delivery Time & Distance */}
                                 <div className="flex items-center gap-1 text-sm lg:text-base text-gray-500 mb-2 lg:mb-3 transition-opacity duration-300 opacity-70 group-hover:opacity-100">
                                   <Clock
-                                    className="h-4 w-4 lg:h-5 lg:w-5 text-gray-500 dark:text-gray-400"
+                                    className={`h-4 w-4 lg:h-5 lg:w-5 ${BRAND_THEME.tokens.homepage.home.restaurantCard.metaIcon}`}
                                     strokeWidth={1.5}
                                   />
                                   <span className="font-medium dark:text-gray-300 text-gray-700">
@@ -2912,10 +2923,10 @@ export default function Home() {
                                 {restaurant.offer && (
                                   <div className="flex items-center gap-2 text-sm lg:text-base mt-auto transform transition-transform duration-300 group-hover:translate-x-1">
                                     <BadgePercent
-                                      className="h-4 w-4 lg:h-5 lg:w-5 text-black"
+                                      className={`h-4 w-4 lg:h-5 lg:w-5 ${BRAND_THEME.tokens.homepage.home.restaurantCard.offerIcon}`}
                                       strokeWidth={2}
                                     />
-                                    <span className="text-gray-700 dark:text-gray-300 font-medium">
+                                    <span className={`${BRAND_THEME.tokens.homepage.home.restaurantCard.offerText} font-medium`}>
                                       {restaurant.offer}
                                     </span>
                                   </div>
@@ -2924,7 +2935,7 @@ export default function Home() {
                             </div>
 
                             {/* Border Glow Effect */}
-                            <div className="absolute inset-0 rounded-md pointer-events-none z-0 transition-all duration-300 border border-transparent group-hover:border-[#EB590E]/30 group-hover:shadow-[inset_0_0_0_1px_rgba(235,89,14,0.2)]" />
+                            <div className={`absolute inset-0 rounded-md pointer-events-none z-0 transition-all duration-300 border border-transparent ${BRAND_THEME.tokens.homepage.home.exploreHoverBorder} ${BRAND_THEME.tokens.homepage.home.exploreHoverGlow}`} />
                           </Card>
                         </Link>
                       </div>
@@ -2938,7 +2949,7 @@ export default function Home() {
                 <Button
                   variant="outline"
                   onClick={loadMoreRestaurants}
-                  className="text-sm font-medium border-gray-300 hover:border-gray-400">
+                  className="text-sm font-medium border-gray-300 hover:border-[#2979FB] hover:text-[#2979FB]">
                   Load more restaurants
                 </Button>
               )}
@@ -3010,7 +3021,7 @@ export default function Home() {
                       setSortBy(null);
                       setSelectedCuisine(null);
                     }}
-                    className="text-[#EB590E] font-medium text-sm">
+                    className={`${BRAND_THEME.tokens.homepage.filters.clearAllText} font-medium text-sm`}>
                     Clear all
                   </button>
                 </div>
@@ -3052,11 +3063,11 @@ export default function Home() {
                           }}
                           className={`flex flex-col items-center gap-1 py-4 px-2 text-center relative transition-colors ${
                             isActive
-                              ? "bg-white dark:bg-[#1a1a1a] text-[#EB590E]"
+                              ? BRAND_THEME.tokens.homepage.filters.sidebarActive
                               : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                           }`}>
                           {isActive && (
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#EB590E] rounded-r" />
+                            <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-r ${BRAND_THEME.tokens.homepage.filters.sidebarIndicator}`} />
                           )}
                           <Icon className="h-5 w-5" strokeWidth={1.5} />
                           <span className="text-xs font-medium leading-tight">
@@ -3092,11 +3103,11 @@ export default function Home() {
                             onClick={() => setSortBy(option.id)}
                             className={`px-4 py-3 rounded-xl border text-left transition-colors ${
                               sortBy === option.id
-                                ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                                : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                                ? HOME_FILTER_ACTIVE_CARD_CLASS
+                                : HOME_FILTER_INACTIVE_CARD_CLASS
                             }`}>
                             <span
-                              className={`text-sm font-medium ${sortBy === option.id ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                              className={`text-sm font-medium ${sortBy === option.id ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                               {option.label}
                             </span>
                           </button>
@@ -3117,15 +3128,15 @@ export default function Home() {
                           onClick={() => toggleFilter("delivery-under-30")}
                           className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${
                             activeFilters.has("delivery-under-30")
-                              ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                              ? HOME_FILTER_ACTIVE_CARD_CLASS
+                              : HOME_FILTER_INACTIVE_CARD_CLASS
                           }`}>
                           <Timer
-                            className={`h-6 w-6 ${activeFilters.has("delivery-under-30") ? "text-[#EB590E]" : "text-gray-600 dark:text-gray-400"}`}
+                            className={`h-6 w-6 ${activeFilters.has("delivery-under-30") ? HOME_FILTER_ACTIVE_ICON_CLASS : "text-gray-600 dark:text-gray-400"}`}
                             strokeWidth={1.5}
                           />
                           <span
-                            className={`text-sm font-medium ${activeFilters.has("delivery-under-30") ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                            className={`text-sm font-medium ${activeFilters.has("delivery-under-30") ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                             Under 30 mins
                           </span>
                         </button>
@@ -3133,15 +3144,15 @@ export default function Home() {
                           onClick={() => toggleFilter("delivery-under-45")}
                           className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${
                             activeFilters.has("delivery-under-45")
-                              ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                              ? HOME_FILTER_ACTIVE_CARD_CLASS
+                              : HOME_FILTER_INACTIVE_CARD_CLASS
                           }`}>
                           <Timer
-                            className={`h-6 w-6 ${activeFilters.has("delivery-under-45") ? "text-[#EB590E]" : "text-gray-600 dark:text-gray-400"}`}
+                            className={`h-6 w-6 ${activeFilters.has("delivery-under-45") ? HOME_FILTER_ACTIVE_ICON_CLASS : "text-gray-600 dark:text-gray-400"}`}
                             strokeWidth={1.5}
                           />
                           <span
-                            className={`text-sm font-medium ${activeFilters.has("delivery-under-45") ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                            className={`text-sm font-medium ${activeFilters.has("delivery-under-45") ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                             Under 45 mins
                           </span>
                         </button>
@@ -3161,14 +3172,14 @@ export default function Home() {
                           onClick={() => toggleFilter("rating-35-plus")}
                           className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${
                             activeFilters.has("rating-35-plus")
-                              ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                              ? HOME_FILTER_ACTIVE_CARD_CLASS
+                              : HOME_FILTER_INACTIVE_CARD_CLASS
                           }`}>
                           <Star
-                            className={`h-6 w-6 ${activeFilters.has("rating-35-plus") ? "text-[#EB590E] fill-[#EB590E]" : "text-gray-400 dark:text-gray-500"}`}
+                            className={`h-6 w-6 ${activeFilters.has("rating-35-plus") ? HOME_FILTER_ACTIVE_ICON_FILL_CLASS : "text-gray-400 dark:text-gray-500"}`}
                           />
                           <span
-                            className={`text-sm font-medium ${activeFilters.has("rating-35-plus") ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                            className={`text-sm font-medium ${activeFilters.has("rating-35-plus") ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                             Rated 3.5+
                           </span>
                         </button>
@@ -3176,14 +3187,14 @@ export default function Home() {
                           onClick={() => toggleFilter("rating-4-plus")}
                           className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${
                             activeFilters.has("rating-4-plus")
-                              ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                              ? HOME_FILTER_ACTIVE_CARD_CLASS
+                              : HOME_FILTER_INACTIVE_CARD_CLASS
                           }`}>
                           <Star
-                            className={`h-6 w-6 ${activeFilters.has("rating-4-plus") ? "text-[#EB590E] fill-[#EB590E]" : "text-gray-400 dark:text-gray-500"}`}
+                            className={`h-6 w-6 ${activeFilters.has("rating-4-plus") ? HOME_FILTER_ACTIVE_ICON_FILL_CLASS : "text-gray-400 dark:text-gray-500"}`}
                           />
                           <span
-                            className={`text-sm font-medium ${activeFilters.has("rating-4-plus") ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                            className={`text-sm font-medium ${activeFilters.has("rating-4-plus") ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                             Rated 4.0+
                           </span>
                         </button>
@@ -3191,14 +3202,14 @@ export default function Home() {
                           onClick={() => toggleFilter("rating-45-plus")}
                           className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${
                             activeFilters.has("rating-45-plus")
-                              ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                              ? HOME_FILTER_ACTIVE_CARD_CLASS
+                              : HOME_FILTER_INACTIVE_CARD_CLASS
                           }`}>
                           <Star
-                            className={`h-6 w-6 ${activeFilters.has("rating-45-plus") ? "text-[#EB590E] fill-[#EB590E]" : "text-gray-400 dark:text-gray-500"}`}
+                            className={`h-6 w-6 ${activeFilters.has("rating-45-plus") ? HOME_FILTER_ACTIVE_ICON_FILL_CLASS : "text-gray-400 dark:text-gray-500"}`}
                           />
                           <span
-                            className={`text-sm font-medium ${activeFilters.has("rating-45-plus") ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                            className={`text-sm font-medium ${activeFilters.has("rating-45-plus") ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                             Rated 4.5+
                           </span>
                         </button>
@@ -3218,15 +3229,15 @@ export default function Home() {
                           onClick={() => toggleFilter("distance-under-1km")}
                           className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${
                             activeFilters.has("distance-under-1km")
-                              ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                              ? HOME_FILTER_ACTIVE_CARD_CLASS
+                              : HOME_FILTER_INACTIVE_CARD_CLASS
                           }`}>
                           <MapPin
-                            className={`h-6 w-6 ${activeFilters.has("distance-under-1km") ? "text-[#EB590E]" : "text-gray-600 dark:text-gray-400"}`}
+                            className={`h-6 w-6 ${activeFilters.has("distance-under-1km") ? HOME_FILTER_ACTIVE_ICON_CLASS : "text-gray-600 dark:text-gray-400"}`}
                             strokeWidth={1.5}
                           />
                           <span
-                            className={`text-sm font-medium ${activeFilters.has("distance-under-1km") ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                            className={`text-sm font-medium ${activeFilters.has("distance-under-1km") ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                             Under 1 km
                           </span>
                         </button>
@@ -3234,15 +3245,15 @@ export default function Home() {
                           onClick={() => toggleFilter("distance-under-2km")}
                           className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors ${
                             activeFilters.has("distance-under-2km")
-                              ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                              ? HOME_FILTER_ACTIVE_CARD_CLASS
+                              : HOME_FILTER_INACTIVE_CARD_CLASS
                           }`}>
                           <MapPin
-                            className={`h-6 w-6 ${activeFilters.has("distance-under-2km") ? "text-[#EB590E]" : "text-gray-600 dark:text-gray-400"}`}
+                            className={`h-6 w-6 ${activeFilters.has("distance-under-2km") ? HOME_FILTER_ACTIVE_ICON_CLASS : "text-gray-600 dark:text-gray-400"}`}
                             strokeWidth={1.5}
                           />
                           <span
-                            className={`text-sm font-medium ${activeFilters.has("distance-under-2km") ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                            className={`text-sm font-medium ${activeFilters.has("distance-under-2km") ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                             Under 2 km
                           </span>
                         </button>
@@ -3262,11 +3273,11 @@ export default function Home() {
                           onClick={() => toggleFilter("price-under-200")}
                           className={`px-4 py-3 rounded-xl border text-left transition-colors ${
                             activeFilters.has("price-under-200")
-                              ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                              ? HOME_FILTER_ACTIVE_CARD_CLASS
+                              : HOME_FILTER_INACTIVE_CARD_CLASS
                           }`}>
                           <span
-                            className={`text-sm font-medium ${activeFilters.has("price-under-200") ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                            className={`text-sm font-medium ${activeFilters.has("price-under-200") ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                             Under â‚¹200
                           </span>
                         </button>
@@ -3274,11 +3285,11 @@ export default function Home() {
                           onClick={() => toggleFilter("price-under-500")}
                           className={`px-4 py-3 rounded-xl border text-left transition-colors ${
                             activeFilters.has("price-under-500")
-                              ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                              : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                              ? HOME_FILTER_ACTIVE_CARD_CLASS
+                              : HOME_FILTER_INACTIVE_CARD_CLASS
                           }`}>
                           <span
-                            className={`text-sm font-medium ${activeFilters.has("price-under-500") ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                            className={`text-sm font-medium ${activeFilters.has("price-under-500") ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                             Under â‚¹500
                           </span>
                         </button>
@@ -3316,11 +3327,11 @@ export default function Home() {
                             }
                             className={`px-4 py-3 rounded-xl border text-center transition-colors ${
                               selectedCuisine === cuisine
-                                ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                                : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                                ? HOME_FILTER_ACTIVE_CARD_CLASS
+                                : HOME_FILTER_INACTIVE_CARD_CLASS
                             }`}>
                             <span
-                              className={`text-sm font-medium ${selectedCuisine === cuisine ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                              className={`text-sm font-medium ${selectedCuisine === cuisine ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                               {cuisine}
                             </span>
                           </button>
@@ -3342,11 +3353,11 @@ export default function Home() {
                             onClick={() => toggleFilter("top-rated")}
                             className={`px-4 py-3 rounded-xl border text-left transition-colors ${
                               activeFilters.has("top-rated")
-                                ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                                : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                                ? HOME_FILTER_ACTIVE_CARD_CLASS
+                                : HOME_FILTER_INACTIVE_CARD_CLASS
                             }`}>
                             <span
-                              className={`text-sm font-medium ${activeFilters.has("top-rated") ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                              className={`text-sm font-medium ${activeFilters.has("top-rated") ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                               Top Rated
                             </span>
                           </button>
@@ -3354,11 +3365,11 @@ export default function Home() {
                             onClick={() => toggleFilter("trusted")}
                             className={`px-4 py-3 rounded-xl border text-left transition-colors ${
                               activeFilters.has("trusted")
-                                ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                                : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                                ? HOME_FILTER_ACTIVE_CARD_CLASS
+                                : HOME_FILTER_INACTIVE_CARD_CLASS
                             }`}>
                             <span
-                              className={`text-sm font-medium ${activeFilters.has("trusted") ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                              className={`text-sm font-medium ${activeFilters.has("trusted") ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                               Trusted by 1000+ users
                             </span>
                           </button>
@@ -3380,11 +3391,11 @@ export default function Home() {
                             onClick={() => toggleFilter("has-offers")}
                             className={`px-4 py-3 rounded-xl border text-left transition-colors ${
                               activeFilters.has("has-offers")
-                                ? "border-[#EB590E] bg-[#FFF2EB] dark:bg-green-900/20"
-                                : "border-gray-200 dark:border-gray-800 hover:border-[#EB590E]"
+                                ? HOME_FILTER_ACTIVE_CARD_CLASS
+                                : HOME_FILTER_INACTIVE_CARD_CLASS
                             }`}>
                             <span
-                              className={`text-sm font-medium ${activeFilters.has("has-offers") ? "text-[#EB590E]" : "text-gray-700 dark:text-gray-300"}`}>
+                              className={`text-sm font-medium ${activeFilters.has("has-offers") ? HOME_FILTER_ACTIVE_TEXT_CLASS : "text-gray-700 dark:text-gray-300"}`}>
                               Restaurants with offers
                             </span>
                           </button>
@@ -3412,7 +3423,7 @@ export default function Home() {
                     }}
                     className={`flex-1 py-3 font-semibold rounded-xl transition-colors ${
                       activeFilters.size > 0 || sortBy || selectedCuisine
-                        ? "bg-[#EB590E] text-white hover:bg-[#D94F0C]"
+                        ? BRAND_THEME.tokens.homepage.filters.primaryButton
                         : "bg-gray-200 text-gray-500"
                     }`}
                     disabled={isLoadingFilterResults}>
@@ -3552,7 +3563,7 @@ export default function Home() {
                       setIsApplyingVegMode(false);
                     }, 2000);
                   }}
-                  className="w-full bg-[#EB590E] text-white font-semibold py-2.5 rounded-xl hover:bg-[#D94F0C] transition-colors mb-2 text-sm">
+                  className={`w-full font-semibold py-2.5 rounded-xl transition-colors mb-2 text-sm ${BRAND_THEME.tokens.homepage.filters.primaryButton}`}>
                   Apply
                 </button>
               </motion.div>
@@ -3993,7 +4004,7 @@ export default function Home() {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 100, opacity: 0 }}
                 transition={{ duration: 0.3, type: "spring", damping: 25 }}
-                className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[10001] bg-black text-white px-6 py-3 rounded-lg shadow-2xl">
+                className={`fixed bottom-20 left-1/2 -translate-x-1/2 z-[10001] ${BRAND_THEME.tokens.homepage.shared.toast} px-6 py-3 rounded-lg shadow-2xl`}>
                 <p className="text-sm font-medium">Added to bookmark</p>
               </motion.div>
             )}

@@ -11,6 +11,7 @@ import OptimizedImage from "@food/components/OptimizedImage"
 import { RestaurantGridSkeleton } from "@food/components/ui/loading-skeletons"
 import { useDelayedLoading } from "@food/hooks/useDelayedLoading"
 import { useLocation } from "@food/hooks/useLocation"
+import BRAND_THEME from "../../../../config/brandTheme"
 
 // Import banner
 import gourmetBanner from "@food/assets/groumetpagebanner.png"
@@ -77,7 +78,7 @@ export default function Gourmet() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a]">
+    <div className={`min-h-screen ${BRAND_THEME.tokens.homepage.shared.pageBackground}`}>
       {/* Banner Section */}
       <div className="relative w-full overflow-hidden min-h-[25vh] md:min-h-[30vh]">
         {/* Back Button */}
@@ -103,12 +104,12 @@ export default function Gourmet() {
         <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
           {/* Header */}
           <div className="mb-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Premium Gourmet Restaurants</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Premium chef-crafted meals delivered to your doorstep</p>
+            <h1 className={`text-xl sm:text-2xl font-bold ${BRAND_THEME.tokens.homepage.shared.title}`}>Premium Gourmet Restaurants</h1>
+            <p className={`text-sm ${BRAND_THEME.tokens.homepage.shared.mutedText} mt-1`}>Premium chef-crafted meals delivered to your doorstep</p>
           </div>
 
           {/* Restaurant Count */}
-          <p className="text-xs sm:text-sm font-semibold text-gray-400 dark:text-gray-500 tracking-widest uppercase">
+          <p className={`text-xs sm:text-sm font-semibold ${BRAND_THEME.tokens.homepage.shared.heading} tracking-widest uppercase`}>
             {showGourmetSkeleton ? '...' : gourmetRestaurants.length} GOURMET RESTAURANTS
           </p>
 
@@ -183,7 +184,7 @@ export default function Gourmet() {
 
                   return (
                     <Link key={restaurantId} to={`/user/restaurants/${restaurantSlug}`}>
-                      <Card className="overflow-hidden cursor-pointer border-0 group bg-white dark:bg-[#1a1a1a] shadow-md hover:shadow-xl transition-all duration-300 py-0 rounded-2xl mb-4">
+                      <Card className={`overflow-hidden cursor-pointer border-0 group ${BRAND_THEME.tokens.homepage.shared.surface} shadow-md hover:shadow-xl transition-all duration-300 py-0 rounded-2xl mb-4`}>
                         {/* Image Section */}
                         <div className="relative h-44 sm:h-52 md:h-56 w-full overflow-hidden rounded-t-2xl">
                           {restaurantImage ? (
@@ -220,7 +221,7 @@ export default function Gourmet() {
                           {/* Restaurant Name & Rating */}
                           <div className="flex items-start justify-between gap-2 mb-2">
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 line-clamp-1">
+                              <h3 className={`text-lg sm:text-xl font-bold ${BRAND_THEME.tokens.homepage.shared.title} line-clamp-1`}>
                                 {restaurant.restaurantName || restaurant.name}
                               </h3>
                             </div>
@@ -241,8 +242,8 @@ export default function Gourmet() {
                           {/* Offer Badge */}
                           {restaurant.offer && (
                             <div className="flex items-center gap-2 text-sm">
-                              <BadgePercent className="h-4 w-4 text-[#EB590E] dark:text-[#F97316]" strokeWidth={2} />
-                              <span className="text-gray-700 dark:text-gray-300 font-medium">{restaurant.offer}</span>
+                              <BadgePercent className="h-4 w-4 text-[#2979FB] dark:text-blue-300" strokeWidth={2} />
+                              <span className={BRAND_THEME.tokens.homepage.shared.bodyText}>{restaurant.offer}</span>
                             </div>
                           )}
                         </CardContent>

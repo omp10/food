@@ -7,6 +7,7 @@ import { useLocationSelector } from "@food/components/user/UserLayout"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import { useLocation as useLocationHook } from "@food/hooks/useLocation"
 import { FaLocationDot } from "react-icons/fa6"
+import BRAND_THEME from "../../../../config/brandTheme"
 // Using placeholder for coffee banner
 const coffeeBanner = "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&h=400&fit=crop"
 // Using placeholder for starbucks logo
@@ -168,7 +169,7 @@ export default function Coffee() {
                     <div className="mb-2">
                       <div className={`inline-flex items-center gap-1 px-2 py-1 rounded ${isHighRating
                           ? 'bg-green-600 text-white'
-                          : 'bg-[#EB590E] text-white'
+                          : BRAND_THEME.tokens.productDetail.primaryBadge
                         }`}>
                         <span className="text-sm font-semibold">{store.rating}</span>
                         <Star className={`h-3 w-3 ${isHighRating ? 'fill-white text-white' : 'fill-white text-white'}`} />
@@ -186,7 +187,7 @@ export default function Coffee() {
                         {store.price}
                       </p>
                       {store.offer && (
-                        <span className="text-sm font-medium text-[#EB590E]">
+                        <span className={`text-sm font-medium ${BRAND_THEME.tokens.homepage.shared.accentText}`}>
                           {store.offer}
                         </span>
                       )}
@@ -202,7 +203,7 @@ export default function Coffee() {
   }
 
   return (
-    <AnimatedPage className="bg-white" style={{ minHeight: '100vh', paddingBottom: '80px', overflow: 'visible' }}>
+    <AnimatedPage className={BRAND_THEME.tokens.homepage.shared.pageBackground} style={{ minHeight: '100vh', paddingBottom: '80px', overflow: 'visible' }}>
       {/* Banner Section with Back Button and Location */}
       <div className="relative w-full overflow-hidden">
         {/* Background with coffee banner */}

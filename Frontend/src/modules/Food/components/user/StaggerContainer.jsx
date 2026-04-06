@@ -1,9 +1,11 @@
 // CSS-only StaggerContainer - no framer-motion
 import { useEffect, useRef, useState } from "react"
+import BRAND_THEME from "../../../../config/brandTheme"
 
 export default function StaggerContainer({ children, className = "" }) {
   const ref = useRef(null)
   const [isVisible, setIsVisible] = useState(false)
+  const motion = BRAND_THEME.tokens.motion
 
   useEffect(() => {
     const element = ref.current
@@ -45,6 +47,7 @@ export default function StaggerContainer({ children, className = "" }) {
       className={className}
       style={{
         opacity: isVisible ? 1 : 0,
+        transition: `opacity ${motion.duration.normal} ${motion.easing.standard}`,
       }}
     >
       {isVisible && children}
@@ -53,13 +56,15 @@ export default function StaggerContainer({ children, className = "" }) {
 }
 
 export const StaggerItem = ({ children, className = "", index = 0 }) => {
+  const motion = BRAND_THEME.tokens.motion
+
   return (
     <div
       className={className}
       style={{
         opacity: 0,
-        transform: 'translateY(20px)',
-        animation: `staggerFadeIn 0.3s ease-out ${index * 0.1}s both`
+        transform: `translateY(${motion.distance.revealY})`,
+        animation: `staggerFadeIn ${motion.duration.normal} ${motion.easing.standard} ${index * 0.08}s both`
       }}
     >
       {children}
@@ -67,7 +72,7 @@ export const StaggerItem = ({ children, className = "", index = 0 }) => {
         @keyframes staggerFadeIn {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(${motion.distance.revealY});
           }
           to {
             opacity: 1;

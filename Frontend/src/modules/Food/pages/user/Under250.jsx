@@ -19,12 +19,14 @@ import { restaurantAPI, adminAPI } from "@food/api"
 import { isModuleAuthenticated } from "@food/utils/auth"
 import { flattenMenuItems, getMenuFromResponse } from "@food/utils/menuItems"
 import { calculateDistance, formatDistance } from "@food/utils/common"
+import BRAND_THEME from "../../../../config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
 const RUPEE_SYMBOL = "\u20B9"
 const UNDER_250_FILTERS_STORAGE_KEY = "food-under-250-filters"
-const STICKY_HEADER_SCROLL_COLOR = "#2979fb"
+const STICKY_HEADER_SCROLL_COLOR =
+  BRAND_THEME.tokens.homepage.home.stickyHeaderScrollColor
 
 const readUnder250Filters = () => {
   if (typeof window === "undefined") {

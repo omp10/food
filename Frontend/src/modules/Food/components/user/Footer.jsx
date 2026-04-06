@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
 import { useCompanyName } from "@food/hooks/useCompanyName"
 import quickSpicyLogo from "@food/assets/quicky-spicy-logo.png"
+import BRAND_THEME from "../../../../config/brandTheme"
 
 export default function Footer() {
   const companyName = useCompanyName()
@@ -70,7 +71,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className="hidden md:block bg-zinc-900 text-white mt-auto">
+    <footer className="hidden md:block text-white mt-auto" style={{ backgroundColor: BRAND_THEME.tokens.footer.background }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           {/* Brand Section */}
@@ -92,11 +93,11 @@ export default function Footer() {
                     }
                   }}
                 />
-                <span className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                <span className="text-2xl font-bold bg-clip-text text-transparent" style={{ backgroundImage: BRAND_THEME.tokens.footer.brandGradient }}>
                   {companyName}
                 </span>
               </div>
-              <p className="text-slate-300 text-sm leading-relaxed max-w-md">
+              <p className="text-sm leading-relaxed max-w-md" style={{ color: BRAND_THEME.tokens.footer.surfaceText }}>
                 Delivering delicious food to your doorstep. Order from your favorite restaurants
                 and enjoy fresh, hot meals in minutes.
               </p>
@@ -106,15 +107,15 @@ export default function Footer() {
             <div
               className="space-y-2"
             >
-              <div className="flex items-center gap-2 text-slate-300 text-sm">
+              <div className="flex items-center gap-2 text-sm" style={{ color: BRAND_THEME.tokens.footer.surfaceText }}>
                 <Phone className="h-4 w-4" />
                 <span>+1 (555) 123-4567</span>
               </div>
-              <div className="flex items-center gap-2 text-slate-300 text-sm">
+              <div className="flex items-center gap-2 text-sm" style={{ color: BRAND_THEME.tokens.footer.surfaceText }}>
                 <Mail className="h-4 w-4" />
                 <span>support@{companyName.toLowerCase().replace(/\s+/g, '')}.com</span>
               </div>
-              <div className="flex items-center gap-2 text-slate-300 text-sm">
+              <div className="flex items-center gap-2 text-sm" style={{ color: BRAND_THEME.tokens.footer.surfaceText }}>
                 <MapPin className="h-4 w-4" />
                 <span>New York, NY</span>
               </div>
@@ -148,7 +149,7 @@ export default function Footer() {
           {/* Company Links */}
           <div
           >
-            <h3 className="font-bold text-lg mb-4 text-yellow-400">Company</h3>
+            <h3 className="font-bold text-lg mb-4" style={{ color: BRAND_THEME.tokens.footer.sectionHeading }}>Company</h3>
             <ul className="space-y-2">
               {footerLinks.company.map((link, index) => (
                 <li key={index}>
@@ -165,7 +166,7 @@ export default function Footer() {
           {/* Support Links */}
           <div
           >
-            <h3 className="font-bold text-lg mb-4 text-yellow-400">Support</h3>
+            <h3 className="font-bold text-lg mb-4" style={{ color: BRAND_THEME.tokens.footer.sectionHeading }}>Support</h3>
             <ul className="space-y-2">
               {footerLinks.support.map((link, index) => (
                 <li key={index}>
@@ -182,7 +183,7 @@ export default function Footer() {
           {/* User Links */}
           <div
           >
-            <h3 className="font-bold text-lg mb-4 text-yellow-400">For You</h3>
+            <h3 className="font-bold text-lg mb-4" style={{ color: BRAND_THEME.tokens.footer.sectionHeading }}>For You</h3>
             <ul className="space-y-2">
               {footerLinks.user.map((link, index) => (
                 <li key={index}>
@@ -199,13 +200,14 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div
-          className="border-t border-slate-600 pt-8 mt-8"
+          className="border-t pt-8 mt-8"
+          style={{ borderColor: BRAND_THEME.tokens.footer.divider }}
         >
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-slate-400 text-sm text-center md:text-left">
+            <p className="text-sm text-center md:text-left" style={{ color: BRAND_THEME.tokens.footer.mutedText }}>
               � {currentYear} {companyName}. All rights reserved.
             </p>
-            <div className="flex items-center gap-1 text-slate-400 text-sm">
+            <div className="flex items-center gap-1 text-sm" style={{ color: BRAND_THEME.tokens.footer.mutedText }}>
               <span>Made with</span>
               <span
               >

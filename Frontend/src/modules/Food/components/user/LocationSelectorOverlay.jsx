@@ -9,6 +9,7 @@ import { useProfile } from "@food/context/ProfileContext"
 import { toast } from "sonner"
 import { locationAPI, userAPI } from "@food/api"
 import { Loader } from '@googlemaps/js-api-loader'
+import BRAND_THEME from "../../../../config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -2249,7 +2250,7 @@ export default function LocationSelectorOverlay({ isOpen, onClose }) {
           {mapLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-900 bg-opacity-75 z-20">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-2" style={{ borderBottomColor: BRAND_THEME.tokens.location.icon }}></div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Loading map...</p>
               </div>
             </div>
@@ -2271,10 +2272,11 @@ export default function LocationSelectorOverlay({ isOpen, onClose }) {
             <Button
               onClick={handleUseCurrentLocationForAddress}
               disabled={mapLoading}
-              className="bg-white dark:bg-[#1a1a1a] border-2 border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 shadow-lg disabled:opacity-50 flex items-center gap-2 px-4 py-2"
+              className="bg-white dark:bg-[#1a1a1a] border-2 hover:bg-blue-50 dark:hover:bg-blue-950/20 shadow-lg disabled:opacity-50 flex items-center gap-2 px-4 py-2"
+              style={{ borderColor: BRAND_THEME.tokens.location.icon, color: BRAND_THEME.tokens.location.icon }}
             >
-              <Crosshair className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" strokeWidth={2.5} />
-              <span className="text-green-600 dark:text-green-400 font-medium">Use current location</span>
+              <Crosshair className="h-4 w-4 flex-shrink-0" style={{ color: BRAND_THEME.tokens.location.icon }} strokeWidth={2.5} />
+              <span className="font-medium" style={{ color: BRAND_THEME.tokens.location.icon }}>Use current location</span>
             </Button>
           </div>
         </div>
@@ -2447,9 +2449,10 @@ export default function LocationSelectorOverlay({ isOpen, onClose }) {
                     onClick={() => setAddressFormData(prev => ({ ...prev, label }))}
                     variant={addressFormData.label === label ? "default" : "outline"}
                     className={`flex-1 ${addressFormData.label === label
-                      ? "bg-green-600 hover:bg-green-700 text-white"
+                      ? "text-white"
                       : "bg-white dark:bg-[#1a1a1a]"
                       }`}
+                    style={addressFormData.label === label ? { backgroundColor: BRAND_THEME.tokens.location.icon } : undefined}
                   >
                     {label}
                   </Button>
@@ -2507,7 +2510,8 @@ export default function LocationSelectorOverlay({ isOpen, onClose }) {
           <form onSubmit={handleAddressFormSubmit}>
             <Button
               type="submit"
-              className="w-full bg-green-600 hover:bg-green-700 text-white h-12 text-base font-semibold"
+              className="w-full text-white h-12 text-base font-semibold"
+              style={{ backgroundColor: BRAND_THEME.tokens.location.icon }}
               disabled={loadingAddress}
             >
               {loadingAddress ? "Loading..." : "Save address"}
@@ -2559,11 +2563,11 @@ export default function LocationSelectorOverlay({ isOpen, onClose }) {
               className="w-full flex items-center justify-between py-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors group"
             >
               <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center group-hover:bg-green-100 dark:group-hover:bg-green-900/30 transition-colors">
-                  <Crosshair className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" strokeWidth={2.5} />
+                <div className="h-10 w-10 rounded-full flex items-center justify-center transition-colors" style={{ backgroundColor: BRAND_THEME.tokens.location.iconSoft }}>
+                  <Crosshair className="h-5 w-5 flex-shrink-0" style={{ color: BRAND_THEME.tokens.location.icon }} strokeWidth={2.5} />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-green-700 dark:text-green-400">Use current location</p>
+                  <p className="font-semibold" style={{ color: BRAND_THEME.tokens.location.icon }}>Use current location</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     {loading ? "Getting location..." : currentLocationText}
                   </p>
@@ -2578,10 +2582,10 @@ export default function LocationSelectorOverlay({ isOpen, onClose }) {
               className="w-full flex items-center justify-between py-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors group border-t border-gray-100 dark:border-gray-800"
             >
               <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center group-hover:bg-green-100 dark:group-hover:bg-green-900/30 transition-colors">
-                  <Plus className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <div className="h-10 w-10 rounded-full flex items-center justify-center transition-colors" style={{ backgroundColor: BRAND_THEME.tokens.location.iconSoft }}>
+                  <Plus className="h-5 w-5" style={{ color: BRAND_THEME.tokens.location.icon }} />
                 </div>
-                <p className="font-semibold text-green-700 dark:text-green-400">Add Address</p>
+                <p className="font-semibold" style={{ color: BRAND_THEME.tokens.location.icon }}>Add Address</p>
               </div>
               <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             </button>
@@ -2683,7 +2687,7 @@ export default function LocationSelectorOverlay({ isOpen, onClose }) {
         .user-location-marker {
           width: 20px !important;
           height: 20px !important;
-          background-color: #4285F4 !important; /* Google Blue */
+          background-color: ${BRAND_THEME.tokens.location.liveLocationBlue} !important;
           border: 3px solid white !important;
           border-radius: 50% !important;
           box-shadow: 0 0 10px rgba(0,0,0,0.3) !important;
@@ -2716,7 +2720,7 @@ export default function LocationSelectorOverlay({ isOpen, onClose }) {
           height: 0;
           border-left: 4px solid transparent;
           border-right: 4px solid transparent;
-          border-bottom: 8px solid #4285F4;
+          border-bottom: 8px solid ${BRAND_THEME.tokens.location.liveLocationBlue};
           filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
         }
         
@@ -2728,7 +2732,7 @@ export default function LocationSelectorOverlay({ isOpen, onClose }) {
           height: 40px;
           top: -13px;
           left: -13px;
-          background-color: rgba(66, 133, 244, 0.2);
+          background-color: rgba(41, 121, 251, 0.2);
           border-radius: 50%;
           animation: pulse 2s infinite;
         }

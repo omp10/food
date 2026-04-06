@@ -7,7 +7,7 @@
   font-size: 1.25rem;
   line-height: 1.75rem;
   font-weight: 700;
-  color: rgb(17 24 39);
+  color: var(--color-foreground);
   letter-spacing: -0.025em;
 }
 
@@ -15,7 +15,7 @@
   font-size: 1.125rem;
   line-height: 1.75rem;
   font-weight: 600;
-  color: rgb(17 24 39);
+  color: var(--color-foreground);
   letter-spacing: -0.025em;
 }
 
@@ -23,32 +23,32 @@
   font-size: 1rem;
   line-height: 1.5rem;
   font-weight: 600;
-  color: rgb(17 24 39);
+  color: var(--color-foreground);
 }
 
 .ds-h4 {
   font-size: 0.875rem;
   line-height: 1.25rem;
   font-weight: 600;
-  color: rgb(17 24 39);
+  color: var(--color-foreground);
 }
 
 .ds-body {
   font-size: 0.75rem;
   line-height: 1rem;
-  color: rgb(55 65 81);
+  color: var(--color-secondary-foreground);
 }
 
 .ds-body-sm {
   font-size: 0.6875rem;
   line-height: 1rem;
-  color: rgb(75 85 99);
+  color: var(--color-secondary-foreground);
 }
 
 .ds-caption {
   font-size: 0.625rem;
   line-height: 0.875rem;
-  color: rgb(107 114 128);
+  color: var(--color-muted-foreground);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
@@ -58,13 +58,13 @@
   font-size: 0.75rem;
   line-height: 1rem;
   font-weight: 500;
-  color: rgb(55 65 81);
+  color: var(--color-secondary-foreground);
 }
 
 .ds-description {
   font-size: 0.75rem;
   line-height: 1rem;
-  color: rgb(107 114 128);
+  color: var(--color-muted-foreground);
 }
 
 /* Stat Values */
@@ -72,7 +72,7 @@
   font-size: 1.875rem;
   line-height: 2.25rem;
   font-weight: 700;
-  color: rgb(17 24 39);
+  color: var(--color-foreground);
   letter-spacing: -0.025em;
 }
 
@@ -80,7 +80,7 @@
   font-size: 1.5rem;
   line-height: 2rem;
   font-weight: 700;
-  color: rgb(17 24 39);
+  color: var(--color-foreground);
   letter-spacing: -0.025em;
 }
 
@@ -88,15 +88,15 @@
   font-size: 1.25rem;
   line-height: 1.75rem;
   font-weight: 700;
-  color: rgb(17 24 39);
+  color: var(--color-foreground);
   letter-spacing: -0.025em;
 }
 
 /* Card Layouts - Consistent Spacing */
 .ds-card {
-  background-color: rgb(255 255 255);
+  background-color: var(--color-card);
   border-radius: 0.5rem;
-  border: 1px solid rgb(243 244 246);
+  border: 1px solid var(--color-border);
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
 
@@ -113,22 +113,22 @@
 }
 
 .ds-card-header {
-  border-bottom: 1px solid rgb(243 244 246);
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 0.75rem;
   margin-bottom: 1rem;
 }
 
 .ds-card-footer {
-  border-top: 1px solid rgb(243 244 246);
+  border-top: 1px solid var(--color-border);
   padding-top: 0.75rem;
   margin-top: 1rem;
 }
 
 /* Stat Cards */
 .ds-stat-card {
-  background-color: rgb(255 255 255);
+  background-color: var(--color-card);
   border-radius: 0.5rem;
-  border: 1px solid rgb(243 244 246);
+  border: 1px solid var(--color-border);
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   padding: 1rem;
   transition: all 0.3s;

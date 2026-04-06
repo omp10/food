@@ -37,6 +37,8 @@ import {
 } from "@food/components/ui/avatar";
 import { useCompanyName } from "@food/hooks/useCompanyName";
 import OptimizedImage from "@food/components/OptimizedImage";
+import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings";
+import BRAND_THEME from "../../../../../config/brandTheme";
 import {
   Dialog,
   DialogContent,
@@ -61,6 +63,7 @@ export default function Profile() {
   const { openLocationSelector } = useLocationSelector();
   const navigate = useNavigate();
   const companyName = useCompanyName();
+  const [brandLogoUrl, setBrandLogoUrl] = useState("");
   const defaultAddress = getDefaultAddress?.();
   const savedAddressSummary = defaultAddress
     ? [
@@ -85,6 +88,36 @@ export default function Profile() {
   // Trigger web push registration when profile mounts to ensure FCM token is saved
   useEffect(() => {
     registerWebPushForCurrentModule().catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    const syncBranding = async () => {
+      try {
+        const cached = getCachedSettings();
+        if (cached?.logo?.url) {
+          setBrandLogoUrl(cached.logo.url);
+          return;
+        }
+        const settings = await loadBusinessSettings();
+        if (settings?.logo?.url) {
+          setBrandLogoUrl(settings.logo.url);
+        }
+      } catch (error) {
+        debugWarn("Failed to load profile branding logo:", error);
+      }
+    };
+
+    syncBranding();
+
+    const handleSettingsUpdate = () => {
+      const cached = getCachedSettings();
+      setBrandLogoUrl(cached?.logo?.url || "");
+    };
+
+    window.addEventListener("businessSettingsUpdated", handleSettingsUpdate);
+    return () => {
+      window.removeEventListener("businessSettingsUpdated", handleSettingsUpdate);
+    };
   }, []);
 
   const handleVegModeUpdate = (nextValue) => {
@@ -408,7 +441,7 @@ export default function Profile() {
   };
 
   return (
-    <AnimatedPage className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a]">
+    <AnimatedPage className={`min-h-screen ${BRAND_THEME.tokens.profile.pageBackground}`}>
       <div className="max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-4 sm:py-6 md:py-8 lg:py-10 pb-20 sm:pb-24">
         {/* Header: Back Arrow */}
         <div className="flex items-center mb-4">
@@ -420,13 +453,13 @@ export default function Profile() {
         </div>
 
         {/* Profile Info Card */}
-        <Card className="bg-white dark:bg-[#1a1a1a] rounded-2xl py-0 pt-1 shadow-sm mb-0 border-0 dark:border-gray-800 overflow-hidden">
+        <Card className={`rounded-2xl py-0 pt-1 shadow-sm mb-0 border overflow-hidden ${BRAND_THEME.tokens.profile.surface} ${BRAND_THEME.tokens.profile.border}`}>
           <CardContent className="p-4 py-0 pt-2">
             <div className="flex items-start gap-4 mb-4">
               <motion.div
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 transition={{ duration: 0.3, type: "spring", stiffness: 300 }}>
-                <Avatar className="h-16 w-16 bg-blue-300 border-0">
+                <Avatar className="h-16 w-16 border-0" style={{ backgroundColor: BRAND_THEME.tokens.profile.avatarBackground }}>
                   {userProfile?.profileImage && (
                     <AvatarImage
                       src={
@@ -438,8 +471,19 @@ export default function Profile() {
                       alt={displayName}
                     />
                   )}
-                  <AvatarFallback className="bg-blue-300 text-white text-2xl font-semibold">
-                    {avatarInitial}
+                  <AvatarFallback
+                    className="text-white text-2xl font-semibold overflow-hidden"
+                    style={{ backgroundColor: BRAND_THEME.tokens.profile.avatarBackground }}
+                  >
+                    {brandLogoUrl ? (
+                      <img
+                        src={brandLogoUrl}
+                        alt={companyName}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      avatarInitial
+                    )}
                   </AvatarFallback>
                 </Avatar>
               </motion.div>
@@ -447,6 +491,9 @@ export default function Profile() {
                 <h2 className="text-xl font-bold text-black dark:text-white mb-1">
                   {displayName}
                 </h2>
+                <p className="text-sm font-medium mb-1" style={{ color: BRAND_THEME.tokens.profile.linkText }}>
+                  {companyName || BRAND_THEME.brandName}
+                </p>
                 {hasValidEmail && (
                   <p className="text-sm text-black dark:text-gray-300 mb-1">
                     {userProfile.email}
@@ -596,7 +643,8 @@ export default function Profile() {
                       e.stopPropagation();
                       handleShareReferral();
                     }}
-                    className="inline-flex items-center gap-1 text-xs text-[#EB590E] font-medium ml-2 px-2 py-1 rounded-md"
+                    className="inline-flex items-center gap-1 text-xs font-medium ml-2 px-2 py-1 rounded-md"
+                    style={{ color: BRAND_THEME.tokens.profile.linkText }}
                     disabled={!referralLink}>
                     <Share2 className="h-3.5 w-3.5" />
                     Refer
@@ -756,7 +804,7 @@ export default function Profile() {
         {/* Collections Section */}
         <div className="mb-3">
           <div className="flex items-center gap-2 mb-2 px-1">
-            <div className="w-1 h-4 bg-[#EB590E] rounded"></div>
+            <div className={`w-1 h-4 rounded ${BRAND_THEME.tokens.profile.accentBar}`}></div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Collections
             </h3>
@@ -792,7 +840,7 @@ export default function Profile() {
         {/* Food Orders Section */}
         <div className="mb-3">
           <div className="flex items-center gap-2 mb-2 px-1">
-            <div className="w-1 h-4 bg-[#EB590E] rounded"></div>
+            <div className={`w-1 h-4 rounded ${BRAND_THEME.tokens.profile.accentBar}`}></div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Food Orders
             </h3>
@@ -830,7 +878,7 @@ export default function Profile() {
         {/* More Section */}
         <div className="mb-8 pb-8">
           <div className="flex items-center gap-2 mb-2 px-1">
-            <div className="w-1 h-4 bg-[#EB590E] rounded"></div>
+            <div className={`w-1 h-4 rounded ${BRAND_THEME.tokens.profile.accentBar}`}></div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               More
             </h3>
@@ -1040,7 +1088,7 @@ export default function Profile() {
               </Button>
               <Button
                 type="button"
-                className="flex-1 rounded-xl bg-[#CB202D] hover:bg-[#b01c27] text-white"
+                className={`flex-1 rounded-xl ${BRAND_THEME.tokens.profile.destructiveButton}`}
                 onClick={() => {
                   setLogoutConfirmOpen(false);
                   handleLogout();

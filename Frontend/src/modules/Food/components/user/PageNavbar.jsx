@@ -8,6 +8,7 @@ import { useLocationSelector } from "./UserLayout"
 import { FaLocationDot } from "react-icons/fa6"
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
 import quickSpicyLogo from "@food/assets/quicky-spicy-logo.png"
+import BRAND_THEME from "../../../../config/brandTheme"
 
 export default function PageNavbar({
   textColor = "white",
@@ -16,6 +17,8 @@ export default function PageNavbar({
   showLogo = true,
   onNavClick
 }) {
+  const { navigation } = BRAND_THEME.tokens
+  const { brand } = BRAND_THEME.colors
   const { location, loading, requestLocation } = useLocation()
   const { getCartCount } = useCart()
   const { openLocationSelector } = useLocationSelector()
@@ -975,9 +978,7 @@ export default function PageNavbar({
     openLocationSelector()
   }
 
-  const textColorClass = textColor === "white" ? "text-white" : "text-black"
-  const iconFill = textColor === "white" ? "white" : "black"
-  const ringColor = textColor === "white" ? "ring-white/30" : "ring-gray-800/30"
+  const textColorClass = textColor === "white" ? "text-white" : "text-slate-900 dark:text-white"
 
   const zIndexClass = zIndex === 50 ? "z-50" : "z-20"
 
@@ -1055,8 +1056,8 @@ export default function PageNavbar({
               className="h-8 w-8 sm:h-9 sm:w-9 rounded-full p-0 hover:opacity-80 transition-opacity"
               title="Wallet"
             >
-              <div className={`h-full w-full rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
-                <Wallet className={`h-4 w-4 sm:h-5 sm:w-5 ${textColor === "white" ? "text-black dark:text-white" : "text-gray-900 dark:text-white"}`} strokeWidth={2} />
+              <div className={`h-full w-full rounded-full ${navigation.iconButtonSurface} flex items-center justify-center`}>
+                <Wallet className={`h-4 w-4 sm:h-5 sm:w-5 ${navigation.icon}`} strokeWidth={2} />
               </div>
             </Button>
           </Link>
@@ -1068,11 +1069,14 @@ export default function PageNavbar({
               className="relative h-8 w-8 sm:h-9 sm:w-9 rounded-full p-0 hover:opacity-80 transition-opacity"
               title="Cart"
             >
-              <div className={`h-full w-full rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center`}>
-                <ShoppingCart className={`h-4 w-4 sm:h-5 sm:w-5 ${textColor === "white" ? "text-black dark:text-white" : "text-gray-900 dark:text-white"}`} strokeWidth={2} />
+              <div className={`h-full w-full rounded-full ${navigation.iconButtonSurface} flex items-center justify-center`}>
+                <ShoppingCart className={`h-4 w-4 sm:h-5 sm:w-5 ${navigation.icon}`} strokeWidth={2} />
               </div>
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center ring-2 ring-white">
+                <span
+                  className={`absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ring-2 ${navigation.badgeRing}`}
+                  style={{ backgroundColor: brand.accentRed }}
+                >
                   <span className="text-[9px] font-bold text-white">{cartCount > 99 ? "99+" : cartCount}</span>
                 </span>
               )}
@@ -1088,8 +1092,8 @@ export default function PageNavbar({
                 className="h-8 w-8 sm:h-9 sm:w-9 rounded-full p-0 hover:opacity-80 transition-opacity"
                 title="Profile"
               >
-                <div className={`h-full w-full rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shadow-sm`}>
-                  <span className={`text-xs sm:text-sm font-extrabold ${textColor === "white" ? "text-black" : "text-gray-900"}`}>
+                <div className={`h-full w-full rounded-full ${navigation.iconButtonSurface} flex items-center justify-center shadow-sm`}>
+                  <span className={`text-xs sm:text-sm font-extrabold ${navigation.icon}`}>
                     A
                   </span>
                 </div>

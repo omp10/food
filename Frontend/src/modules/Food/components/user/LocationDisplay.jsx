@@ -1,6 +1,7 @@
 import { MapPin, Loader2, AlertCircle } from "lucide-react"
 import { Button } from "@food/components/ui/button"
 import { useLocationSimple } from "@food/hooks/useLocationSimple"
+import BRAND_THEME from "../../../../config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -69,7 +70,8 @@ export default function LocationDisplay({
     return (
       <Button
         variant="ghost"
-        className={`flex items-center gap-2 text-red-500 hover:text-red-600 ${className}`}
+        className={`flex items-center gap-2 ${className}`}
+        style={{ color: BRAND_THEME.colors.brand.accentRed }}
         onClick={handleClick}
       >
         <AlertCircle className="h-4 w-4" />
@@ -85,7 +87,7 @@ export default function LocationDisplay({
       className={`flex items-center gap-2 hover:bg-gray-100 ${className}`}
       onClick={handleClick}
     >
-      {showIcon && <MapPin className="h-4 w-4 text-red-500" fill="currentColor" />}
+      {showIcon && <MapPin className="h-4 w-4" fill="currentColor" style={{ color: BRAND_THEME.tokens.location.icon }} />}
       <div className="flex flex-col items-start">
         <span className="text-xs text-gray-500">Delivering to</span>
         <span className="text-sm font-semibold text-gray-900">{displayText}</span>
@@ -121,6 +123,7 @@ export function CompactLocationDisplay({ className = "" }) {
     <button
       onClick={requestLocation}
       className={`flex items-center gap-1 text-sm font-semibold hover:underline ${className}`}
+      style={{ color: BRAND_THEME.tokens.location.icon }}
     >
       <MapPin className="h-4 w-4" />
       {displayText}
@@ -152,7 +155,7 @@ export function FullLocationDisplay({ className = "" }) {
 
   if (error && !location) {
     return (
-      <div className={`flex items-center gap-2 text-red-500 ${className}`}>
+      <div className={`flex items-center gap-2 ${className}`} style={{ color: BRAND_THEME.colors.brand.accentRed }}>
         <AlertCircle className="h-5 w-5" />
         <span>Location unavailable: {error}</span>
       </div>
@@ -171,7 +174,7 @@ export function FullLocationDisplay({ className = "" }) {
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
       <div className="flex items-center gap-2">
-        <MapPin className="h-5 w-5 text-red-500" fill="currentColor" />
+        <MapPin className="h-5 w-5" fill="currentColor" style={{ color: BRAND_THEME.tokens.location.icon }} />
         <div className="flex flex-col">
           <span className="text-xs text-gray-500">Delivering to</span>
           <span className="text-lg font-bold text-gray-900">

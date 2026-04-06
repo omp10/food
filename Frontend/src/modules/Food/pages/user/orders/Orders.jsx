@@ -5,6 +5,7 @@ import { orderAPI } from "@food/api"
 import { useCart } from "@food/context/CartContext"
 import { toast } from "sonner"
 import { getCompanyNameAsync } from "@food/utils/businessSettings"
+import BRAND_THEME from "../../../../../config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -661,7 +662,7 @@ Order again from this restaurant in the ${companyName} app.`
           <h1 className="ml-4 text-xl font-semibold text-gray-800">Your Orders</h1>
         </div>
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 text-[#EB590E] animate-spin" />
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: BRAND_THEME.tokens.orders.primaryText }} />
         </div>
       </div>
     )
@@ -679,7 +680,7 @@ Order again from this restaurant in the ${companyName} app.`
         <div className="px-4 py-8 text-center">
           <p className="text-gray-600">You haven't placed any orders yet</p>
           <Link to="/user">
-            <button className="mt-4 text-[#EB590E] font-medium">Start Ordering</button>
+            <button className="mt-4 font-medium" style={{ color: BRAND_THEME.tokens.orders.primaryText }}>Start Ordering</button>
           </Link>
         </div>
       </div>
@@ -699,7 +700,7 @@ Order again from this restaurant in the ${companyName} app.`
       {/* Search Bar */}
       <div className="p-4 bg-white mt-1">
         <div className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
-          <Search className="w-5 h-5 text-[#EB590E]" />
+          <Search className="w-5 h-5" style={{ color: BRAND_THEME.tokens.orders.primaryText }} />
           <input
             type="text"
             placeholder="Search by restaurant or dish"
@@ -774,7 +775,7 @@ Order again from this restaurant in the ${companyName} app.`
                       )}
                       {order.restaurantId && (
                         <Link to={`/user/restaurants/${order.restaurantId}`}>
-                          <button className="text-xs text-[#EB590E] font-medium flex items-center mt-1 hover:text-[#D94F0C]">
+                          <button className="text-xs font-medium flex items-center mt-1 hover:text-blue-700" style={{ color: BRAND_THEME.tokens.orders.primaryText }}>
                             View menu <span className="ml-0.5">&gt;</span>
                           </button>
                         </Link>
@@ -1053,7 +1054,7 @@ Order again from this restaurant in the ${companyName} app.`
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             {/* Header with gradient */}
-            <div className="bg-gradient-to-r from-[#EB590E] to-[#D94F0C] px-6 py-5">
+            <div className="px-6 py-5" style={{ backgroundImage: BRAND_THEME.tokens.orders.primaryGradient }}>
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Star className="w-5 h-5 fill-white" />
@@ -1099,7 +1100,8 @@ Order again from this restaurant in the ${companyName} app.`
                   rows={2}
                   value={restaurantFeedbackText}
                   onChange={(e) => setRestaurantFeedbackText(e.target.value)}
-                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#EB590E] focus:border-[#EB590E] resize-none transition-all"
+                  className="w-full rounded-xl border-2 border-gray-200 px-4 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 resize-none transition-all"
+                  style={{ '--tw-ring-color': BRAND_THEME.tokens.orders.focusRing, borderColor: undefined }}
                   placeholder="Restaurant feedback (optional)"
                 />
               </div>
@@ -1133,7 +1135,8 @@ Order again from this restaurant in the ${companyName} app.`
                     rows={2}
                     value={deliveryFeedbackText}
                     onChange={(e) => setDeliveryFeedbackText(e.target.value)}
-                    className="w-full rounded-xl border-2 border-gray-200 px-4 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#EB590E] focus:border-[#EB590E] resize-none transition-all"
+                    className="w-full rounded-xl border-2 border-gray-200 px-4 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 resize-none transition-all"
+                    style={{ '--tw-ring-color': BRAND_THEME.tokens.orders.focusRing, borderColor: undefined }}
                     placeholder="Delivery partner feedback (optional)"
                   />
                 </div>
@@ -1144,7 +1147,8 @@ Order again from this restaurant in the ${companyName} app.`
                 type="button"
                 disabled={ratingSubmitDisabled}
                 onClick={handleSubmitRating}
-                className="w-full rounded-xl bg-gradient-to-r from-[#EB590E] to-[#D94F0C] text-white text-base font-bold py-3.5 hover:from-[#D94F0C] hover:to-[#C44409] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2"
+                className="w-full rounded-xl text-white text-base font-bold py-3.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2"
+                style={{ backgroundImage: BRAND_THEME.tokens.orders.primaryGradient }}
               >
                 {submittingRating ? (
                   <>
