@@ -92,7 +92,7 @@ export default function Gourmet() {
         <div className="absolute inset-0 z-0">
           <img
             src={gourmetBanner}
-            alt="Gourmet Dining"
+            alt="Gourmet"
             className="w-full h-full object-cover"
           />
         </div>
@@ -104,7 +104,7 @@ export default function Gourmet() {
           {/* Header */}
           <div className="mb-2">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Premium Gourmet Restaurants</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Exquisite dining experiences delivered to your doorstep</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Premium chef-crafted meals delivered to your doorstep</p>
           </div>
 
           {/* Restaurant Count */}
