@@ -31,6 +31,7 @@ import {
   getTransactionsByType
 } from "@food/utils/walletState"
 import { formatCurrency } from "@food/utils/currency"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function WalletPage() {
   const navigate = useNavigate()
@@ -133,7 +134,10 @@ export default function WalletPage() {
 
 
   return (
-    <div className="min-h-screen bg-[#f6e9dc] overflow-x-hidden">
+    <div
+      className="min-h-screen overflow-x-hidden"
+      style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+    >
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6 pb-24 md:pb-6 overflow-x-visible">
         {/* Title */}
@@ -141,12 +145,13 @@ export default function WalletPage() {
           Wallet
         </h1>
 
-        {/* Withdrawal Balance Card - Orange */}
+        {/* Withdrawal Balance Card - Brand */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-[#ff8100] rounded-xl p-4 md:p-6 mb-4 shadow-lg"
+          className="rounded-xl p-4 md:p-6 mb-4 shadow-lg text-white"
+          style={{ background: BRAND_THEME.gradients.primary, boxShadow: `0 14px 40px -20px ${BRAND_THEME.colors.brand.primaryDark}` }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -160,7 +165,8 @@ export default function WalletPage() {
             </div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button 
-              className="bg-white text-[#ff8100] hover:bg-white/90 font-semibold px-4 py-2 md:px-6 md:py-3 rounded-lg"
+              className="bg-white hover:bg-white/90 font-semibold px-4 py-2 md:px-6 md:py-3 rounded-lg"
+              style={{ color: BRAND_THEME.colors.brand.primary }}
               onClick={() => {
                 setWithdrawAmount(balances.withdrawalBalance.toString())
                 setShowWithdrawModal(true)
@@ -172,17 +178,39 @@ export default function WalletPage() {
           </div>
         </motion.div>
 
-        {/* Balance Unadjusted Card - Light Red */}
+        {/* Balance Unadjusted Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className={isBalanceAdjusted ? "bg-green-50 border-2 border-green-200 rounded-xl p-4 md:p-6 mb-4 shadow-md" : "bg-[#ffebee] rounded-xl p-4 md:p-6 mb-4 shadow-md"}
+          className="rounded-xl p-4 md:p-6 mb-4 shadow-md border"
+          style={{
+            backgroundColor: isBalanceAdjusted
+              ? BRAND_THEME.colors.semantic.successSoft
+              : BRAND_THEME.colors.brand.accentRedSoft,
+            borderColor: isBalanceAdjusted
+              ? BRAND_THEME.colors.semantic.success
+              : BRAND_THEME.colors.brand.accentRed,
+          }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className={isBalanceAdjusted ? "bg-green-200/50 rounded-lg p-3" : "bg-red-200/50 rounded-lg p-3"}>
-                <DollarSign className={isBalanceAdjusted ? "w-6 h-6 md:w-8 md:h-8 text-green-700" : "w-6 h-6 md:w-8 md:h-8 text-red-700"} />
+              <div
+                className="rounded-lg p-3"
+                style={{
+                  backgroundColor: isBalanceAdjusted
+                    ? BRAND_THEME.colors.semantic.successSoft
+                    : BRAND_THEME.colors.brand.accentRedSoft,
+                }}
+              >
+                <DollarSign
+                  className="w-6 h-6 md:w-8 md:h-8"
+                  style={{
+                    color: isBalanceAdjusted
+                      ? BRAND_THEME.colors.semantic.successDark
+                      : BRAND_THEME.colors.brand.accentRed,
+                  }}
+                />
               </div>
               <div>
                 <p className="text-gray-800 text-sm md:text-base mb-1 font-medium">{isBalanceAdjusted ? "Balance Adjusted" : "Balance Unadjusted"}</p>
@@ -193,7 +221,12 @@ export default function WalletPage() {
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button 
               variant="outline"
-              className="bg-[#ffebee] border-red-300 text-red-700 hover:bg-red-100 font-semibold px-4 py-2 md:px-6 md:py-3 rounded-lg"
+              className="font-semibold px-4 py-2 md:px-6 md:py-3 rounded-lg"
+              style={{
+                backgroundColor: BRAND_THEME.colors.brand.accentRedSoft,
+                color: BRAND_THEME.colors.brand.accentRed,
+                borderColor: BRAND_THEME.colors.brand.accentRed,
+              }}
                   onClick={() => setShowAdjustModal(true)}
             >
               Adjust
@@ -307,15 +340,17 @@ export default function WalletPage() {
                 onClick={() => setActiveTab("withdraw")}
                 className={`pb-3 px-2 text-sm md:text-base font-medium transition-colors relative ${
                   activeTab === "withdraw"
-                    ? "text-[#ff8100]"
+                    ? "text-blue-600"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
+                style={activeTab === "withdraw" ? { color: BRAND_THEME.colors.brand.primary } : undefined}
               >
                 Withdraw Request
                 {activeTab === "withdraw" && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff8100]"
+                    className="absolute bottom-0 left-0 right-0 h-0.5"
+                    style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
                   />
                 )}
               </button>
@@ -323,15 +358,17 @@ export default function WalletPage() {
                 onClick={() => setActiveTab("payment")}
                 className={`pb-3 px-2 text-sm md:text-base font-medium transition-colors relative ${
                   activeTab === "payment"
-                    ? "text-[#ff8100]"
+                    ? "text-blue-600"
                     : "text-gray-600 hover:text-gray-900"
                 }`}
+                style={activeTab === "payment" ? { color: BRAND_THEME.colors.brand.primary } : undefined}
               >
                 Payment History
                 {activeTab === "payment" && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff8100]"
+                    className="absolute bottom-0 left-0 right-0 h-0.5"
+                    style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
                   />
                 )}
               </button>
@@ -380,9 +417,20 @@ export default function WalletPage() {
                               (option === "Pending" && filterStatus === "Pending") ||
                               (option === "Approved" && filterStatus === "Completed") ||
                               (option === "Denied" && filterStatus === "Failed")
-                                ? "text-[#ff8100] font-medium bg-[#ff8100]/5"
+                                ? "font-medium"
                                 : "text-gray-700"
                             }`}
+                            style={
+                              (option === "All" && filterStatus === "all") ||
+                              (option === "Pending" && filterStatus === "Pending") ||
+                              (option === "Approved" && filterStatus === "Completed") ||
+                              (option === "Denied" && filterStatus === "Failed")
+                                ? {
+                                    color: BRAND_THEME.colors.brand.primary,
+                                    backgroundColor: `${BRAND_THEME.colors.brand.primary}0D`,
+                                  }
+                                : undefined
+                            }
                           >
                             {option}
                           </button>
@@ -441,7 +489,7 @@ export default function WalletPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-[#1E5ED8]/40 backdrop-blur-sm"
             onClick={() => setShowWithdrawModal(false)}
           >
             <motion.div
@@ -485,7 +533,11 @@ export default function WalletPage() {
                     type="number"
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
-                    className="w-full border-gray-300 focus:border-[#ff8100] focus:ring-[#ff8100]"
+                    className="w-full border-gray-300"
+                    style={{
+                      borderColor: BRAND_THEME.colors.brand.primary,
+                      boxShadow: `0 0 0 1px ${BRAND_THEME.colors.brand.primary}26`,
+                    }}
                     placeholder="0.00"
                   />
                 </div>
@@ -499,7 +551,8 @@ export default function WalletPage() {
           <button 
                       type="button"
                       onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
-                      className="w-full flex items-center justify-between px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-left focus:outline-none focus:border-[#ff8100] focus:ring-1 focus:ring-[#ff8100]"
+                      className="w-full flex items-center justify-between px-3 py-2.5 border rounded-lg bg-white text-left focus:outline-none"
+                      style={{ borderColor: BRAND_THEME.colors.brand.primary, boxShadow: `0 0 0 1px ${BRAND_THEME.colors.brand.primary}26` }}
           >
                       <span className={selectedPaymentMethod ? "text-gray-900" : "text-gray-400"}>
                         {selectedPaymentMethod || "Select payment method"}
@@ -536,7 +589,8 @@ export default function WalletPage() {
               {/* Footer Button */}
               <div className="px-6 pb-6 pt-4 border-t border-gray-200">
                 <Button
-                  className="w-full bg-[#ff8100] hover:bg-[#e67300] text-white font-semibold py-3 rounded-lg text-base md:text-lg"
+                  className="w-full text-white font-semibold py-3 rounded-lg text-base md:text-lg"
+                  style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
                   onClick={() => {
                     if (withdrawAmount && selectedPaymentMethod) {
                       const amount = parseFloat(withdrawAmount)
@@ -570,7 +624,7 @@ export default function WalletPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#1E5ED8]/40 backdrop-blur-sm px-4"
             onClick={() => setShowAdjustModal(false)}
           >
             <motion.div
@@ -596,7 +650,8 @@ export default function WalletPage() {
                   Cancel
                 </Button>
                 <Button
-                  className="flex-1 bg-[#ff8100] hover:bg-[#e67300] text-white font-semibold px-4 py-2 md:px-6 md:py-3 rounded-lg"
+                  className="flex-1 text-white font-semibold px-4 py-2 md:px-6 md:py-3 rounded-lg"
+                  style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
                   onClick={() => {
                     setIsBalanceAdjusted(true)
                     setBalanceAdjusted(true)
@@ -621,4 +676,5 @@ export default function WalletPage() {
     </div>
   )
 }
+
 

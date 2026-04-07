@@ -13,7 +13,7 @@ import { Badge } from "@food/components/ui/badge"
 import { useCart } from "@food/context/CartContext"
 import { useProfile } from "@food/context/ProfileContext"
 import { useOrders } from "@food/context/OrdersContext"
-import BRAND_THEME from "../../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function Checkout() {
   const navigate = useNavigate()

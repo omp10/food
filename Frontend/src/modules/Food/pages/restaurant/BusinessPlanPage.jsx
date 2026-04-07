@@ -154,7 +154,7 @@ export default function BusinessPlanPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/40 z-[70]"
+              className="fixed inset-0 bg-[#1E5ED8]/40 z-[70]"
               onClick={() => setShowPlans(false)}
             />
 
@@ -284,6 +284,7 @@ export default function BusinessPlanPage() {
     </div>
   )
 }
+
 
 
 

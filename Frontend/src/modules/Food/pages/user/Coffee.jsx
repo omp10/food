@@ -7,7 +7,7 @@ import { useLocationSelector } from "@food/components/user/UserLayout"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import { useLocation as useLocationHook } from "@food/hooks/useLocation"
 import { FaLocationDot } from "react-icons/fa6"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 // Using placeholder for coffee banner
 const coffeeBanner = "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=1200&h=400&fit=crop"
 // Using placeholder for starbucks logo

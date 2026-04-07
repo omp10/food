@@ -11,7 +11,7 @@ import { useLocation } from "@food/hooks/useLocation"
 import { useZone } from "@food/hooks/useZone"
 import { restaurantAPI, adminAPI } from "@food/api"
 import { useDelayedLoading } from "@food/hooks/useDelayedLoading"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}

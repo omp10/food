@@ -9,7 +9,7 @@ import { useProfile } from "@food/context/ProfileContext";
 import { orderAPI } from "@food/api";
 import { initRazorpayPayment } from "@food/utils/razorpay";
 import { useCompanyName } from "@food/hooks/useCompanyName";
-import BRAND_THEME from "../../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 const RUPEE_SYMBOL = "\u20B9";
 

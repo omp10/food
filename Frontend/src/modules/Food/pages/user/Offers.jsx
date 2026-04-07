@@ -8,7 +8,7 @@ import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import { toast } from "sonner"
 import { RestaurantGridSkeleton } from "@food/components/ui/loading-skeletons"
 import { useDelayedLoading } from "@food/hooks/useDelayedLoading"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 // Import banner image
 import offerBanner from "@food/assets/offerpagebanner.png"

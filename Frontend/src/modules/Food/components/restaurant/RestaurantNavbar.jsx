@@ -4,6 +4,7 @@ import { Search, Menu, ChevronRight, MapPin, X, Bell } from "lucide-react"
 import { restaurantAPI } from "@food/api"
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
 import useNotificationInbox from "@food/hooks/useNotificationInbox"
+import BRAND_THEME from "@/config/brandTheme"
 
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
@@ -309,7 +310,8 @@ export default function RestaurantNavbar({
         {/* Close Button */}
         <button
           onClick={handleSearchClose}
-          className="w-6 h-6 bg-black rounded-full flex items-center justify-center shrink-0"
+          className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+          style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
           aria-label="Close search"
         >
           <X className="w-3 h-3 text-white" />
@@ -332,7 +334,7 @@ export default function RestaurantNavbar({
               {loading ? "Loading..." : (restaurantName || "Restaurant")}
             </h1>
             {companyName && !loading && (
-              <span className="text-[9px] text-gray-400 font-bold uppercase tracking-tight shrink-0">
+              <span className="text-[9px] text-gray-500 font-bold uppercase tracking-tight shrink-0">
                 {companyName}
               </span>
             )}
@@ -354,23 +356,21 @@ export default function RestaurantNavbar({
         {showOfflineOnlineTag && (
           <button
             onClick={handleStatusClick}
-            className={`flex items-center gap-1.5 px-2 py-1 border rounded-full hover:opacity-80 transition-all ${
-              status === "Online" 
-                ? "bg-green-50 border-green-300" 
-                : "bg-gray-100 border-gray-300"
-            }`}
+            className="flex items-center gap-1.5 px-2 py-1 rounded-full hover:opacity-90 transition-all"
+            style={{
+              backgroundColor: status === "Online" ? "#DCFCE7" : "#F1F5F9",
+              color: status === "Online" ? "#166534" : "#334155",
+              border: status === "Online" ? "1px solid #bbf7d0" : "1px solid #e2e8f0",
+            }}
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${
-              status === "Online" ? "bg-green-500" : "bg-gray-500"
-            }`}></span>
-            <span className={`text-sm font-medium ${
-              status === "Online" ? "text-green-700" : "text-gray-700"
-            }`}>
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ backgroundColor: status === "Online" ? "#22c55e" : "#94a3b8" }}
+            ></span>
+            <span className="text-sm font-medium">
               {status}
             </span>
-            <ChevronRight className={`w-4 h-4 ${
-              status === "Online" ? "text-green-700" : "text-gray-700"
-            }`} />
+            <ChevronRight className="w-4 h-4" />
           </button>
         )}
 
@@ -378,7 +378,7 @@ export default function RestaurantNavbar({
         {showSearch && (
           <button
             onClick={handleSearchClick}
-            className="p-2 ml-1 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 ml-1 hover:bg-white/15 rounded-full transition-colors"
             aria-label="Search"
           >
             <Search className="w-5 h-5 text-gray-700" />
@@ -411,4 +411,5 @@ export default function RestaurantNavbar({
     </div>
   )
 }
+
 

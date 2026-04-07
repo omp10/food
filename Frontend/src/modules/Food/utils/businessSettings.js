@@ -6,7 +6,7 @@
 import apiClient from "@food/api/axios";
 import { API_ENDPOINTS } from "@food/api/config";
 import { publicGetOnce } from "@food/api";
-import BRAND_THEME from "../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 const SETTINGS_KEY = 'food_business_settings';
 

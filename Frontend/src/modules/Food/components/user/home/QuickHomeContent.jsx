@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
 import QuickTabPage from "@food/pages/user/Quick";
-import BRAND_THEME from "../../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 function QuickHomeContent({ quickThemeColor, onThemeChange }) {
   return (

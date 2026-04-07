@@ -24,6 +24,7 @@ import {
 import { Card, CardContent } from "@food/components/ui/card"
 import BottomNavbar from "@food/components/restaurant/BottomNavbar"
 import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -97,7 +98,10 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#f6e9dc] overflow-x-hidden pb-24 md:pb-6">
+    <div
+      className="min-h-screen overflow-x-hidden pb-24 md:pb-6"
+      style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+    >
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-50 flex items-center gap-3">
         <button 
@@ -152,13 +156,13 @@ export default function SettingsPage() {
                           <div className={`flex-shrink-0 p-1.5 rounded-lg ${
                             item.isDestructive 
                               ? "bg-red-100" 
-                              : "bg-[#ff8100]/10"
-                          }`}>
+                              : ""
+                          }`} style={!item.isDestructive ? { backgroundColor: `${BRAND_THEME.colors.brand.primary}14` } : undefined}>
                             <item.icon className={`w-4 h-4 ${
                               item.isDestructive 
                                 ? "text-red-600" 
-                                : "text-[#ff8100]"
-                            }`} />
+                                : ""
+                            }`} style={!item.isDestructive ? { color: BRAND_THEME.colors.brand.primary } : undefined} />
                           </div>
                           <span className="text-sm font-medium flex-1 text-left">
                             {item.label}
@@ -179,9 +183,12 @@ export default function SettingsPage() {
                                   item.onToggle(!item.toggleValue)
                                 }
                               }}
-                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                item.toggleValue ? "bg-[#ff8100]" : "bg-gray-300"
-                              }`}
+                              className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                              style={{
+                                backgroundColor: item.toggleValue
+                                  ? BRAND_THEME.colors.brand.primary
+                                  : "#d1d5db",
+                              }}
                             >
                               <span
                                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -213,5 +220,6 @@ export default function SettingsPage() {
     </div>
   )
 }
+
 
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
 import { useCompanyName } from "@food/hooks/useCompanyName"
 import quickSpicyLogo from "@food/assets/quicky-spicy-logo.png"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function Footer() {
   const companyName = useCompanyName()

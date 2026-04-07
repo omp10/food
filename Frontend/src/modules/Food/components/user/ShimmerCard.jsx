@@ -1,6 +1,6 @@
 // CSS-only ShimmerCard - no framer-motion, no infinite animations
 import { useState } from "react"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function ShimmerCard({ children, className = "", delay = 0 }) {
   const [isHovered, setIsHovered] = useState(false)

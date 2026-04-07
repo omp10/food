@@ -93,7 +93,7 @@ export default function MenuOverlay({ showMenu, setShowMenu }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             onClick={() => setShowMenu(false)}
-            className="fixed inset-0 bg-black/40 z-[100] backdrop-blur-sm"
+            className="fixed inset-0 bg-[#1E5ED8]/40 z-[100] backdrop-blur-sm"
           />
           
           {/* Menu Sheet - Full bottom slide */}
@@ -207,4 +207,5 @@ export default function MenuOverlay({ showMenu, setShowMenu }) {
     </AnimatePresence>
   )
 }
+
 

@@ -9,7 +9,7 @@ import { useLocation } from "@food/hooks/useLocation";
 import { useZone } from "@food/hooks/useZone";
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation";
 import { API_BASE_URL } from "@food/api/config";
-import BRAND_THEME from "../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 export default function Categories() {
   const navigate = useNavigate();

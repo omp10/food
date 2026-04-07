@@ -6,7 +6,7 @@ import { toast } from "sonner"
 import { authAPI } from "@food/api"
 import { setAuthData } from "@food/utils/auth"
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
-import BRAND_THEME from "../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function UnifiedOTPFastLogin() {
   const RESEND_COOLDOWN_SECONDS = 60

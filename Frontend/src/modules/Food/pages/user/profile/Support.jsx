@@ -1,4 +1,4 @@
-ï»¿import { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import AnimatedPage from "@food/components/user/AnimatedPage"
 import { Button } from "@food/components/ui/button"
@@ -8,7 +8,7 @@ import { Card, CardContent } from "@food/components/ui/card"
 import { orderAPI, restaurantAPI, supportAPI, authAPI } from "@food/api"
 import { toast } from "sonner"
 import { ArrowLeft, Building2, HelpCircle, ShoppingBag, ChevronRight } from "lucide-react"
-import BRAND_THEME from "../../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function Support() {
   const [step, setStep] = useState("pick")
@@ -117,13 +117,13 @@ export default function Support() {
     const dateValue = order?.createdAt || order?.date
     const dateLabel = dateValue ? new Date(dateValue).toLocaleDateString() : "No date"
     const amount = order?.pricing?.total ?? order?.total ?? 0
-    return `${restaurantName} â€¢ ${dateLabel} â€¢ â‚¹${amount}`
+    return `${restaurantName} • ${dateLabel} • ?${amount}`
   }
 
   const getRestaurantLabel = (restaurant) => {
     const name = restaurant?.restaurantName || restaurant?.name || "Restaurant"
     const location = restaurant?.city || restaurant?.area || ""
-    return `${name}${location ? ` â€¢ ${location}` : ""}`
+    return `${name}${location ? ` • ${location}` : ""}`
   }
 
   const filteredOrders = orders.filter((order) => {
@@ -186,7 +186,7 @@ export default function Support() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                      #{String(t._id || t.id).slice(-6)} â€¢ {t.type} â€¢ {t.issueType}
+                      #{String(t._id || t.id).slice(-6)} • {t.type} • {t.issueType}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">{new Date(t.createdAt).toLocaleDateString()}</p>
                   </div>

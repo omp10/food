@@ -1,6 +1,6 @@
 // CSS-only AnimatedPage - no GSAP dependency
 import { useEffect, useRef } from "react"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function AnimatedPage({ children, className = "" }) {
   const containerRef = useRef(null)

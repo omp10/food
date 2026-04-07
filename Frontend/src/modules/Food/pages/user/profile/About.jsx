@@ -1,4 +1,4 @@
-ï»¿import { Link } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { useState, useEffect } from "react"
 
 import { ArrowLeft, ArrowRight, Heart, Users, Shield, Clock, Star, Award, FileText, Lock, Loader2, Receipt, Truck, XCircle } from "lucide-react"
@@ -11,7 +11,7 @@ import api from "@food/api"
 import { API_ENDPOINTS } from "@food/api/config"
 import { useCompanyName } from "@food/hooks/useCompanyName"
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
-import BRAND_THEME from "../../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 // Icon mapping
 const iconMap = {
@@ -82,7 +82,7 @@ export default function About() {
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-[#0a0a0a] dark:to-[#1a1a1a] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-10 w-10 animate-spin text-[#2979FB]" />
-          <p className="text-sm text-gray-500">Loading Aboutâ€¦</p>
+          <p className="text-sm text-gray-500">Loading About…</p>
         </div>
       </div>
     )
@@ -331,7 +331,7 @@ export default function About() {
           className="text-center mt-8 mb-4"
         >
           <p className="text-sm text-gray-500 dark:text-gray-500">
-            Â© {new Date().getFullYear()} {companyName || "Iggymet"}. All rights reserved.
+            © {new Date().getFullYear()} {companyName || "Iggymet"}. All rights reserved.
           </p>
         </motion.div>
       </div>

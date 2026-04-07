@@ -24,6 +24,7 @@ import { getGoogleMapsApiKey } from "@food/utils/googleMapsApiKey"
 import { clearModuleAuth, clearAuthData } from "@food/utils/auth"
 import { ImageSourcePicker } from "@food/components/ImageSourcePicker"
 import { isFlutterBridgeAvailable, openCamera } from "@food/utils/imageUploadUtils"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -1188,7 +1189,7 @@ export default function RestaurantOnboarding() {
                 onClick={() => isEditing && setStep1({ ...step1, pureVegRestaurant: false })}
                 className={`px-3 py-1.5 text-xs rounded-full border ${
                   step1.pureVegRestaurant === false
-                    ? "bg-gray-900 text-white border-gray-900"
+                    ? "bg-[#1E5ED8] text-white border-[#1E5ED8]"
                     : "bg-white text-gray-700 border-gray-200"
                 } ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
               >
@@ -1641,7 +1642,7 @@ export default function RestaurantOnboarding() {
                         Preview unavailable
                       </div>
                     )}
-                    <div className="absolute bottom-0 inset-x-0 bg-black/60 px-2 py-1">
+                    <div className="absolute bottom-0 inset-x-0 bg-blue-900/50 px-2 py-1">
                       <p className="text-[10px] text-white truncate">
                         {imageName}
                       </p>
@@ -1776,7 +1777,7 @@ export default function RestaurantOnboarding() {
                   key={day}
                   type="button"
                   onClick={() => toggleDay(day)}
-                  className={`aspect-square flex items-center justify-center rounded-md text-[11px] font-medium ${active ? "bg-black text-white" : "bg-gray-100 text-gray-800"
+                  className={`aspect-square flex items-center justify-center rounded-md text-[11px] font-medium ${active ? "bg-[#1E5ED8] text-white" : "bg-gray-100 text-gray-800"
                     }`}
                 >
                   {day.charAt(0)}
@@ -1879,7 +1880,7 @@ export default function RestaurantOnboarding() {
           <button
             type="button"
             onClick={() => setStep3({ ...step3, gstRegistered: true })}
-            className={`px-3 py-1.5 text-xs rounded-full ${step3.gstRegistered ? "bg-black text-white" : "bg-gray-100 text-gray-800"
+            className={`px-3 py-1.5 text-xs rounded-full ${step3.gstRegistered ? "bg-[#1E5ED8] text-white" : "bg-gray-100 text-gray-800"
               }`}
           >
             Yes
@@ -1887,7 +1888,7 @@ export default function RestaurantOnboarding() {
           <button
             type="button"
             onClick={() => setStep3({ ...step3, gstRegistered: false })}
-            className={`px-3 py-1.5 text-xs rounded-full ${!step3.gstRegistered ? "bg-black text-white" : "bg-gray-100 text-gray-800"
+            className={`px-3 py-1.5 text-xs rounded-full ${!step3.gstRegistered ? "bg-[#1E5ED8] text-white" : "bg-gray-100 text-gray-800"
               }`}
           >
             No
@@ -2208,7 +2209,10 @@ export default function RestaurantOnboarding() {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <div className="min-h-screen bg-gray-100 flex flex-col">
+      <div
+        className="min-h-screen flex flex-col"
+        style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+      >
         <header className="px-4 py-4 sm:px-6 sm:py-5 bg-white flex items-center justify-between border-b">
           <div className="flex items-center gap-3">
             <button
@@ -2301,7 +2305,15 @@ export default function RestaurantOnboarding() {
             <Button
               onClick={handleNext}
               disabled={saving || (step === 4 && !isEditing)}
-              className={`text-sm bg-black text-white px-6 ${(step === 4 && !isEditing) ? "opacity-50 cursor-not-allowed" : ""}`}
+              className="text-sm px-6 rounded-lg text-white"
+              style={
+                saving || (step === 4 && !isEditing)
+                  ? { backgroundColor: "#e5e7eb", color: "#94a3b8" }
+                  : {
+                      background: BRAND_THEME.gradients.primary,
+                      boxShadow: `0 10px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}`,
+                    }
+              }
             >
               {step === 4 ? (saving ? "Saving..." : "Finish") : saving ? "Saving..." : "Continue"}
             </Button>
@@ -2311,6 +2323,7 @@ export default function RestaurantOnboarding() {
     </LocalizationProvider>
   )
 }
+
 
 
 

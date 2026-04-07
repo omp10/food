@@ -428,7 +428,7 @@ export default function Feedback() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${
-                activeTab === tab.id ? "bg-black text-white" : "bg-white text-gray-600 border border-gray-200"
+                activeTab === tab.id ? "bg-[#1E5ED8] text-white" : "bg-white text-gray-600 border border-gray-200"
               }`}
             >
               {tab.label}
@@ -537,3 +537,4 @@ export default function Feedback() {
     </div>
   )
 }
+

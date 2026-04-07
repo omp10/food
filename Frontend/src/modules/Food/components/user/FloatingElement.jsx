@@ -1,6 +1,6 @@
 // CSS-only FloatingElement - no framer-motion
 import { useEffect, useRef, useState } from "react"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function FloatingElement({ children, delay = 0, className = "" }) {
   const ref = useRef(null)

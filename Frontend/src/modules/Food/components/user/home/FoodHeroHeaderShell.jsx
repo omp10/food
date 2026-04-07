@@ -1,5 +1,5 @@
 import HomeHeader from "@food/components/user/home/HomeHeader";
-import BRAND_THEME from "../../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 const STICKY_HEADER_SCROLL_COLOR =
   BRAND_THEME.tokens.homepage.home.stickyHeaderScrollColor;

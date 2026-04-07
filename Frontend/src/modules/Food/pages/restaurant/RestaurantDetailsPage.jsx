@@ -33,6 +33,7 @@ import { useNavigate } from "react-router-dom"
 import { restaurantAPI } from "@food/api"
 import { flattenMenuItems, getMenuFromResponse } from "@food/utils/menuItems"
 import { getRestaurantData } from "@food/utils/restaurantManagement"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function RestaurantDetailsPage() {
   const navigate = useNavigate()
@@ -310,7 +311,10 @@ export default function RestaurantDetailsPage() {
 
                       <div className="flex items-center justify-between mt-0.5">
                         <div className="flex items-center gap-2">
-                          <p className="text-[#ff8100] font-bold text-sm">
+                          <p
+                            className="font-bold text-sm"
+                            style={{ color: BRAND_THEME.colors.brand.primary }}
+                          >
                             ? {item.price.toFixed(2)}
                           </p>
                           <p className="text-gray-500 text-xs">
@@ -342,4 +346,5 @@ export default function RestaurantDetailsPage() {
     </div>
   )
 }
+
 

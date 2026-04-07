@@ -10,7 +10,7 @@ import { Label } from "@food/components/ui/label"
 import { Badge } from "@food/components/ui/badge"
 import { useProfile } from "@food/context/ProfileContext"
 import { toast } from "sonner"
-import BRAND_THEME from "../../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 const getAddressId = (address) => address?.id || address?._id || ""
 

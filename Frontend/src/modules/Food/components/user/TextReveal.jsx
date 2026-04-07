@@ -1,6 +1,6 @@
 // CSS-only TextReveal - no framer-motion
 import { useEffect, useRef, useState } from "react"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function TextReveal({ children, delay = 0, className = "" }) {
   const ref = useRef(null)

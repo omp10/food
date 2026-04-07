@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { restaurantAPI } from "@food/api";
-import BRAND_THEME from "../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 export const useUnder250Data = (zoneId) => {
   const homepageDefaults = BRAND_THEME.tokens.homepage.defaults;

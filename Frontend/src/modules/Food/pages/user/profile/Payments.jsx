@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@food/components/ui/ca
 import { Button } from "@food/components/ui/button";
 import { Badge } from "@food/components/ui/badge";
 import { useProfile } from "@food/context/ProfileContext";
-import BRAND_THEME from "../../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 export default function Payments() {
   const { paymentMethods, deletePaymentMethod, setDefaultPaymentMethod } = useProfile();

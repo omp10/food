@@ -20,6 +20,7 @@ import { restaurantAPI, uploadAPI } from "@food/api"
 import { toast } from "sonner"
 import { ImageSourcePicker } from "@food/components/ImageSourcePicker"
 import { isFlutterBridgeAvailable } from "@food/utils/imageUploadUtils"
+import BRAND_THEME from "@/config/brandTheme"
 
 const defaultFormData = {
   name: "",
@@ -226,7 +227,10 @@ export default function MenuCategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div
+      className="min-h-screen pb-24"
+      style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+    >
       <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="px-4 py-3 flex items-center gap-3">
           <button onClick={goBack} className="rounded-full p-1 hover:bg-slate-100">
@@ -250,7 +254,11 @@ export default function MenuCategoriesPage() {
 
         <button
           onClick={openCreateModal}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white"
+          className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-white shadow-md"
+          style={{
+            background: BRAND_THEME.gradients.primary,
+            boxShadow: `0 12px 30px -18px ${BRAND_THEME.colors.brand.primaryDark}`
+          }}
         >
           <Plus className="h-5 w-5" />
           Add Category
@@ -364,7 +372,7 @@ export default function MenuCategoriesPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={resetModal}
-              className="fixed inset-0 z-50 bg-black/50"
+              className="fixed inset-0 z-50 bg-[#1E5ED8]/50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -396,7 +404,7 @@ export default function MenuCategoriesPage() {
                     value={formData.name}
                     onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="Enter category name"
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#1E5ED8] focus:ring-2 focus:ring-[#1E5ED8]/20"
                   />
                 </div>
 
@@ -405,7 +413,7 @@ export default function MenuCategoriesPage() {
                   <select
                     value={formData.foodTypeScope}
                     onChange={(e) => setFormData((prev) => ({ ...prev, foodTypeScope: e.target.value }))}
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#1E5ED8] focus:ring-2 focus:ring-[#1E5ED8]/20"
                   >
                     <option value="Veg">Veg</option>
                     <option value="Non-Veg">Non-Veg</option>
@@ -420,7 +428,7 @@ export default function MenuCategoriesPage() {
                     value={formData.type}
                     onChange={(e) => setFormData((prev) => ({ ...prev, type: e.target.value }))}
                     placeholder="Examples: Starters, Desserts, Drinks"
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-900"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#1E5ED8] focus:ring-2 focus:ring-[#1E5ED8]/20"
                   />
                 </div>
 
@@ -466,7 +474,11 @@ export default function MenuCategoriesPage() {
                 <button
                   onClick={handleSaveCategory}
                   disabled={uploadingImage}
-                  className="flex-1 rounded-xl bg-slate-900 py-3 font-medium text-white disabled:opacity-60"
+                  className="flex-1 rounded-xl py-3 font-medium text-white disabled:opacity-60 shadow-md"
+                  style={{
+                    background: BRAND_THEME.gradients.primary,
+                    boxShadow: `0 12px 30px -18px ${BRAND_THEME.colors.brand.primaryDark}`
+                  }}
                 >
                   {uploadingImage ? "Uploading..." : editingCategory ? "Save & Resubmit" : "Create"}
                 </button>
@@ -488,3 +500,4 @@ export default function MenuCategoriesPage() {
     </div>
   )
 }
+

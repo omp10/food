@@ -94,7 +94,7 @@ import OptimizedImage from "@food/components/OptimizedImage";
 import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability";
 import FoodHeroHeaderShell from "@food/components/user/home/FoodHeroHeaderShell";
 import PromoRow from "@food/components/user/home/PromoRow";
-import BRAND_THEME from "../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 // import FestBanner from "@food/components/user/home/FestBanner";
 
 // Explore More Icons

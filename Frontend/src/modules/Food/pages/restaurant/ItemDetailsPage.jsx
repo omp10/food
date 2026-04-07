@@ -24,6 +24,7 @@ import { toast } from "sonner"
 import { ImageSourcePicker } from "@food/components/ImageSourcePicker"
 import { isFlutterBridgeAvailable } from "@food/utils/imageUploadUtils"
 import { getFoodVariants } from "@food/utils/foodVariants"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -846,7 +847,7 @@ export default function ItemDetailsPage() {
 
                 {/* Image counter */}
                 {images.length > 1 && (
-                  <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full z-10">
+                  <div className="absolute top-4 left-4 bg-blue-900/50 backdrop-blur-sm px-3 py-1.5 rounded-full z-10">
                     <span className="text-white text-xs font-medium">
                       {currentImageIndex + 1} / {images.length}
                     </span>
@@ -865,7 +866,7 @@ export default function ItemDetailsPage() {
                         setCurrentImageIndex(index)
                       }}
                       className={`transition-all duration-300 rounded-full ${index === currentImageIndex
-                        ? "w-8 h-2 bg-gray-900"
+                        ? "w-8 h-2 bg-[#1E5ED8]"
                         : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
                         }`}
                     />
@@ -896,7 +897,11 @@ export default function ItemDetailsPage() {
             />
             <button
               onClick={handleCameraClick}
-              className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-xl text-sm font-semibold cursor-pointer hover:from-gray-800 hover:to-gray-700 transition-all shadow-md hover:shadow-lg active:scale-95"
+              className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 text-white rounded-xl text-sm font-semibold cursor-pointer transition-all shadow-md hover:shadow-lg active:scale-95"
+              style={{
+                background: BRAND_THEME.gradients.primary,
+                boxShadow: `0 16px 36px -22px ${BRAND_THEME.colors.brand.primaryDark}`,
+              }}
             >
               <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
                 <Plus className="w-4 h-4" />
@@ -1177,7 +1182,7 @@ export default function ItemDetailsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsCategoryPopupOpen(false)}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -1195,7 +1200,7 @@ export default function ItemDetailsPage() {
                       setIsCategoryPopupOpen(false)
                       navigate('/restaurant/menu-categories')
                     }}
-                    className="p-2 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors flex items-center gap-1.5"
+                    className="p-2 rounded-lg bg-[#1E5ED8] text-white hover:bg-gray-800 transition-colors flex items-center gap-1.5"
                     title="Add Category"
                   >
                     <Plus className="w-4 h-4" />
@@ -1222,7 +1227,7 @@ export default function ItemDetailsPage() {
                         setIsCategoryPopupOpen(false)
                         navigate('/restaurant/menu-categories')
                       }}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-[#1E5ED8] text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors"
                     >
                       <Plus className="w-5 h-5" />
                       Add Category
@@ -1235,9 +1240,17 @@ export default function ItemDetailsPage() {
                         key={cat.id}
                         onClick={() => handleCategorySelect(cat.id, cat.name)}
                         className={`w-full rounded-lg px-4 py-3 text-left transition-colors ${String(selectedCategoryId || "") === String(cat.id)
-                          ? "bg-gray-900 text-white"
+                          ? "text-white shadow-md"
                           : "bg-gray-50 text-gray-900 hover:bg-gray-100"
                           }`}
+                        style={
+                          String(selectedCategoryId || "") === String(cat.id)
+                            ? {
+                                background: BRAND_THEME.gradients.primary,
+                                boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}`
+                              }
+                            : undefined
+                        }
                       >
                         <div className="flex items-center justify-between gap-3">
                           <span className="text-sm font-medium">{cat.name}</span>
@@ -1270,7 +1283,7 @@ export default function ItemDetailsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsGstPopupOpen(false)}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -1297,9 +1310,17 @@ export default function ItemDetailsPage() {
                       onClick={() => handleGstSelect(gstValue)}
                       className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                         gst === gstValue
-                          ? "bg-gray-900 text-white"
+                          ? "text-white shadow-md"
                           : "bg-gray-50 text-gray-900 hover:bg-gray-100"
                       }`}
+                      style={
+                        gst === gstValue
+                          ? {
+                              background: BRAND_THEME.gradients.primary,
+                              boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}`
+                            }
+                          : undefined
+                      }
                     >
                       {gstValue}
                     </button>
@@ -1330,7 +1351,7 @@ export default function ItemDetailsPage() {
             onClick={handleSave}
             disabled={uploadingImages}
             className={`${isNewItem ? 'w-full' : 'flex-1'} py-3 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${!uploadingImages
-              ? "bg-black text-white hover:bg-black"
+              ? "bg-[#1E5ED8] text-white hover:bg-[#1E5ED8]"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
           >
@@ -1358,4 +1379,5 @@ export default function ItemDetailsPage() {
     </div>
   )
 }
+
 

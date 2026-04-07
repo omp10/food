@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { Button } from "@food/components/ui/button";
 import { useCart } from "@food/context/CartContext";
-import BRAND_THEME from "../../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 const RUPEE_SYMBOL = "\u20B9";
 

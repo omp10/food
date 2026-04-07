@@ -38,7 +38,7 @@ import {
 import { useCompanyName } from "@food/hooks/useCompanyName";
 import OptimizedImage from "@food/components/OptimizedImage";
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings";
-import BRAND_THEME from "../../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 import {
   Dialog,
   DialogContent,

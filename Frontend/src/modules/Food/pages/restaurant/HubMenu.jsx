@@ -1137,22 +1137,36 @@ export default function HubMenu() {
               <button
                 key={filter.id}
                 onClick={() => handleFilterSelect(filter.id)}
-                className={`flex items-center gap-2 px-2 py-1 text-semibold border-2 rounded-md text-sm font-medium whitespace-nowrap shrink-0 ${
+                className="flex items-center gap-2 px-2 py-1 text-semibold border-2 rounded-md text-sm font-medium whitespace-nowrap shrink-0"
+                style={
                   activeFilter === filter.id
-                    ? "bg-gray-900 text-white border-gray-900"
-                    : "bg-white border-gray-200 text-gray-900"
-                }`}
+                    ? {
+                        background: BRAND_THEME.gradients.primary,
+                        color: "white",
+                        borderColor: BRAND_THEME.colors.brand.primary,
+                        boxShadow: "0 12px 28px -18px rgba(41,121,251,0.4)",
+                      }
+                    : {
+                        background: "white",
+                        borderColor: "#e5e7eb",
+                        color: "#111827",
+                      }
+                }
               >
                 <span>{filter.label}</span>
-                <span className="bg-red-100 border-2 border-red-400 text-red-400 text-xs  font-bold p-0.5 py-0.25 rounded-sm">
+                <span className="bg-red-100 border-2 border-red-400 text-red-400 text-xs font-bold p-0.5 py-0.25 rounded-sm">
                   {filter.count}
                 </span>
               </button>
-
             ))}
             <button
               onClick={() => setIsFilterOpen(true)}
-              className="z-10 shrink-0 bg-black text-white border-2 border-black flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap"
+              className="z-10 shrink-0 text-white flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap"
+              style={{
+                background: BRAND_THEME.gradients.primary,
+                boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}`,
+                border: "1px solid rgba(255,255,255,0.35)",
+              }}
             >
               <SlidersHorizontal className="w-4 h-4" />
               <span>Filter</span>
@@ -1163,24 +1177,26 @@ export default function HubMenu() {
         {/* Tabs */}
       </div>
 
-        <div className="flex items-center gap-2 p-0.5 mt-2 w-auto mx-4 bg-gray-200 rounded-md">
+        <div className="flex items-center gap-2 p-0.5 mt-2 w-auto mx-4 bg-white/80 border border-blue-100 rounded-md">
           <button
             onClick={() => setActiveTab("all")}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+            className="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors"
+            style={
               activeTab === "all"
-                ? "bg-white text-black"
-                : " text-gray-600"
-            }`}
+                ? { background: BRAND_THEME.gradients.primary, color: "white", boxShadow: "0 12px 28px -18px rgba(41,121,251,0.4)" }
+                : { color: "#475569" }
+            }
           >
             All items
           </button>
           <button
             onClick={() => setActiveTab("add-ons")}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+            className="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors"
+            style={
               activeTab === "add-ons"
-                ? "bg-white text-black"
-                : " text-gray-600"
-            }`}
+                ? { background: BRAND_THEME.gradients.primary, color: "white", boxShadow: "0 12px 28px -18px rgba(41,121,251,0.4)" }
+                : { color: "#475569" }
+            }
           >
             Add-ons
           </button>
@@ -1282,8 +1298,16 @@ export default function HubMenu() {
                             className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
                               addon.isAvailable === false
                                 ? "bg-green-600 text-white hover:bg-green-700"
-                                : "bg-gray-900 text-white hover:bg-gray-800"
+                                : "text-white shadow-md"
                             }`}
+                            style={
+                              addon.isAvailable === false
+                                ? undefined
+                                : {
+                                    background: BRAND_THEME.gradients.primary,
+                                    boxShadow: `0 10px 24px -16px ${BRAND_THEME.colors.brand.primaryDark}`
+                                  }
+                            }
                             title="Toggle availability"
                           >
                             {addon.isAvailable === false ? "Enable" : "Disable"}
@@ -1414,7 +1438,7 @@ export default function HubMenu() {
                               alt={item.name}
                               className="w-20 h-20 rounded-lg object-cover"
                             />
-                            <div className="absolute bottom-1 right-1 bg-black/60 rounded-full p-1">
+                            <div className="absolute bottom-1 right-1 bg-blue-900/50 rounded-full p-1">
                               <div className="flex items-center gap-1">
                                 <Camera className="w-3 h-3 text-white" />
                                 <span className="text-white text-xs font-semibold">{item.photoCount}</span>
@@ -1457,7 +1481,7 @@ export default function HubMenu() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsFilterOpen(false)}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -1492,8 +1516,8 @@ export default function HubMenu() {
                         value={filter.id}
                         checked={activeFilter === filter.id}
                         onChange={() => handleFilterSelect(filter.id)}
-                        className="w-5 h-5 text-black border-gray-400 focus:ring-black"
-                        style={{ accentColor: "#000000" }}
+                        className="w-5 h-5 text-[#1E5ED8] border-gray-300 focus:ring-[#1E5ED8]"
+                        style={{ accentColor: BRAND_THEME.colors.brand.primary }}
                       />
                     </label>
                   ))}
@@ -1514,7 +1538,11 @@ export default function HubMenu() {
                 )}
                 <button
                   onClick={() => setIsFilterOpen(false)}
-                  className="w-full py-3 rounded-lg font-semibold text-sm bg-gray-900 text-white hover:bg-gray-800 transition-colors"
+                  className="w-full py-3 rounded-lg font-semibold text-sm text-white transition-colors shadow-md"
+                  style={{
+                    background: BRAND_THEME.gradients.primary,
+                    boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}`
+                  }}
                 >
                   Confirm
                 </button>
@@ -1533,7 +1561,7 @@ export default function HubMenu() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsAddPopupOpen(false)}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -1603,15 +1631,15 @@ export default function HubMenu() {
                         <label
                           className="flex items-center gap-3 cursor-pointer py-2"
                         >
-                          <input
-                            type="radio"
-                            name="availability"
-                            value={option.id}
-                            checked={availabilityReason === option.id}
-                            onChange={() => setAvailabilityReason(option.id)}
-                            className="w-5 h-5 text-black border-gray-400 focus:ring-black"
-                            style={{ accentColor: "#000000" }}
-                          />
+                      <input
+                        type="radio"
+                        name="availability"
+                        value={option.id}
+                        checked={availabilityReason === option.id}
+                        onChange={() => setAvailabilityReason(option.id)}
+                        className="w-5 h-5 text-[#1E5ED8] border-gray-300 focus:ring-[#1E5ED8]"
+                        style={{ accentColor: BRAND_THEME.colors.brand.primary }}
+                      />
                           <span className="text-sm font-medium text-gray-900">{option.label}</span>
                         </label>
                         {option.id === "custom" && availabilityReason === "custom" && (
@@ -1622,7 +1650,7 @@ export default function HubMenu() {
                               onChange={(e) => setCustomDateTime(e.target.value)}
                               min={new Date().toISOString().slice(0, 16)}
                               max={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E5ED8] focus:border-[#1E5ED8]"
                               required
                             />
                           </div>
@@ -1646,8 +1674,8 @@ export default function HubMenu() {
                         value="manual"
                         checked={availabilityReason === "manual"}
                         onChange={() => setAvailabilityReason("manual")}
-                        className="w-5 h-5 text-black border-gray-400 focus:ring-black"
-                        style={{ accentColor: "#000000" }}
+                        className="w-5 h-5 text-[#1E5ED8] border-gray-300 focus:ring-[#1E5ED8]"
+                        style={{ accentColor: BRAND_THEME.colors.brand.primary }}
                       />
                       <span className="text-sm font-medium text-gray-900">I will turn it on myself</span>
                     </label>
@@ -1665,7 +1693,7 @@ export default function HubMenu() {
                   disabled={!availabilityReason || isScheduling || (availabilityReason === 'custom' && !customDateTime)}
                   className={`w-full py-3 rounded-lg font-semibold text-sm transition-colors ${
                     availabilityReason && !isScheduling && (availabilityReason !== 'custom' || customDateTime)
-                      ? "bg-gray-900 text-white hover:bg-gray-800"
+                      ? "text-white shadow-md"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
@@ -1685,7 +1713,7 @@ export default function HubMenu() {
           <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => setIsAddPopupOpen(true)}
-          className="px-4 py-2 border bg-black text-white border-gray-800 rounded-lg text-sm font-bold"
+          className="px-4 py-2 border bg-[#1E5ED8] text-white border-gray-800 rounded-lg text-sm font-bold"
         >
           + ADD
         </motion.button>)}
@@ -1713,7 +1741,7 @@ export default function HubMenu() {
               {isMenuOpen && (
                 <>
                   <motion.div
-                    className="fixed inset-0 bg-black/40 z-30"
+                    className="fixed inset-0 bg-[#1E5ED8]/40 z-30"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -1779,7 +1807,7 @@ export default function HubMenu() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsCategoryOptionsOpen(false)}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -1834,7 +1862,7 @@ export default function HubMenu() {
                 setEditCategoryName("")
                 setSelectedCategory(null)
               }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -1888,7 +1916,7 @@ export default function HubMenu() {
                       disabled={!editCategoryName.trim()}
                       className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-colors ${
                         editCategoryName.trim()
-                          ? "bg-black text-white hover:bg-gray-800"
+                          ? "bg-[#1E5ED8] text-white hover:bg-gray-800"
                           : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
                     >
@@ -1915,7 +1943,7 @@ export default function HubMenu() {
                 setSubCategoryName("")
                 setSelectedGroupForSubCategory(null)
               }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -1968,7 +1996,7 @@ export default function HubMenu() {
                     disabled={!subCategoryName.trim()}
                     className={`w-full py-3 px-4 rounded-lg text-sm font-semibold transition-colors ${
                       subCategoryName.trim()
-                        ? "bg-black text-white hover:bg-gray-800"
+                        ? "bg-[#1E5ED8] text-white hover:bg-gray-800"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                   >
@@ -1993,7 +2021,7 @@ export default function HubMenu() {
                 setIsAddCategoryPopupOpen(false)
                 setNewCategoryName("")
               }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -2040,7 +2068,7 @@ export default function HubMenu() {
                     disabled={!newCategoryName.trim()}
                     className={`w-full py-3 px-4 rounded-lg text-sm font-semibold transition-colors ${
                       newCategoryName.trim()
-                        ? "bg-black text-white hover:bg-gray-800"
+                        ? "bg-[#1E5ED8] text-white hover:bg-gray-800"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                   >
@@ -2065,7 +2093,7 @@ export default function HubMenu() {
                 setIsSearchOpen(false)
                 setSearchQuery("")
               }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -2201,7 +2229,11 @@ export default function HubMenu() {
                 <div className="px-4 py-3 border-t border-gray-200">
                   <button
                     onClick={() => setIsSearchOpen(false)}
-                    className="w-full py-3 rounded-lg font-semibold text-sm bg-gray-900 text-white hover:bg-gray-800 transition-colors"
+                    className="w-full py-3 rounded-lg font-semibold text-sm text-white transition-colors shadow-md"
+                    style={{
+                      background: BRAND_THEME.gradients.primary,
+                      boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}`
+                    }}
                   >
                     View Results ({filteredMenuGroups.reduce((acc, group) => acc + group.items.length, 0)} items)
                   </button>
@@ -2219,7 +2251,7 @@ export default function HubMenu() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-[#1E5ED8]/50 backdrop-blur-sm flex items-center justify-center p-4"
             onClick={() => setIsAddAddonModalOpen(false)}
           >
             <motion.div
@@ -2373,4 +2405,5 @@ export default function HubMenu() {
     </div>
   )
 }
+
 

@@ -27,7 +27,7 @@ import { Badge } from "@food/components/ui/badge";
 import foodPattern from "@food/assets/food_pattern_background.png";
 import useNotificationInbox from "@food/hooks/useNotificationInbox";
 import { useCart } from "@food/context/CartContext";
-import BRAND_THEME from "../../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 const normalizeHex = (hex, fallback = "#8e24aa") => {
   const value = String(hex || "").trim();

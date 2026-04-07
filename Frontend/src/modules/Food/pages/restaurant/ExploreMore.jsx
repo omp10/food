@@ -188,7 +188,7 @@ function TimePickerWheel({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
+        className="fixed inset-0 bg-[#1E5ED8]/50 z-[9999] flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
@@ -1013,7 +1013,7 @@ export default function ExploreMore() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 z-[60]"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-[60]"
               onClick={() => {
                 if (!isLoggingOut) setLogoutConfirmOpen(false)
               }}
@@ -1068,7 +1068,7 @@ export default function ExploreMore() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
               onClick={() => {
                 setSearchOpen(false)
                 setSearchQuery("")
@@ -1195,7 +1195,7 @@ export default function ExploreMore() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
               onClick={() => setProfileOpen(false)}
             />
 
@@ -1347,7 +1347,7 @@ export default function ExploreMore() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
               onClick={() => setScheduleOffOpen(false)}
             />
 
@@ -1403,7 +1403,7 @@ export default function ExploreMore() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
               onClick={() => setDateTimePickerOpen(false)}
             />
 
@@ -1511,7 +1511,7 @@ export default function ExploreMore() {
 
       {/* Calendar Popup */}
       {showCalendar && (
-        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" onClick={() => setShowCalendar(false)}>
+        <div className="fixed inset-0 bg-[#1E5ED8]/50 z-[60] flex items-center justify-center p-4" onClick={() => setShowCalendar(false)}>
           <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-lg shadow-lg">
             <DateRangeCalendar
               startDate={startDate}
@@ -1553,7 +1553,7 @@ export default function ExploreMore() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSuccessPopupOpen(false)}
-              className="fixed inset-0 bg-black/50 z-[10000]"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-[10000]"
             />
 
             {/* Success Modal */}
@@ -1605,7 +1605,7 @@ export default function ExploreMore() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
               onClick={() => setExistingScheduleOpen(false)}
             />
 
@@ -1707,4 +1707,5 @@ export default function ExploreMore() {
     </motion.div>
   )
 }
+
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { loadBusinessSettings, getCachedSettings, getCompanyName } from '@food/utils/businessSettings';
-import BRAND_THEME from "../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 /**
  * Custom hook to get company name from business settings

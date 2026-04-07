@@ -4,7 +4,7 @@ import { ArrowLeft, Plus, Share2, UtensilsCrossed, Store, X } from "lucide-react
 import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 // Import banner
 import collectionsBanner from "@food/assets/collectionspagebanner.png"

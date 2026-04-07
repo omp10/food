@@ -13,3 +13,4 @@ export default function EditCouponPage() {
 
   return <AddCouponPage mode="edit" couponId={id} />
 }
+

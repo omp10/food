@@ -6,7 +6,7 @@ import { Card, CardContent } from "@food/components/ui/card"
 import { Switch } from "@food/components/ui/switch"
 import { Label } from "@food/components/ui/label"
 import { useState } from "react"
-import BRAND_THEME from "../../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function Accessibility() {
   const [largeText, setLargeText] = useState(false)

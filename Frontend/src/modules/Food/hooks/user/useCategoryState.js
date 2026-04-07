@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import BRAND_THEME from "../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 export const useCategoryState = (initialCategory) => {
   const homepageDefaults = BRAND_THEME.tokens.homepage.defaults;

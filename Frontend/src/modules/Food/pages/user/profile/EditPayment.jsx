@@ -6,7 +6,7 @@ import { Button } from "@food/components/ui/button";
 import { Input } from "@food/components/ui/input";
 import { Label } from "@food/components/ui/label";
 import { useProfile } from "@food/context/ProfileContext";
-import BRAND_THEME from "../../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 export default function EditPayment() {
   const { id } = useParams();

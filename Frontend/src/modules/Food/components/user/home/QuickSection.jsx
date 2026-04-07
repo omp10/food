@@ -1,5 +1,5 @@
 import QuickHomeView from '@quickCommerce/user/components/QuickHomeView';
-import BRAND_THEME from "../../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 export default function QuickSection(props) {
   return (

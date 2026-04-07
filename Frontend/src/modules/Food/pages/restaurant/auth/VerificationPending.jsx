@@ -132,3 +132,4 @@ export default function VerificationPending() {
     </div>
   )
 }
+

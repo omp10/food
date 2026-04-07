@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, Edit, Phone, Users, ChevronDown, X } from "lucide-react"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function PhoneNumbersPage() {
   const navigate = useNavigate()
@@ -230,7 +231,7 @@ export default function PhoneNumbersPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={handleCancelEdit}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -297,7 +298,7 @@ export default function PhoneNumbersPage() {
                   disabled={!phoneNumber.trim()}
                   className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-colors ${
                     phoneNumber.trim()
-                      ? "bg-black text-white hover:bg-gray-800"
+                      ? "bg-[#1E5ED8] text-white hover:bg-gray-800"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
@@ -318,7 +319,7 @@ export default function PhoneNumbersPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsCountryCodeOpen(false)}
-              className="fixed inset-0 bg-black/50 z-[60]"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-[60]"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -346,12 +347,20 @@ export default function PhoneNumbersPage() {
                         setCountryCode(country.code)
                         setIsCountryCodeOpen(false)
                       }}
-                      className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-3 ${
-                        countryCode === country.code
-                          ? "bg-gray-900 text-white"
-                          : "bg-gray-50 text-gray-900 hover:bg-gray-100"
-                      }`}
-                    >
+                    className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center gap-3 ${
+                      countryCode === country.code
+                        ? "text-white shadow-md"
+                        : "bg-gray-50 text-gray-900 hover:bg-gray-100"
+                    }`}
+                    style={
+                      countryCode === country.code
+                        ? {
+                            background: BRAND_THEME.gradients.primary,
+                            boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}`
+                          }
+                        : undefined
+                    }
+                  >
                       <span className="text-xl">{country.flag}</span>
                       <span className="flex-1">{country.country}</span>
                       <span className={countryCode === country.code ? "text-white" : "text-gray-600"}>
@@ -375,7 +384,7 @@ export default function PhoneNumbersPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={handleCancelOtp}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -445,7 +454,7 @@ export default function PhoneNumbersPage() {
                   disabled={otp.join("").length !== 6}
                   className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-colors ${
                     otp.join("").length === 6
-                      ? "bg-black text-white hover:bg-gray-800"
+                      ? "bg-[#1E5ED8] text-white hover:bg-gray-800"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
@@ -459,3 +468,4 @@ export default function PhoneNumbersPage() {
     </div>
   )
 }
+

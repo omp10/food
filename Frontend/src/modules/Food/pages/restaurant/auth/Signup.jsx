@@ -15,6 +15,7 @@ import {
 } from "@food/components/ui/select"
 import loginBg from "@food/assets/loginbanner.png"
 import { useCompanyName } from "@food/hooks/useCompanyName"
+import BRAND_THEME from "@/config/brandTheme"
 
 const countryCodes = [
   { code: "+91", country: "IN", flag: "🇮🇳" },
@@ -135,242 +136,167 @@ export default function RestaurantSignup() {
   }
 
   return (
-    <div className="h-screen w-full flex bg-white overflow-hidden">
-      {/* Left image section */}
-      <div className="hidden lg:flex lg:w-1/2 relative">
-        <img
-          src={loginBg}
-          alt="Restaurant background"
-          className="w-full h-full object-cover"
-        />
-        {/* Orange half-circle text block attached to the left with animation */}
-        <div className="absolute inset-0 flex items-center text-white pointer-events-none">
-          <div
-            className="bg-primary-orange/80 rounded-r-full py-10 xl:py-20 pl-10 xl:pl-14 pr-10 xl:pr-20 max-w-[70%] shadow-xl backdrop-blur-[1px]"
-            style={{ animation: "slideInLeft 0.8s ease-out both" }}
-          >
-            <h1 className="text-3xl xl:text-4xl font-extrabold mb-4 tracking-wide leading-tight">
-              JOIN AS
-              <br />
-              RESTAURANT PARTNER
-            </h1>
-            <p className="text-base xl:text-lg opacity-95 max-w-xl">
-              Register your restaurant and start serving customers.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Right form section */}
-      <div className="w-full lg:w-1/2 h-full flex flex-col">
-        {/* Top logo and version */}
-        <div className="relative flex items-center justify-center px-6 sm:px-10 lg:px-16 pt-6 pb-4">
-          <div
-            className="flex items-center gap-3"
-            style={{ animation: "fadeInDown 0.7s ease-out both" }}
-          >
-            <div className="h-11 w-11 rounded-xl bg-primary-orange flex items-center justify-center text-white shadow-lg">
-              <UtensilsCrossed className="h-6 w-6" />
-            </div>
-            <div className="flex flex-col items-start">
-              <span className="text-2xl font-bold tracking-wide text-primary-orange">
-                {companyName}
-              </span>
-              <span className="text-xs font-medium text-gray-500">
-                Restaurant Panel
-              </span>
-            </div>
-          </div>
-          <div className="absolute right-6 sm:right-10 lg:right-16 top-6 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-medium text-emerald-700 shadow-sm">
-            Software Version : 1.0.0
-          </div>
-        </div>
-
-        {/* Centered content (title + form + info) */}
-        <div
-          className="flex-1 flex flex-col items-center justify-center px-6 sm:px-10 lg:px-16 pb-8"
-          style={{ animation: "fadeInUp 0.8s ease-out 0.15s both" }}
-        >
-          {/* Title */}
-          <div className="mb-8 text-center">
-            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2">
-              Register Your Restaurant
-            </h2>
-            <p className="text-sm text-gray-500">
-              Enter your details to get started.
-            </p>
-          </div>
-
-          {/* Form */}
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-5 w-full max-w-lg rounded-xl bg-white/80 backdrop-blur-sm p-1 sm:p-2"
-          >
-            {/* Restaurant name input */}
-            <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                Restaurant Name
-              </Label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
-                  <User className="h-4 w-4" />
-                </span>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Enter restaurant name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className={`h-11 pl-9 border-gray-300 rounded-md shadow-sm focus-visible:ring-primary-orange focus-visible:ring-2 transition-colors placeholder:text-gray-400 ${errors.name ? "border-red-500" : ""}`}
-                  required
-                />
-              </div>
-              {errors.name && (
-                <div className="flex items-center gap-1 text-xs sm:text-sm text-red-600">
-                  <AlertCircle className="h-3 w-3" />
-                  <span>{errors.name}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Phone input */}
-            <div className="space-y-1.5">
-              <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
-                Phone Number
-              </Label>
-              <div className="flex gap-2">
-                <Select
-                  value={formData.countryCode}
-                  onValueChange={handleCountryCodeChange}
-                >
-                  <SelectTrigger className="w-20 sm:w-24 md:w-[100px] text-xs sm:text-sm">
-                    <SelectValue placeholder="Code" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countryCodes.map((country) => (
-                      <SelectItem key={country.code} value={country.code}>
-                        <span className="flex items-center gap-2 text-xs sm:text-sm">
-                          <span>{country.flag}</span>
-                          <span>{country.code}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="flex-1 min-w-0">
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
-                      <Phone className="h-4 w-4" />
-                    </span>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      placeholder="Enter phone number"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className={`h-11 pl-9 border-gray-300 rounded-md shadow-sm focus-visible:ring-primary-orange focus-visible:ring-2 transition-colors placeholder:text-gray-400 ${errors.phone ? "border-red-500" : ""}`}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-              {errors.phone && (
-                <div className="flex items-center gap-1 text-xs sm:text-sm text-red-600">
-                  <AlertCircle className="h-3 w-3" />
-                  <span>{errors.phone}</span>
-                </div>
-              )}
-              {apiError && !errors.phone && (
-                <div className="flex items-center gap-1 text-xs sm:text-sm text-red-600 mt-1">
-                  <AlertCircle className="h-3 w-3" />
-                  <span>{apiError}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Sign up button */}
-            <Button
-              type="submit"
-              className="mt-2 h-11 w-full bg-primary-orange hover:bg-primary-orange/90 text-white text-base font-semibold rounded-md shadow-md transition-colors"
-              disabled={isLoading}
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-8"
+      style={{ background: "linear-gradient(180deg, #f7faff 0%, #ffffff 35%)" }}
+    >
+      <div className="w-full max-w-sm space-y-7">
+        <div className="text-center space-y-2 sm:space-y-3">
+          <div className="flex justify-center">
+            <div
+              className="h-14 w-14 rounded-full flex items-center justify-center shadow-md"
+              style={{
+                background: BRAND_THEME.gradients.primary,
+                boxShadow: `0 12px 30px -16px ${BRAND_THEME.colors.brand.primaryDark}`,
+              }}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Sending OTP...
-                </>
-              ) : (
-                "Send OTP"
-              )}
-            </Button>
-          </form>
+              <span className="text-white font-black text-lg">
+                {companyName?.charAt(0) || "I"}
+              </span>
+            </div>
+          </div>
+          <p className="text-[11px] tracking-[0.16em] text-gray-500 font-semibold uppercase">
+            Fast Delivery, Better Cravings
+          </p>
+        </div>
 
-          {/* Login link */}
-          <div className="mt-6 text-center text-sm">
-            <span className="text-gray-600">Already have an account? </span>
+        <Card className="rounded-3xl shadow-md border border-blue-100/70 bg-white">
+          <CardContent className="pt-7 pb-8 px-5 sm:px-7 space-y-6">
+            <div className="flex flex-col items-center space-y-2">
+              <span className="px-4 py-1 rounded-full text-[11px] font-semibold text-blue-700 bg-blue-50">
+                Secure Login
+              </span>
+              <div className="text-center space-y-1">
+                <h2 className="text-2xl font-bold text-gray-900">Login or Signup</h2>
+                <p className="text-sm text-gray-600">Continue with your phone number.</p>
+                <div className="flex justify-center">
+                  <div className="w-12 h-0.5 bg-blue-600 rounded-full mt-2" />
+                </div>
+                </div>
+              </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label className="text-[11px] font-semibold tracking-wide text-gray-600">
+                  Restaurant Name
+                </Label>
+                <div
+                  className="rounded-2xl border bg-white px-4 py-3 shadow-[0_8px_20px_-18px_rgba(37,99,235,0.5)]"
+                  style={{ borderColor: BRAND_THEME.colors.brand.primary }}
+                >
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="Restaurant name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full border-0 focus:outline-none focus:ring-0 text-base font-medium text-gray-900 placeholder-gray-400"
+                    maxLength={50}
+                    required
+                  />
+                </div>
+                {errors.name && (
+                  <div className="flex items-center gap-1 text-xs text-red-600">
+                    <AlertCircle className="h-3 w-3" />
+                    <span>{errors.name}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[11px] font-semibold tracking-wide text-gray-600">
+                  Phone Number
+                </Label>
+                <div
+                  className="flex items-center gap-2 rounded-2xl border bg-white px-3 py-2 shadow-[0_10px_26px_-20px_rgba(37,99,235,0.55)]"
+                  style={{ borderColor: BRAND_THEME.colors.brand.primary }}
+                >
+                  <span className="text-gray-500">
+                    <Phone className="h-4 w-4" />
+                  </span>
+                  <Select value={formData.countryCode} onValueChange={handleCountryCodeChange}>
+                    <SelectTrigger className="w-20 border-0 focus:ring-0 focus:outline-none text-sm font-semibold text-gray-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countryCodes.map((country) => (
+                        <SelectItem key={country.code} value={country.code}>
+                          {country.code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="h-5 w-px bg-blue-100" />
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="Phone number"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="flex-1 border-0 focus-visible:ring-0 focus-visible:outline-none text-base font-medium text-gray-900 placeholder-gray-400"
+                    maxLength={15}
+                    required
+                  />
+                </div>
+                {(errors.phone || apiError) && (
+                  <div className="flex items-center gap-1 text-xs text-red-600">
+                    <AlertCircle className="h-3 w-3" />
+                    <span>{errors.phone || apiError}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-xl bg-blue-50 text-blue-700 text-[12px] font-medium px-4 py-3 text-center">
+                We will send verification updates via SMS.
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-12 rounded-2xl text-white text-base font-semibold shadow-lg"
+                style={{
+                  background: BRAND_THEME.gradients.primary,
+                  boxShadow: `0 16px 40px -18px ${BRAND_THEME.colors.brand.primaryDark}`,
+                }}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Sending OTP...
+                  </>
+                ) : (
+                  "Get Verification Code"
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <div className="text-center text-[11px] text-gray-500 font-semibold space-y-1">
+          <p>By continuing, you agree to our</p>
+          <div className="flex items-center justify-center gap-1 text-blue-700 font-semibold">
             <button
               type="button"
-              onClick={() => navigate("/food/restaurant/login")}
-              className="text-primary-orange hover:underline font-medium"
+              onClick={() => navigate("/food/restaurant/terms")}
+              className="underline underline-offset-2"
             >
-              Login
+              Terms of Service
+            </button>
+            <span className="text-gray-400">&</span>
+            <button
+              type="button"
+              onClick={() => navigate("/food/restaurant/privacy")}
+              className="underline underline-offset-2"
+            >
+              Privacy Policy
             </button>
           </div>
-
-          {/* Demo credentials / info bar */}
-          <div className="mt-8 w-full max-w-lg rounded-lg border border-orange-100 bg-orange-50 px-4 py-3 text-xs sm:text-sm text-gray-800 flex items-start gap-3">
-            <div className="mt-0.5 text-primary-orange">
-              <AlertCircle className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="font-semibold mb-1">Demo Credentials</div>
-              <div>
-                <span className="font-semibold">Phone :</span> +91 9876543210
-              </div>
-              <div>
-                <span className="font-semibold">OTP :</span> 1234
-              </div>
-            </div>
-          </div>
         </div>
-
-        {/* Simple keyframe animations */}
-        <style>{`
-          @keyframes slideInLeft {
-            from {
-              opacity: 0;
-              transform: translateX(-40px);
-            }
-            to {
-              opacity: 1;
-              transform: translateX(0);
-            }
-          }
-          @keyframes fadeInUp {
-            from {
-              opacity: 0;
-              transform: translateY(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          @keyframes fadeInDown {
-            from {
-              opacity: 0;
-              transform: translateY(-16px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-        `}</style>
       </div>
     </div>
   )
 }
+
 

@@ -31,6 +31,7 @@ import { useRestaurantNotifications } from "@food/hooks/useRestaurantNotificatio
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import ResendNotificationButton from "@food/components/restaurant/ResendNotificationButton";
+import BRAND_THEME from "@/config/brandTheme";
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
 const debugError = (...args) => {};
@@ -1721,7 +1722,10 @@ export default function OrdersMain() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+    >
       {/* Restaurant Navbar - Sticky at top */}
       <div className="sticky top-0 z-50 bg-white">
         <RestaurantNavbar showNotifications={true} />
@@ -1757,7 +1761,7 @@ export default function OrdersMain() {
                   }
                 }}
                 className={`shrink-0 px-6 py-3.5 rounded-full font-medium text-sm whitespace-nowrap relative overflow-hidden ${
-                  isActive ? "text-white" : "bg-white text-black"
+                  isActive ? "text-white" : "bg-white text-gray-900"
                 }`}
                 animate={{
                   scale: isActive ? 1.05 : 1,
@@ -1771,7 +1775,8 @@ export default function OrdersMain() {
                 {isActive && (
                   <motion.div
                     layoutId="activeFilterBackground"
-                    className="absolute inset-0 bg-black rounded-full -z-10"
+                    className="absolute inset-0 rounded-full -z-10"
+                    style={{ background: BRAND_THEME.gradients.primary }}
                     initial={false}
                     transition={{
                       type: "spring",
@@ -1970,7 +1975,7 @@ export default function OrdersMain() {
         {showNewOrderPopup && (
           <>
             <motion.div
-              className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4"
+              className="fixed inset-0 z-[60] bg-blue-900/50 flex items-center justify-center p-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}>
@@ -2237,7 +2242,7 @@ export default function OrdersMain() {
                   <div className="space-y-3">
                     <div
                       ref={acceptSliderRef}
-                      className="relative h-14 rounded-2xl bg-gray-900 overflow-hidden select-none touch-pan-y">
+                      className="relative h-14 rounded-2xl overflow-hidden select-none touch-pan-y bg-gradient-to-r from-[#1E5ED8] to-[#3B82F6]">
                       <motion.div
                         className="absolute inset-y-0 left-0 bg-blue-600"
                         initial={{ width: "100%" }}
@@ -2304,7 +2309,7 @@ export default function OrdersMain() {
         {showRejectPopup && (
           <>
             <motion.div
-              className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4"
+              className="fixed inset-0 z-[70] bg-blue-900/50 flex items-center justify-center p-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -2335,7 +2340,7 @@ export default function OrdersMain() {
                         onClick={() => setRejectReason(reason)}
                         className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                           rejectReason === reason
-                            ? "border-black bg-black/5"
+                            ? "border-black bg-[#1E5ED8]/5"
                             : "border-gray-200 bg-white hover:border-gray-300"
                         }`}>
                         <div className="flex items-center justify-between">
@@ -2348,7 +2353,7 @@ export default function OrdersMain() {
                             {reason}
                           </span>
                           {rejectReason === reason && (
-                            <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center">
+                            <div className="w-5 h-5 rounded-full bg-[#1E5ED8] flex items-center justify-center">
                               <svg
                                 className="w-3 h-3 text-white"
                                 fill="none"
@@ -2381,7 +2386,7 @@ export default function OrdersMain() {
                     disabled={!rejectReason}
                     className={`flex-1 py-3 rounded-lg font-semibold text-sm transition-colors ${
                       rejectReason
-                        ? "!bg-black !text-white"
+                        ? "!bg-[#1E5ED8] !text-white"
                         : "bg-gray-200 text-gray-400 cursor-not-allowed"
                     }`}>
                     Confirm Rejection
@@ -2398,7 +2403,7 @@ export default function OrdersMain() {
         {showCancelPopup && orderToCancel && (
           <>
             <motion.div
-              className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4"
+              className="fixed inset-0 z-[70] bg-blue-900/50 flex items-center justify-center p-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -2497,7 +2502,7 @@ export default function OrdersMain() {
       <AnimatePresence>
         {isSheetOpen && selectedOrder && (
           <motion.div
-            className="fixed inset-0 z-50 bg-black/40 flex items-end justify-center"
+            className="fixed inset-0 z-50 bg-[#1E5ED8]/40 flex items-end justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -2600,7 +2605,7 @@ export default function OrdersMain() {
               </div>
 
               <button
-                className="w-full bg-black text-white py-2.5 rounded-xl text-sm font-medium"
+                className="w-full bg-[#1E5ED8] text-white py-2.5 rounded-xl text-sm font-medium"
                 onClick={() => setIsSheetOpen(false)}>
                 Close
               </button>
@@ -3433,9 +3438,10 @@ function EmptyState({ message = "Temporarily closed" }) {
       </h2>
 
       {/* View Status Button */}
-      <button className="bg-black text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+      <button className="bg-[#1E5ED8] text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors">
         View status
       </button>
     </div>
   );
 }
+

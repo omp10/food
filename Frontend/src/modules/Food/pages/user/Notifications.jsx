@@ -6,7 +6,7 @@ import { Button } from "@food/components/ui/button"
 import { Card, CardContent } from "@food/components/ui/card"
 import { Badge } from "@food/components/ui/badge"
 import useNotificationInbox from "@food/hooks/useNotificationInbox"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 // Initial mock notification data (fallback if localStorage is empty)
 const DEFAULT_NOTIFICATIONS = [

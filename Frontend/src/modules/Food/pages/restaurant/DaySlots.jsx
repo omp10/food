@@ -224,7 +224,7 @@ function TimePickerWheel({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
+        className="fixed inset-0 bg-[#1E5ED8]/50 z-[9999] flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
@@ -745,13 +745,13 @@ export default function DaySlots() {
             Total: {calculateTotalDuration()}
           </div>
 
-          {/* Save Button */}
-          <Button
-            onClick={handleSave}
-            className="w-full bg-gray-800 hover:bg-gray-900 text-white font-medium py-3 rounded-lg"
-          >
-            Save
-          </Button>
+        {/* Save Button */}
+        <Button
+          onClick={handleSave}
+          className="w-full text-white font-medium py-3 rounded-lg bg-gradient-to-r from-[#1E5ED8] to-[#3B82F6] hover:opacity-95"
+        >
+          Save
+        </Button>
         </div>
       </div>
 
@@ -836,4 +836,5 @@ export default function DaySlots() {
     </div>
   )
 }
+
 

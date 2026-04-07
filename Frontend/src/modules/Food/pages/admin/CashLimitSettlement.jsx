@@ -1,4 +1,4 @@
-ï»¿import { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Search, Receipt, Loader2, Package } from "lucide-react"
 import { adminAPI } from "@food/api"
 import { toast } from "sonner"
@@ -13,7 +13,7 @@ const formatCurrency = (amount) => {
 }
 
 const formatDate = (d) => {
-  if (!d) return "â€”"
+  if (!d) return "—"
   try {
     return new Date(d).toLocaleString("en-IN", {
       day: "2-digit",
@@ -112,7 +112,7 @@ export default function CashLimitSettlement() {
           {loading ? (
             <div className="py-20 text-center">
               <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-4" />
-              <p className="text-slate-600">Loadingâ€¦</p>
+              <p className="text-slate-600">Loading…</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -149,10 +149,10 @@ export default function CashLimitSettlement() {
                           {formatDate(tx.createdAt)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-700">
-                          {tx.deliveryName || "â€”"}
+                          {tx.deliveryName || "—"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
-                          {tx.deliveryIdString || "â€”"}
+                          {tx.deliveryIdString || "—"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-700">
                           {formatCurrency(tx.amount)}
@@ -165,11 +165,11 @@ export default function CashLimitSettlement() {
                                 : "bg-slate-100 text-slate-700"
                             }`}
                           >
-                            {tx.status || "â€”"}
+                            {tx.status || "—"}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500 font-mono">
-                          {tx.razorpayPaymentId ? tx.razorpayPaymentId.slice(0, 12) + "â€¦" : "â€”"}
+                          {tx.razorpayPaymentId ? tx.razorpayPaymentId.slice(0, 12) + "…" : "—"}
                         </td>
                       </tr>
                     ))
@@ -182,7 +182,7 @@ export default function CashLimitSettlement() {
           {pages > 1 && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-200">
               <p className="text-sm text-slate-600">
-                Page {page} of {pages} Â· {total} total
+                Page {page} of {pages} · {total} total
               </p>
               <div className="flex gap-2">
                 <button

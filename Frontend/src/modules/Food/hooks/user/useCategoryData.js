@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { adminAPI, restaurantAPI } from "@food/api";
 import { foodImages } from "@food/constants/images";
 import { normalizeImageUrl } from "@food/utils/common";
-import BRAND_THEME from "../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 export const useCategoryData = (zoneId) => {
   const homepageDefaults = BRAND_THEME.tokens.homepage.defaults;

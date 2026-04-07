@@ -1,7 +1,7 @@
 import { MapPin, Loader2, AlertCircle } from "lucide-react"
 import { Button } from "@food/components/ui/button"
 import { useLocationSimple } from "@food/hooks/useLocationSimple"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}

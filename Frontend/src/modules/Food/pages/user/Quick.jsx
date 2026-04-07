@@ -5,7 +5,7 @@ import { LocationProvider as QuickLocationProvider } from "../../../quickCommerc
 import { ProductDetailProvider as QuickProductDetailProvider } from "../../../quickCommerce/user/context/ProductDetailContext";
 import { WishlistProvider as QuickWishlistProvider } from "../../../quickCommerce/user/context/WishlistContext";
 import { CartAnimationProvider as QuickCartAnimationProvider } from "../../../quickCommerce/user/context/CartAnimationContext";
-import BRAND_THEME from "../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 export default function Quick({ onThemeChange, embeddedHeaderColor }) {
   useLayoutEffect(() => {

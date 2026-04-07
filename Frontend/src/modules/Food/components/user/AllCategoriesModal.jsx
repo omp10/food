@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Search } from "lucide-react";
 import OptimizedImage from "@food/components/OptimizedImage";
-import BRAND_THEME from "../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 const AllCategoriesModal = ({ 
   isOpen, 

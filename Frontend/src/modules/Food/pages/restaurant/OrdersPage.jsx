@@ -22,6 +22,7 @@ import { formatCurrency, usdToInr } from "@food/utils/currency"
 import { restaurantAPI } from "@food/api"
 import { RestaurantGridSkeleton } from "@food/components/ui/loading-skeletons"
 import { useDelayedLoading } from "@food/hooks/useDelayedLoading"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -385,7 +386,10 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6e9dc] overflow-x-hidden">
+    <div
+      className="min-h-screen overflow-x-hidden"
+      style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+    >
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6 pb-24 md:pb-6">
         {/* Title */}
@@ -395,11 +399,15 @@ export default function OrdersPage() {
 
         {/* Main Navigation Tabs */}
         <div className="flex gap-4 mb-6 border-b border-gray-200">
-          <div className="pb-3 px-2 text-sm md:text-base font-medium text-[#ff8100] relative">
+          <div
+            className="pb-3 px-2 text-sm md:text-base font-medium relative"
+            style={{ color: BRAND_THEME.colors.brand.primary }}
+          >
             Regular Order
             <motion.div
               layoutId="activeMainTab"
-              className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#ff8100]"
+              className="absolute bottom-0 left-0 right-0 h-0.5"
+              style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
           </div>
@@ -444,14 +452,15 @@ export default function OrdersPage() {
                 onClick={() => setActiveFilterTab(tab.id)}
                 className={`relative z-10 shrink-0 px-4 py-2 rounded-full text-sm md:text-base font-medium transition-colors ${
                   activeFilterTab === tab.id
-                    ? "text-white"
+                    ? "text-white shadow-sm"
                     : "bg-white text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 {activeFilterTab === tab.id && (
                   <motion.div
                     layoutId="activeFilterTab"
-                    className="absolute inset-0 bg-[#ff8100] rounded-full z-0"
+                    className="absolute inset-0 rounded-full z-0"
+                    style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
@@ -561,5 +570,6 @@ export default function OrdersPage() {
     </div>
   )
 }
+
 
 

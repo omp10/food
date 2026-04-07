@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { ShieldCheck } from "lucide-react"
+import { ShieldCheck, AlertCircle } from "lucide-react"
 import { Button } from "@food/components/ui/button"
+import { Card, CardContent } from "@food/components/ui/card"
+import { Label } from "@food/components/ui/label"
 import { restaurantAPI } from "@food/api"
 import { useCompanyName } from "@food/hooks/useCompanyName"
+import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
+import BRAND_THEME from "@/config/brandTheme"
 
 const DEFAULT_COUNTRY_CODE = "+91"
 const countryCodes = [
@@ -14,6 +18,7 @@ export default function RestaurantLogin() {
   const companyName = useCompanyName()
   const navigate = useNavigate()
   const phoneInputRef = useRef(null)
+  const [logoUrl, setLogoUrl] = useState("")
   const [formData, setFormData] = useState(() => {
     const saved = sessionStorage.getItem("restaurantLoginPhone")
     return {
@@ -27,6 +32,19 @@ export default function RestaurantLogin() {
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.visualViewport) return undefined
+
+    // preload logo from business setup
+    const syncBranding = async () => {
+      const cached = getCachedSettings()
+      if (cached?.logo?.url) setLogoUrl(cached.logo.url)
+      try {
+        const settings = await loadBusinessSettings()
+        if (settings?.logo?.url) setLogoUrl(settings.logo.url)
+      } catch (err) {
+        /* silent */
+      }
+    }
+    syncBranding()
 
     const updateKeyboardInset = () => {
       const viewport = window.visualViewport
@@ -112,49 +130,59 @@ export default function RestaurantLogin() {
 
   return (
     <div
-      className="min-h-[100dvh] bg-white flex flex-col overflow-y-auto overscroll-contain font-sans"
-      style={{ paddingBottom: keyboardInset ? `${keyboardInset + 24}px` : undefined }}
+      className="min-h-screen flex items-center justify-center px-4 py-8"
+      style={{ background: "linear-gradient(180deg, #f7faff 0%, #ffffff 35%)", paddingBottom: keyboardInset ? `${keyboardInset + 24}px` : undefined }}
     >
-      {/* Curved Header Background */}
-      <div className="relative h-[300px] w-full bg-[#ef4f5f] overflow-hidden">
-        {/* Abstract Circles like in the image */}
-        <div className="absolute -top-10 -left-10 w-48 h-48 rounded-full bg-white/10" />
-        <div className="absolute top-20 -right-10 w-64 h-64 rounded-full bg-white/10" />
-        <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full bg-white/5" />
-
-        <div className="absolute bottom-0 w-full h-[100px] bg-white rounded-t-[100px] shadow-[0_-20px_40px_rgba(0,0,0,0.05)]" />
-      </div>
-
-      <div className="flex-1 flex flex-col items-center px-4 sm:px-8 -mt-12 sm:-mt-16 z-10 overflow-hidden">
-        <div className="w-28 h-28 sm:w-32 sm:h-32 bg-white rounded-full shadow-xl flex items-center justify-center border-4 border-slate-50 mb-4 sm:mb-6">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-[#ef4f5f] rounded-2xl mx-auto flex items-center justify-center transform rotate-12 shadow-lg mb-1">
-              <ShieldCheck className="w-8 h-8 text-white -rotate-12" />
-            </div>
+      <div className="w-full max-w-sm space-y-3.5">
+        <div className="text-center space-y-1.5 sm:space-y-2">
+          <div className="flex justify-center">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={`${companyName} logo`}
+                className="h-20 w-20 object-contain"
+              />
+            ) : (
+              <div
+                className="h-16 w-16 flex items-center justify-center"
+                style={{
+                  background: "transparent",
+                }}
+              >
+                <ShieldCheck className="w-8 h-8 text-blue-600" />
+              </div>
+            )}
           </div>
+          {/* Intentionally left blank per request (remove title/subtitle) */}
         </div>
 
-        <div className="text-center space-y-1.5 sm:space-y-2 mb-6 sm:mb-10">
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight lowercase">
-            {companyName}
-          </h1>
-          <p className="text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-widest">
-            Partner Login
-          </p>
-        </div>
-
-        <div className="w-full max-w-[400px] flex-1 flex flex-col justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-1">Registered Mobile Number</label>
-              
-              <div className="flex items-center gap-2 h-16 bg-slate-50 border border-slate-100 rounded-[32px] px-6 focus-within:border-[#ef4f5f]/30 focus-within:ring-4 focus-within:ring-[#ef4f5f]/5 transition-all overflow-hidden">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-900 text-lg">{formData.countryCode}</span>
+        <Card className="rounded-3xl shadow-md border border-blue-100/70 bg-white">
+          <CardContent className="pt-5 pb-6 px-4 sm:px-5 space-y-4">
+            <div className="flex flex-col items-center space-y-1">
+              <div className="text-center space-y-1">
+                <h2 className="text-xl font-bold text-gray-900">Login</h2>
+                <p className="text-sm text-gray-600">Continue with your phone number.</p>
+                <div className="flex justify-center">
+                  <div className="w-12 h-0.5 bg-blue-600 rounded-full mt-2" />
                 </div>
-                
-                <div className="w-[1px] h-6 bg-slate-200 ml-2" />
+              </div>
+            </div>
 
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-semibold tracking-wide text-gray-600">
+                Registered Mobile Number
+              </Label>
+              <div
+                className="flex items-center gap-2 rounded-2xl border bg-white px-3 py-2 shadow-[0_10px_26px_-20px_rgba(37,99,235,0.55)]"
+                style={{ borderColor: BRAND_THEME.colors.brand.primary }}
+              >
+                <span className="text-gray-500">
+                  <ShieldCheck className="h-4 w-4" />
+                </span>
+                <div className="flex items-center gap-1">
+                  <span className="font-semibold text-gray-800 text-sm">{formData.countryCode}</span>
+                </div>
+                <div className="h-5 w-px bg-blue-100" />
                 <input
                   ref={phoneInputRef}
                   type="tel"
@@ -166,59 +194,61 @@ export default function RestaurantLogin() {
                   value={formData.phone}
                   onChange={handlePhoneChange}
                   onFocus={ensurePhoneFieldVisible}
-                  className="min-w-0 flex-1 h-12 bg-transparent border-0 outline-none ring-0 shadow-none focus:border-0 focus:outline-none focus:ring-0 focus:shadow-none text-left text-lg font-bold leading-none tracking-[0.02em] text-slate-900 placeholder-slate-300 caret-[#ef4f5f] px-2"
-                  style={{ WebkitTextFillColor: "#0f172a", opacity: 1 }}
+                  className="flex-1 border-0 focus:outline-none focus:ring-0 text-base font-medium text-gray-900 placeholder-gray-400"
+                  style={{ WebkitTextFillColor: "#0f172a" }}
                 />
               </div>
-
               {error && (
-                <p className="text-[#ef4f5f] text-xs font-bold italic ml-4 animate-bounce">
-                  {error}
-                </p>
+                <div className="flex items-center gap-1 text-xs text-red-600">
+                  <AlertCircle className="h-3 w-3" />
+                  <span>{error}</span>
+                </div>
               )}
             </div>
 
             <Button
               onClick={handleSendOTP}
               disabled={!isValidPhone || isSending}
-              className={`w-full h-14 sm:h-16 rounded-[32px] font-black text-base sm:text-lg tracking-widest uppercase transition-all duration-300 ${
+              className="w-full h-11 rounded-2xl text-white text-base font-semibold shadow-lg transition-all duration-300"
+              style={
                 isValidPhone && !isSending
-                  ? "bg-[#ef4f5f] hover:bg-[#d63a4a] text-white shadow-lg shadow-[#ef4f5f]/20 transform active:scale-[0.98]"
-                  : "bg-slate-100 text-slate-400 cursor-not-allowed"
-              }`}
+                  ? {
+                      background: BRAND_THEME.gradients.primary,
+                      boxShadow: `0 16px 38px -18px ${BRAND_THEME.colors.brand.primaryDark}`,
+                    }
+                  : {
+                      backgroundColor: "#e5e7eb",
+                      color: "#94a3b8",
+                    }
+              }
             >
-              {isSending ? "Processing..." : "Continue"}
+              {isSending ? "Processing..." : "Get Verification Code"}
             </Button>
-          </div>
 
-          <div className={`text-center pt-4 pb-2 ${keyboardInset ? "hidden" : ""}`}>
-            <p className="text-slate-400 text-xs font-medium">
-              By logging in, you agree to our <br />
-              <button
-                type="button"
-                onClick={() => navigate("/food/restaurant/terms")}
-                className="bg-transparent border-0 p-0 text-[#ef4f5f] font-bold hover:underline cursor-pointer"
-              >
-                Terms
-              </button>{" "}
-              and{" "}
-              <button
-                type="button"
-                onClick={() => navigate("/food/restaurant/privacy")}
-                className="bg-transparent border-0 p-0 text-[#ef4f5f] font-bold hover:underline cursor-pointer"
-              >
-                Privacy Policy
-              </button>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className={`pb-8 text-center ${keyboardInset ? "hidden" : ""}`}>
-          <p className="text-[10px] font-black text-slate-300 tracking-[0.2em] uppercase">
-            &copy; {new Date().getFullYear()} {companyName.toUpperCase()} PARTNER
-          </p>
+            <div className="text-center text-[11px] text-gray-500 font-semibold space-y-1">
+              <p>We will send verification updates via SMS.</p>
+              <div className="flex items-center justify-center gap-1 text-blue-700 font-semibold">
+                <button
+                  type="button"
+                  onClick={() => navigate("/food/restaurant/terms")}
+                  className="underline underline-offset-2"
+                >
+                  Terms of Service
+                </button>
+                <span className="text-gray-400">&</span>
+                <button
+                  type="button"
+                  onClick={() => navigate("/food/restaurant/privacy")}
+                  className="underline underline-offset-2"
+                >
+                  Privacy Policy
+                </button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
 }
+

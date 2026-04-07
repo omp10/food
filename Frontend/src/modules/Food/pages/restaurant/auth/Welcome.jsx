@@ -180,7 +180,7 @@ export default function RestaurantWelcome() {
   }, [carouselData.length])
 
   return (
-    <div className="h-screen w-full flex flex-col bg-black overflow-hidden">
+    <div className="h-screen w-full flex flex-col bg-[#1E5ED8] overflow-hidden">
       {/* Carousel Section - 70% height */}
       <div
         ref={carouselRef}
@@ -219,7 +219,7 @@ export default function RestaurantWelcome() {
                   />
 
                   {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/80" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#1E5ED8]/35 to-[#1E5ED8]/80" />
 
                   {/* Text Overlay */}
                   <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 pb-16">
@@ -283,7 +283,7 @@ export default function RestaurantWelcome() {
 
       {/* Bottom Section - 30% height */}
       <div
-        className="bg-black px-6 py-6 md:py-8 flex flex-col justify-center gap-4"
+        className="bg-[#1E5ED8] px-6 py-6 md:py-8 flex flex-col justify-center gap-4"
         style={{ height: "30vh", minHeight: "240px" }}
       >
         {/* Login Button */}
@@ -316,3 +316,4 @@ export default function RestaurantWelcome() {
     </div>
   )
 }
+

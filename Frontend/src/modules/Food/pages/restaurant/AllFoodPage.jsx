@@ -336,7 +336,7 @@ export default function AllFoodPage() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               onClick={() => setShowFilterModal(false)}
-              className="fixed inset-0 bg-black/40 z-[60]"
+              className="fixed inset-0 bg-[#1E5ED8]/40 z-[60]"
             />
 
             {/* Bottom Sheet */}
@@ -458,4 +458,5 @@ export default function AllFoodPage() {
     </div>
   )
 }
+
 

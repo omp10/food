@@ -1,4 +1,4 @@
-﻿import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { ArrowLeft, Truck, Loader2 } from "lucide-react"
 import { motion } from "framer-motion"
@@ -98,7 +98,7 @@ export default function Shipping() {
 
         <p className="text-center mt-10 text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] leading-relaxed">
           Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} <br />
-          © {new Date().getFullYear()} Iggymet. All Rights Reserved.
+          � {new Date().getFullYear()} Iggymet. All Rights Reserved.
         </p>
       </div>
     </AnimatedPage>

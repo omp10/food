@@ -8,7 +8,7 @@ import { Button } from "@food/components/ui/button"
 import { Badge } from "@food/components/ui/badge"
 import { useProfile } from "@food/context/ProfileContext"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function CollectionDetail() {
   const { id } = useParams()

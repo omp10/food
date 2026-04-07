@@ -1,4 +1,4 @@
-﻿import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { ArrowLeft, FileText, Loader2 } from "lucide-react"
 import { motion } from "framer-motion"
@@ -7,7 +7,7 @@ import { Button } from "@food/components/ui/button"
 import api from "@food/api"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import { API_ENDPOINTS } from "@food/api/config"
-import BRAND_THEME from "../../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function Terms() {
   const navigate = useNavigate()
@@ -98,7 +98,7 @@ export default function Terms() {
 
         <p className="text-center mt-10 text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] leading-relaxed">
           Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} <br />
-          � {new Date().getFullYear()} Iggymet. All Rights Reserved.
+          ? {new Date().getFullYear()} Iggymet. All Rights Reserved.
         </p>
       </div>
     </AnimatedPage>

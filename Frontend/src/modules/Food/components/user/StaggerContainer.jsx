@@ -1,6 +1,6 @@
 // CSS-only StaggerContainer - no framer-motion
 import { useEffect, useRef, useState } from "react"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function StaggerContainer({ children, className = "" }) {
   const ref = useRef(null)

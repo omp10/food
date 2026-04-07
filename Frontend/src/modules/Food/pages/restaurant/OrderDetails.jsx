@@ -18,6 +18,7 @@ import {
   Volume2,
 } from "lucide-react"
 import ResendNotificationButton from "@food/components/restaurant/ResendNotificationButton"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -601,7 +602,10 @@ export default function OrderDetails() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+      >
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-gray-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading order details...</p>
@@ -613,7 +617,10 @@ export default function OrderDetails() {
   // Error state
   if (error && !orderData) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+      >
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 text-center">
           <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Not Found</h2>
@@ -632,7 +639,10 @@ export default function OrderDetails() {
   // No order data
   if (!orderData) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+      >
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 text-center">
           <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Not Found</h2>
@@ -649,7 +659,10 @@ export default function OrderDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+    >
       {/* Header */}
       <div className="bg-white  px-4 py-3 sticky top-0 z-50">
         <div className="flex items-center gap-3">
@@ -880,7 +893,7 @@ export default function OrderDetails() {
                     {/* Icon */}
                     <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center ${
                       event.status === "completed" 
-                        ? "bg-gray-900" 
+                        ? "bg-[#1E5ED8]" 
                         : event.status === "rejected"
                         ? "bg-red-600"
                         : "bg-gray-400"
@@ -913,7 +926,7 @@ export default function OrderDetails() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             transition={{ duration: 0.3 }}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-gray-900 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 max-w-sm"
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 max-w-sm bg-gradient-to-r from-[#1E5ED8] to-[#3B82F6]"
           >
             {isGeneratingPDF ? (
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -932,5 +945,6 @@ export default function OrderDetails() {
     </div>
   )
 }
+
 
 

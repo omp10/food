@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom"
 import { Tag, User, Truck } from "lucide-react"
-import BRAND_THEME from "../../../../config/brandTheme"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function BottomNavigation() {
   const location = useLocation()

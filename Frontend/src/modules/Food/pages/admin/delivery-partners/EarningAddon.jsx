@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Search, Plus, Edit, Trash2, ToggleLeft, ToggleRight, Settings, ArrowUpDown, Check, Columns, Package } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@food/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@food/components/ui/dialog"
@@ -422,7 +422,7 @@ export default function EarningAddon() {
                         {visibleColumns.earningAmount && (
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-1">
-                              <span className="text-sm font-semibold text-emerald-500">₹</span>
+                              <span className="text-sm font-semibold text-emerald-500">?</span>
                               <span className="text-sm font-medium text-slate-900">{addon.earningAmount?.toFixed(2)}</span>
                             </div>
                           </td>
@@ -542,10 +542,10 @@ export default function EarningAddon() {
               </div>
               <div className="space-y-1.5">
                 <label className="block text-sm font-semibold text-slate-700">
-                  Earning Amount (₹) <span className="text-red-500">*</span>
+                  Earning Amount (?) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-emerald-500">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-emerald-500">?</span>
                   <input
                     type="number"
                     required

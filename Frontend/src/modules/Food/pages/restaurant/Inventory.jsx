@@ -22,6 +22,7 @@ import { Switch } from "@food/components/ui/switch"
 import { useNavigate } from "react-router-dom"
 import { restaurantAPI, uploadAPI } from "@food/api"
 import { toast } from "sonner"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -371,7 +372,7 @@ function TimePickerWheel({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
+        className="fixed inset-0 bg-blue-900/50 z-[9999] flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
@@ -651,7 +652,7 @@ function SimpleCalendar({ selectedDate, onDateSelect, isOpen, onClose }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 z-[9998] flex items-center justify-center p-4"
+        className="fixed inset-0 bg-blue-900/50 z-[9998] flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
@@ -714,9 +715,9 @@ function SimpleCalendar({ selectedDate, onDateSelect, isOpen, onClose }) {
                     className={`h-10 text-sm rounded transition-colors ${!isCurrent
                         ? 'text-gray-300'
                         : isSelectedDate
-                          ? 'bg-black text-white'
+                          ? 'bg-[#1E5ED8] text-white'
                           : isTodayDate
-                            ? 'bg-gray-100 text-black font-semibold'
+                            ? 'bg-gray-100 text-gray-900 font-semibold'
                             : 'text-gray-700 hover:bg-gray-100'
                       }`}
                   >
@@ -1767,7 +1768,10 @@ export default function Inventory() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f3f5f8] flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+    >
       {/* Navbar */}
       <div className="sticky top-0 z-50 bg-white">
         <RestaurantNavbar
@@ -1784,7 +1788,7 @@ export default function Inventory() {
             onClick={() => setActiveTab("all-items")}
             className={`relative overflow-hidden rounded-[24px] border px-5 py-4 text-sm font-semibold whitespace-nowrap ${
               activeTab === "all-items"
-                ? "border-slate-950 text-white shadow-[0_18px_32px_-24px_rgba(15,23,42,0.8)]"
+                ? "text-white shadow-[0_18px_32px_-24px_rgba(41,121,251,0.45)]"
                 : "border-white/80 bg-white/80 text-slate-700 shadow-[0_16px_40px_-34px_rgba(15,23,42,0.4)]"
             }`}
             animate={{
@@ -1795,7 +1799,8 @@ export default function Inventory() {
             {activeTab === "all-items" && (
               <motion.div
                 layoutId="activeTabBackground"
-                className="absolute inset-0 rounded-[24px] bg-slate-950 -z-10"
+                className="absolute inset-0 rounded-[24px] -z-10"
+                style={{ background: BRAND_THEME.gradients.primary }}
                 initial={false}
                 transition={{
                   type: "spring",
@@ -1807,7 +1812,7 @@ export default function Inventory() {
             <span className="relative z-10 flex items-center justify-center gap-2">
               <span>All items</span>
               <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                activeTab === "all-items" ? "bg-white text-slate-950" : "bg-slate-100 text-slate-600"
+                activeTab === "all-items" ? "bg-white text-[#1E5ED8]" : "bg-slate-100 text-slate-600"
               }`}>
                 {totalItems}
               </span>
@@ -1818,7 +1823,7 @@ export default function Inventory() {
             onClick={() => setActiveTab("add-ons")}
             className={`relative overflow-hidden rounded-[24px] border px-5 py-4 text-sm font-semibold whitespace-nowrap ${
               activeTab === "add-ons"
-                ? "border-slate-950 text-white shadow-[0_18px_32px_-24px_rgba(15,23,42,0.8)]"
+                ? "text-white shadow-[0_18px_32px_-24px_rgba(41,121,251,0.45)]"
                 : "border-white/80 bg-white/80 text-slate-700 shadow-[0_16px_40px_-34px_rgba(15,23,42,0.4)]"
             }`}
             animate={{
@@ -1829,7 +1834,8 @@ export default function Inventory() {
             {activeTab === "add-ons" && (
               <motion.div
                 layoutId="activeTabBackground"
-                className="absolute inset-0 rounded-[24px] bg-slate-950 -z-10"
+                className="absolute inset-0 rounded-[24px] -z-10"
+                style={{ background: BRAND_THEME.gradients.primary }}
                 initial={false}
                 transition={{
                   type: "spring",
@@ -1841,7 +1847,7 @@ export default function Inventory() {
             <span className="relative z-10 flex items-center justify-center gap-2">
               <span>Add ons</span>
               <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                activeTab === "add-ons" ? "bg-white text-slate-950" : "bg-slate-100 text-slate-600"
+                activeTab === "add-ons" ? "bg-white text-[#1E5ED8]" : "bg-slate-100 text-slate-600"
               }`}>
                 {addons.length}
               </span>
@@ -1972,14 +1978,15 @@ export default function Inventory() {
                 <SlidersHorizontal className="w-4 h-4 text-slate-700" />
                 <span>Filters</span>
                 {selectedFilter !== "all" && (
-                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-slate-950" />
+                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#1E5ED8]" />
                 )}
               </button>
 
               {activeTab === "add-ons" && (
                 <button
                   onClick={() => setIsAddAddonOpen((v) => !v)}
-                  className="h-12 rounded-[20px] bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_18px_32px_-24px_rgba(15,23,42,0.85)] transition-colors hover:bg-slate-800"
+                  className="h-12 rounded-[20px] px-4 text-sm font-semibold text-white shadow-[0_18px_32px_-24px_rgba(41,121,251,0.45)] transition-colors"
+                  style={{ background: BRAND_THEME.gradients.primary }}
                   style={{ minWidth: "128px" }}
                 >
                   {isAddAddonOpen ? "Close" : "Add Add-on"}
@@ -2001,9 +2008,17 @@ export default function Inventory() {
                     onClick={() => setSelectedFilter(option.value)}
                     className={`shrink-0 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors ${
                       isActive
-                        ? "border-slate-950 bg-slate-950 text-white shadow-[0_14px_28px_-24px_rgba(15,23,42,0.9)]"
+                        ? "text-white shadow-[0_14px_28px_-24px_rgba(41,121,251,0.4)]"
                         : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white"
                     }`}
+                    style={
+                      isActive
+                        ? {
+                            background: BRAND_THEME.gradients.primary,
+                            borderColor: BRAND_THEME.colors.brand.primary,
+                          }
+                        : undefined
+                    }
                   >
                     <span>{option.label}</span>
                     <span className={`ml-2 inline-flex min-w-[20px] items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] ${
@@ -2106,7 +2121,15 @@ export default function Inventory() {
                         type="button"
                         onClick={handleSaveAddon}
                         disabled={savingAddon}
-                        className="px-4 py-2 bg-black text-white rounded-md text-sm font-medium hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 text-white"
+                        style={
+                          savingAddon
+                            ? { backgroundColor: "#e5e7eb", color: "#94a3b8" }
+                            : {
+                                background: BRAND_THEME.gradients.primary,
+                                boxShadow: `0 10px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}`,
+                              }
+                        }
                       >
                         {savingAddon && <Loader2 className="h-4 w-4 animate-spin" />}
                         <span>{savingAddon ? "Saving..." : "Submit for approval"}</span>
@@ -2428,7 +2451,7 @@ export default function Inventory() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-blue-900/50 z-50"
               onClick={() => setFilterOpen(false)}
             />
             <motion.div
@@ -2470,7 +2493,7 @@ export default function Inventory() {
                             name="filter"
                             checked={selectedFilter === option.value}
                             onChange={() => setSelectedFilter(option.value)}
-                            className="w-5 h-5 text-black border-gray-300 focus:ring-black"
+                            className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
                           />
                           <span className="text-base text-gray-900">{option.label}</span>
                         </div>
@@ -2493,7 +2516,11 @@ export default function Inventory() {
                   )}
                   <button
                     onClick={handleFilterApply}
-                    className={`${selectedFilter !== "all" ? 'flex-1' : 'w-full'} bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors`}
+                    className={`${selectedFilter !== "all" ? 'flex-1' : 'w-full'} text-white py-3 rounded-lg font-medium transition-colors`}
+                    style={{
+                      background: BRAND_THEME.gradients.primary,
+                      boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}`,
+                    }}
                   >
                     Apply
                   </button>
@@ -2512,7 +2539,7 @@ export default function Inventory() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-blue-900/50 z-50"
               onClick={() => setTogglePopupOpen(false)}
             />
             <motion.div
@@ -2577,7 +2604,7 @@ export default function Inventory() {
                         checked={selectedOption === "specific-time"}
                         onChange={() => setSelectedOption("specific-time")}
                         style={{ accentColor: "#000000" }}
-                        className="ml-auto w-5 h-5 !text-black !border-gray-300 !bg-black !focus:ring-black"
+                            className="ml-auto w-5 h-5 !text-blue-600 !border-gray-300 !bg-white !focus:ring-blue-500"
                       />
                     </div>
                   </label>
@@ -2593,7 +2620,7 @@ export default function Inventory() {
                         checked={selectedOption === "next-business-day"}
                         onChange={() => setSelectedOption("next-business-day")}
                         style={{ accentColor: "#000000" }}
-                        className="ml-auto w-5 h-5 !text-black !border-gray-300 !bg-black !focus:ring-black"
+                        className="ml-auto w-5 h-5 !text-blue-600 !border-gray-300 !bg-white !focus:ring-blue-500"
                       />
                     </div>
                   </label>
@@ -2644,7 +2671,7 @@ export default function Inventory() {
                           checked={selectedOption === "manual"}
                           onChange={() => setSelectedOption("manual")}
                           style={{ accentColor: "#000000" }}
-                          className="ml-auto w-5 h-5 !text-black !border-gray-300 !bg-black !focus:ring-black"
+                          className="ml-auto w-5 h-5 !text-blue-600 !border-gray-300 !bg-white !focus:ring-blue-500"
                         />
                       </div>
                       <p className="text-sm text-gray-500">
@@ -2664,7 +2691,11 @@ export default function Inventory() {
                   </button>
                   <button
                     onClick={handleToggleConfirm}
-                    className="flex-1 bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                    className="flex-1 text-white py-3 rounded-lg font-medium transition-colors"
+                    style={{
+                      background: BRAND_THEME.gradients.primary,
+                      boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}`,
+                    }}
                   >
                     Confirm
                   </button>
@@ -2702,7 +2733,7 @@ export default function Inventory() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsAddPopupOpen(false)}
-              className="fixed inset-0 bg-black/50 z-[70]"
+              className="fixed inset-0 bg-blue-900/50 z-[70]"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -2741,7 +2772,7 @@ export default function Inventory() {
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => setIsAddPopupOpen(true)}
-            className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-[0_22px_40px_-24px_rgba(15,23,42,0.85)]"
+            className="rounded-full bg-[#1E5ED8] px-5 py-3 text-sm font-semibold text-white shadow-[0_22px_40px_-24px_rgba(41,121,251,0.55)]"
           >
             + Add item
           </motion.button>
@@ -2766,7 +2797,7 @@ export default function Inventory() {
               <>
                 {/* Backdrop */}
                 <motion.div
-                  className="fixed inset-0 bg-black/40 z-30"
+                  className="fixed inset-0 bg-blue-900/40 z-30"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -2830,4 +2861,5 @@ export default function Inventory() {
     </div>
   )
 }
+
 

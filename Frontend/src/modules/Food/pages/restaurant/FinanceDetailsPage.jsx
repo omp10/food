@@ -187,7 +187,7 @@ export default function FinanceDetailsPage() {
                 {isActive && (
                   <motion.div
                     layoutId="financeTopTabActive"
-                    className="absolute inset-0 bg-black rounded-full -z-10"
+                    className="absolute inset-0 bg-[#1E5ED8] rounded-full -z-10"
                     initial={false}
                     transition={{
                       type: "spring",
@@ -559,7 +559,7 @@ export default function FinanceDetailsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowDownloadPopup(false)}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -582,7 +582,7 @@ export default function FinanceDetailsPage() {
               </p>
               <button
                 onClick={() => setShowDownloadPopup(false)}
-                className="w-full py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                className="w-full py-3 bg-[#1E5ED8] text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
               >
                 Close
               </button>
@@ -600,7 +600,7 @@ export default function FinanceDetailsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowEmailPopup(false)}
-              className="fixed inset-0 bg-black/50 z-50"
+              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -623,7 +623,7 @@ export default function FinanceDetailsPage() {
               </p>
               <button
                 onClick={() => setShowEmailPopup(false)}
-                className="w-full py-3 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                className="w-full py-3 bg-[#1E5ED8] text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
               >
                 Close
               </button>
@@ -634,3 +634,4 @@ export default function FinanceDetailsPage() {
     </div>
   )
 }
+

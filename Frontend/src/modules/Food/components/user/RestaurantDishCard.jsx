@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from "framer-motion";
 import { Star, Clock, IndianRupee, Heart, BadgePercent, Plus } from "lucide-react";
 import OptimizedImage from "@food/components/OptimizedImage";
-import BRAND_THEME from "../../../../config/brandTheme";
+import BRAND_THEME from "@/config/brandTheme";
 
 const RestaurantDishCard = ({ 
   restaurant, 
