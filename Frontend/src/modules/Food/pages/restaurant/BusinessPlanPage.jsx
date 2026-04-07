@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation"
 import Lenis from "lenis"
 import { ArrowLeft, CheckCircle } from "lucide-react"
+import BRAND_THEME from "@/config/brandTheme"
 import { Card, CardContent } from "@food/components/ui/card"
 import { Button } from "@food/components/ui/button"
 import BottomNavbar from "@food/components/restaurant/BottomNavbar"
@@ -154,7 +155,8 @@ export default function BusinessPlanPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-[#1E5ED8]/40 z-[70]"
+              className="fixed inset-0 z-[70]"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}66` }}
               onClick={() => setShowPlans(false)}
             />
 

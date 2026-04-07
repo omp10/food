@@ -7,6 +7,7 @@ import loginBanner2 from "@food/assets/restaurant/loginbanner2.png"
 import loginBanner3 from "@food/assets/restaurant/loginbanner3.png"
 import loginBanner4 from "@food/assets/restaurant/loginbanner4.png"
 import { useCompanyName } from "@food/hooks/useCompanyName"
+import BRAND_THEME from "@/config/brandTheme"
 
 // Carousel data with images and taglines
 const carouselData = [
@@ -180,7 +181,10 @@ export default function RestaurantWelcome() {
   }, [carouselData.length])
 
   return (
-    <div className="h-screen w-full flex flex-col bg-[#1E5ED8] overflow-hidden">
+    <div
+      className="h-screen w-full flex flex-col overflow-hidden"
+      style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
+    >
       {/* Carousel Section - 70% height */}
       <div
         ref={carouselRef}
@@ -219,7 +223,10 @@ export default function RestaurantWelcome() {
                   />
 
                   {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#1E5ED8]/35 to-[#1E5ED8]/80" />
+                  <div
+                    className="absolute inset-0 bg-gradient-to-b from-transparent"
+                    style={{ background: `linear-gradient(to bottom, transparent, ${BRAND_THEME.colors.brand.primaryDark}59, ${BRAND_THEME.colors.brand.primaryDark}cc)` }}
+                  />
 
                   {/* Text Overlay */}
                   <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 pb-16">
@@ -283,7 +290,8 @@ export default function RestaurantWelcome() {
 
       {/* Bottom Section - 30% height */}
       <div
-        className="bg-[#1E5ED8] px-6 py-6 md:py-8 flex flex-col justify-center gap-4"
+        className="px-6 py-6 md:py-8 flex flex-col justify-center gap-4"
+        style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
         style={{ height: "30vh", minHeight: "240px" }}
       >
         {/* Login Button */}

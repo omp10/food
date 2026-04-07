@@ -26,6 +26,7 @@ import {
   PopoverTrigger,
 } from "@food/components/ui/popover"
 import { useCompanyName } from "@food/hooks/useCompanyName"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -224,7 +225,8 @@ function TimePickerWheel({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-[#1E5ED8]/50 z-[9999] flex items-center justify-center p-4"
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+        style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
         onClick={onClose}
       >
         <motion.div
@@ -748,7 +750,8 @@ export default function DaySlots() {
         {/* Save Button */}
         <Button
           onClick={handleSave}
-          className="w-full text-white font-medium py-3 rounded-lg bg-gradient-to-r from-[#1E5ED8] to-[#3B82F6] hover:opacity-95"
+          className="w-full text-white font-medium py-3 rounded-lg hover:opacity-95"
+          style={{ background: BRAND_THEME.gradients.primary }}
         >
           Save
         </Button>

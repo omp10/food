@@ -6,6 +6,7 @@ import { restaurantAPI, orderAPI } from "@food/api"
 import { API_BASE_URL } from "@food/api/config"
 import { toast } from "sonner"
 import { useLocation } from "@food/hooks/useLocation"
+import BRAND_THEME from "@/config/brandTheme"
 import { useZone } from "@food/hooks/useZone"
 import {
   ArrowLeft,
@@ -1922,7 +1923,10 @@ function RestaurantDetailsContent() {
       <AnimatedPage>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
           <div className="flex flex-col items-center gap-4 text-center">
-            <AlertCircle className={`h-12 w-12 ${isNetworkError ? 'text-[#2979FB]' : 'text-red-500'}`} />
+            <AlertCircle
+              className="h-12 w-12"
+              style={{ color: isNetworkError ? BRAND_THEME.colors.brand.primary : undefined }}
+            />
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
                 {isNetworkError ? 'Connection Error' : isNotFoundError ? 'Restaurant not found' : 'Error'}
@@ -2003,7 +2007,8 @@ function RestaurantDetailsContent() {
                     placeholder="Search for dishes..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2 rounded-full border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-[#1a1a1a] text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2979FB] focus:border-transparent"
+                    className="w-full pl-10 pr-10 py-2 rounded-full border border-gray-200 dark:border-gray-800 shadow-sm bg-white dark:bg-[#1a1a1a] text-sm dark:text-white focus:outline-none"
+                    style={{ boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}22`, borderColor: `${BRAND_THEME.colors.brand.primary}33` }}
                     autoFocus
                     onBlur={() => {
                       if (!searchQuery) {
@@ -2091,7 +2096,7 @@ function RestaurantDetailsContent() {
           {/* Offers */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm overflow-hidden">
-              <Tag className="h-4 w-4 text-[#2979FB]" />
+              <Tag className="h-4 w-4" style={{ color: BRAND_THEME.colors.brand.primary }} />
               <div className="relative h-5 overflow-hidden">
                 <AnimatePresence mode="wait">
                   <motion.span
@@ -2100,7 +2105,8 @@ function RestaurantDetailsContent() {
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -16, opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="text-[#2979FB] font-medium inline-block"
+                    className="font-medium inline-block"
+                    style={{ color: BRAND_THEME.colors.brand.primary }}
                   >
                     {highlightOffers[highlightIndex]}
                   </motion.span>
@@ -2173,9 +2179,10 @@ function RestaurantDetailsContent() {
                     onClick={() => setSelectedMenuCategory("all")}
                     className={`flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
                       selectedMenuCategory === "all"
-                        ? "border-[#2979FB] bg-[#EAF2FF] text-[#2979FB]"
+                        ? "text-white"
                         : "border-gray-300 bg-white text-gray-700"
                     }`}
+                    style={selectedMenuCategory === "all" ? { background: BRAND_THEME.gradients.primary, borderColor: BRAND_THEME.colors.brand.primary } : undefined}
                   >
                     All
                   </button>
@@ -2186,9 +2193,14 @@ function RestaurantDetailsContent() {
                       onClick={() => setSelectedMenuCategory(category.id)}
                       className={`flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
                         selectedMenuCategory === category.id
-                          ? "border-[#2979FB] bg-[#EAF2FF] text-[#2979FB]"
+                          ? "text-white"
                           : "border-gray-300 bg-white text-gray-700"
                       }`}
+                      style={
+                        selectedMenuCategory === category.id
+                          ? { background: BRAND_THEME.gradients.primary, borderColor: BRAND_THEME.colors.brand.primary }
+                          : undefined
+                      }
                     >
                       {category.image ? (
                         <img
@@ -2346,7 +2358,8 @@ function RestaurantDetailsContent() {
                                 delete dishCardRefs.current[item.id]
                               }
                             }}
-                            className={`flex gap-4 p-4 border-b border-gray-100 last:border-none relative cursor-pointer transition-all duration-300 ${highlightedDishId === item.id ? "bg-blue-50 ring-2 ring-[#2979FB] ring-inset dark:bg-blue-950/20" : ""}`}
+                            className={`flex gap-4 p-4 border-b border-gray-100 last:border-none relative cursor-pointer transition-all duration-300 ${highlightedDishId === item.id ? "bg-blue-50 ring-2 ring-inset dark:bg-blue-950/20" : ""}`}
+                            style={highlightedDishId === item.id ? { boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}`, borderColor: BRAND_THEME.colors.brand.primary } : undefined}
                             onClick={() => handleItemClick(item)}
                           >
                             {/* Left Side - Details */}
@@ -2567,7 +2580,8 @@ function RestaurantDetailsContent() {
                                           delete dishCardRefs.current[item.id]
                                         }
                                       }}
-                                      className={`flex gap-4 p-4 border-b border-gray-100 last:border-none relative cursor-pointer transition-all duration-300 ${highlightedDishId === item.id ? "bg-blue-50 ring-2 ring-[#2979FB] ring-inset dark:bg-blue-950/20" : ""}`}
+                                      className={`flex gap-4 p-4 border-b border-gray-100 last:border-none relative cursor-pointer transition-all duration-300 ${highlightedDishId === item.id ? "bg-blue-50 ring-2 ring-inset dark:bg-blue-950/20" : ""}`}
+                                      style={highlightedDishId === item.id ? { boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}`, borderColor: BRAND_THEME.colors.brand.primary } : undefined}
                                       onClick={() => handleItemClick(item)}
                                     >
                                       {/* Left Side - Details */}
@@ -2766,7 +2780,12 @@ function RestaurantDetailsContent() {
       {!showFilterSheet && !showMenuSheet && !showMenuOptionsSheet && (
         <div className="sticky dark:bg-[#1a1a1a] bottom-4 flex justify-end px-4 z-50 mt-auto">
           <Button
-            className="bg-[#2979FB] hover:bg-[#1E5ED8] text-white flex items-center gap-2 shadow-[0_8px_30px_rgba(41,121,251,0.28)] border border-[#2979FB]/20 px-6 py-6 rounded-full font-bold transform transition-all duration-300 hover:scale-110 active:scale-95 group"
+            className="text-white flex items-center gap-2 px-6 py-6 rounded-full font-bold transform transition-all duration-300 hover:scale-110 active:scale-95 group"
+            style={{
+              background: BRAND_THEME.gradients.primary,
+              boxShadow: "0 8px 30px rgba(41,121,251,0.28)",
+              border: `1px solid ${BRAND_THEME.colors.brand.primary}33`
+            }}
             size="lg"
             onClick={() => setShowMenuSheet(true)}
           >

@@ -1189,9 +1189,10 @@ export default function RestaurantOnboarding() {
                 onClick={() => isEditing && setStep1({ ...step1, pureVegRestaurant: false })}
                 className={`px-3 py-1.5 text-xs rounded-full border ${
                   step1.pureVegRestaurant === false
-                    ? "bg-[#1E5ED8] text-white border-[#1E5ED8]"
+                    ? "text-white border-transparent"
                     : "bg-white text-gray-700 border-gray-200"
                 } ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
+                style={step1.pureVegRestaurant === false ? { background: BRAND_THEME.gradients.primary } : undefined}
               >
                 No, Mixed Menu
               </button>
@@ -1777,8 +1778,9 @@ export default function RestaurantOnboarding() {
                   key={day}
                   type="button"
                   onClick={() => toggleDay(day)}
-                  className={`aspect-square flex items-center justify-center rounded-md text-[11px] font-medium ${active ? "bg-[#1E5ED8] text-white" : "bg-gray-100 text-gray-800"
+                  className={`aspect-square flex items-center justify-center rounded-md text-[11px] font-medium ${active ? "text-white" : "bg-gray-100 text-gray-800"
                     }`}
+                  style={active ? { background: BRAND_THEME.gradients.primary } : undefined}
                 >
                   {day.charAt(0)}
                 </button>
@@ -1880,16 +1882,18 @@ export default function RestaurantOnboarding() {
           <button
             type="button"
             onClick={() => setStep3({ ...step3, gstRegistered: true })}
-            className={`px-3 py-1.5 text-xs rounded-full ${step3.gstRegistered ? "bg-[#1E5ED8] text-white" : "bg-gray-100 text-gray-800"
+            className={`px-3 py-1.5 text-xs rounded-full ${step3.gstRegistered ? "text-white" : "bg-gray-100 text-gray-800"
               }`}
+            style={step3.gstRegistered ? { background: BRAND_THEME.gradients.primary } : undefined}
           >
             Yes
           </button>
           <button
             type="button"
             onClick={() => setStep3({ ...step3, gstRegistered: false })}
-            className={`px-3 py-1.5 text-xs rounded-full ${!step3.gstRegistered ? "bg-[#1E5ED8] text-white" : "bg-gray-100 text-gray-800"
+            className={`px-3 py-1.5 text-xs rounded-full ${!step3.gstRegistered ? "text-white" : "bg-gray-100 text-gray-800"
               }`}
+            style={!step3.gstRegistered ? { background: BRAND_THEME.gradients.primary } : undefined}
           >
             No
           </button>

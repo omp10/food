@@ -1481,7 +1481,8 @@ export default function HubMenu() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsFilterOpen(false)}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -1561,7 +1562,8 @@ export default function HubMenu() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsAddPopupOpen(false)}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -1807,7 +1809,8 @@ export default function HubMenu() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsCategoryOptionsOpen(false)}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -1862,7 +1865,8 @@ export default function HubMenu() {
                 setEditCategoryName("")
                 setSelectedCategory(null)
               }}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -1943,7 +1947,8 @@ export default function HubMenu() {
                 setSubCategoryName("")
                 setSelectedGroupForSubCategory(null)
               }}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -2021,7 +2026,8 @@ export default function HubMenu() {
                 setIsAddCategoryPopupOpen(false)
                 setNewCategoryName("")
               }}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -2093,7 +2099,8 @@ export default function HubMenu() {
                 setIsSearchOpen(false)
                 setSearchQuery("")
               }}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -2251,7 +2258,8 @@ export default function HubMenu() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[#1E5ED8]/50 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 backdrop-blur-sm flex items-center justify-center p-4"
+            style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}50` }}
             onClick={() => setIsAddAddonModalOpen(false)}
           >
             <motion.div

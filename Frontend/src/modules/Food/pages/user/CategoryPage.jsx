@@ -1782,7 +1782,10 @@ export default function CategoryPage() {
                               }`}
                           >
                             {isActive && (
-                              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#2979FB] rounded-r" />
+                              <div
+                                className="absolute left-0 top-0 bottom-0 w-1 rounded-r"
+                                style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
+                              />
                             )}
                             <Icon className="h-5 w-5 md:h-6 md:w-6" strokeWidth={1.5} />
                             <span className="text-xs md:text-sm font-medium leading-tight">{tab.label}</span>
@@ -1812,9 +1815,10 @@ export default function CategoryPage() {
                               key={option.id || 'relevance'}
                               onClick={() => setSortBy(option.id)}
                               className={`px-4 md:px-5 py-3 md:py-4 rounded-xl border text-left transition-colors ${sortBy === option.id
-                                ? 'border-[#2979FB] bg-[#EAF2FF] dark:bg-blue-950/20'
-                                : 'border-gray-200 dark:border-gray-700 hover:border-[#2979FB]'
+                                ? 'border-transparent bg-[#EAF2FF] dark:bg-blue-950/20'
+                                : 'border-gray-200 dark:border-gray-700'
                                 }`}
+                              style={sortBy === option.id ? { borderColor: BRAND_THEME.colors.brand.primary, backgroundColor: `${BRAND_THEME.colors.brand.primary}14` } : undefined}
                             >
                               <span className={`text-sm md:text-base font-medium ${sortBy === option.id ? 'text-[#2979FB] dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}`}>
                                 {option.label}
@@ -1835,22 +1839,24 @@ export default function CategoryPage() {
                           <button
                             onClick={() => toggleFilter('under-30-mins')}
                             className={`flex flex-col items-center gap-2 p-4 md:p-5 rounded-xl border transition-colors ${activeFilters.has('under-30-mins')
-                              ? 'border-[#2979FB] bg-[#EAF2FF] dark:bg-blue-950/20'
-                              : 'border-gray-200 dark:border-gray-700 hover:border-[#2979FB]'
+                              ? 'border-transparent bg-[#EAF2FF] dark:bg-blue-950/20'
+                              : 'border-gray-200 dark:border-gray-700'
                               }`}
+                            style={activeFilters.has('under-30-mins') ? { borderColor: BRAND_THEME.colors.brand.primary, backgroundColor: `${BRAND_THEME.colors.brand.primary}14` } : undefined}
                           >
-                            <Timer className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('under-30-mins') ? 'text-[#2979FB]' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('under-30-mins') ? 'text-[#2979FB]' : 'text-gray-700 dark:text-gray-300'}`}>Under 30 mins</span>
+                            <Timer className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('under-30-mins') ? 'text-[#2979FB]' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} style={activeFilters.has('under-30-mins') ? { color: BRAND_THEME.colors.brand.primary } : undefined} />
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('under-30-mins') ? 'text-[#2979FB]' : 'text-gray-700 dark:text-gray-300'}`} style={activeFilters.has('under-30-mins') ? { color: BRAND_THEME.colors.brand.primary } : undefined}>Under 30 mins</span>
                           </button>
                           <button
                             onClick={() => toggleFilter('delivery-under-45')}
                             className={`flex flex-col items-center gap-2 p-4 md:p-5 rounded-xl border transition-colors ${activeFilters.has('delivery-under-45')
-                              ? 'border-[#2979FB] bg-[#EAF2FF] dark:bg-blue-950/20'
-                              : 'border-gray-200 dark:border-gray-700 hover:border-[#2979FB]'
+                              ? 'border-transparent bg-[#EAF2FF] dark:bg-blue-950/20'
+                              : 'border-gray-200 dark:border-gray-700'
                               }`}
+                            style={activeFilters.has('delivery-under-45') ? { borderColor: BRAND_THEME.colors.brand.primary, backgroundColor: `${BRAND_THEME.colors.brand.primary}14` } : undefined}
                           >
-                            <Timer className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('delivery-under-45') ? 'text-[#2979FB]' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} />
-                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('delivery-under-45') ? 'text-[#2979FB]' : 'text-gray-700 dark:text-gray-300'}`}>Under 45 mins</span>
+                            <Timer className={`h-6 w-6 md:h-7 md:w-7 ${activeFilters.has('delivery-under-45') ? 'text-[#2979FB]' : 'text-gray-600 dark:text-gray-400'}`} strokeWidth={1.5} style={activeFilters.has('delivery-under-45') ? { color: BRAND_THEME.colors.brand.primary } : undefined} />
+                            <span className={`text-sm md:text-base font-medium ${activeFilters.has('delivery-under-45') ? 'text-[#2979FB]' : 'text-gray-700 dark:text-gray-300'}`} style={activeFilters.has('delivery-under-45') ? { color: BRAND_THEME.colors.brand.primary } : undefined}>Under 45 mins</span>
                           </button>
                         </div>
                       </div>

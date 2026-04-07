@@ -440,9 +440,10 @@ export default function EditOwner() {
             disabled={!hasChanges || loading || saving}
             className={`w-full py-3 ${
               hasChanges && !loading && !saving
-                ? "bg-[#1E5ED8] hover:bg-[#1B54C2] text-white" 
+                ? "text-white"
                 : "bg-gray-200 text-gray-500 cursor-not-allowed"
             } transition-colors`}
+            style={hasChanges && !loading && !saving ? { background: BRAND_THEME.gradients.primary } : undefined}
           >
             {saving ? "Saving..." : "Save"}
           </Button>

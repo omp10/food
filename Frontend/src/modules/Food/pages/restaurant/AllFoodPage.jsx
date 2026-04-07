@@ -13,6 +13,7 @@ import {
 import BottomNavbar from "@food/components/restaurant/BottomNavbar"
 import MenuOverlay from "@food/components/restaurant/MenuOverlay"
 import { formatCurrency } from "@food/utils/currency"
+import BRAND_THEME from "@/config/brandTheme"
 import { restaurantAPI } from "@food/api"
 import { flattenMenuItems, getMenuFromResponse } from "@food/utils/menuItems"
 
@@ -336,7 +337,8 @@ export default function AllFoodPage() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               onClick={() => setShowFilterModal(false)}
-              className="fixed inset-0 bg-[#1E5ED8]/40 z-[60]"
+              className="fixed inset-0 z-[60]"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}66` }}
             />
 
             {/* Bottom Sheet */}

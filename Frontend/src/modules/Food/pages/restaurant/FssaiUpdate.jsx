@@ -4,6 +4,7 @@ import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation
 import { ArrowLeft, Upload } from "lucide-react"
 import { ImageSourcePicker } from "@food/components/ImageSourcePicker"
 import { isFlutterBridgeAvailable } from "@food/utils/imageUploadUtils"
+import BRAND_THEME from "@/config/brandTheme"
 import { toast } from "sonner"
 
 export default function FssaiUpdate() {
@@ -125,9 +126,10 @@ export default function FssaiUpdate() {
           form="fssai-form"
           className={`w-full py-3 rounded-full text-sm font-medium transition-colors ${
             uploadedFile 
-              ? "bg-[#1E5ED8] text-white hover:bg-[#1B54C2]" 
+              ? "text-white"
               : "bg-gray-200 text-gray-500 cursor-not-allowed"
           }`}
+          style={uploadedFile ? { background: BRAND_THEME.gradients.primary } : undefined}
           disabled={!uploadedFile}
         >
           Confirm

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, ChevronDown, ChevronUp, Download, Mail, X, Info } from "lucide-react"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function FinanceDetailsPage() {
   const navigate = useNavigate()
@@ -187,7 +188,8 @@ export default function FinanceDetailsPage() {
                 {isActive && (
                   <motion.div
                     layoutId="financeTopTabActive"
-                    className="absolute inset-0 bg-[#1E5ED8] rounded-full -z-10"
+                    className="absolute inset-0 rounded-full -z-10"
+                    style={{ backgroundColor: BRAND_THEME.colors.brand.primaryDark }}
                     initial={false}
                     transition={{
                       type: "spring",
@@ -559,7 +561,8 @@ export default function FinanceDetailsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowDownloadPopup(false)}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -582,7 +585,8 @@ export default function FinanceDetailsPage() {
               </p>
               <button
                 onClick={() => setShowDownloadPopup(false)}
-                className="w-full py-3 bg-[#1E5ED8] text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                className="w-full py-3 text-white rounded-lg font-medium transition-colors"
+                style={{ background: BRAND_THEME.gradients.primary }}
               >
                 Close
               </button>
@@ -600,7 +604,8 @@ export default function FinanceDetailsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowEmailPopup(false)}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -623,7 +628,8 @@ export default function FinanceDetailsPage() {
               </p>
               <button
                 onClick={() => setShowEmailPopup(false)}
-                className="w-full py-3 bg-[#1E5ED8] text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                className="w-full py-3 text-white rounded-lg font-medium transition-colors"
+                style={{ background: BRAND_THEME.gradients.primary }}
               >
                 Close
               </button>

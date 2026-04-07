@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react"
 import { ArrowLeft, CheckCircle, Mail } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation"
+import BRAND_THEME from "@/config/brandTheme"
 
 const REPORT_VIEWS = [
   { id: "detailed", label: "Detailed report" },
@@ -98,7 +99,8 @@ export default function DownloadReport() {
               <button
                 key={type}
                 onClick={() => setViewType(type)}
-                className={`py-2 ${viewType === type ? "bg-[#1E5ED8] text-white" : "bg-white text-gray-800"}`}
+                className={`py-2 ${viewType === type ? "text-white" : "bg-white text-gray-800"}`}
+                style={viewType === type ? { background: BRAND_THEME.gradients.primary } : undefined}
               >
                 {type}
               </button>
@@ -129,7 +131,8 @@ export default function DownloadReport() {
       <div className="px-4 pb-6">
         <button
           onClick={handleSend}
-          className="w-full bg-[#1E5ED8] text-white py-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+          className="w-full text-white py-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+          style={{ background: BRAND_THEME.gradients.primary }}
         >
           <Mail className="w-5 h-5" />
           Send an email

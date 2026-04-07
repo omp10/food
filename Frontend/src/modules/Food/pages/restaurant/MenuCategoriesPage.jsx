@@ -372,7 +372,8 @@ export default function MenuCategoriesPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={resetModal}
-              className="fixed inset-0 z-50 bg-[#1E5ED8]/50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}

@@ -144,9 +144,10 @@ export default function Checkout() {
                           <div
                             key={addressId || `${address.label}-${address.street}-${address.city}`}
                             className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${isSelected
-                                ? "border-[#2979FB] bg-blue-50"
+                                ? "border-transparent"
                                 : "border-gray-200 hover:border-blue-300"
                               }`}
+                            style={isSelected ? { borderColor: BRAND_THEME.colors.brand.primary, backgroundColor: `${BRAND_THEME.colors.brand.primary}14` } : undefined}
                             onClick={() => {
                               setSelectedAddressId(addressId)
                               if (addressId) setDefaultAddress(addressId)
@@ -203,9 +204,10 @@ export default function Checkout() {
                           <div
                             key={payment.id}
                             className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${isSelected
-                                ? "border-[#2979FB] bg-blue-50"
+                                ? "border-transparent"
                                 : "border-gray-200 hover:border-blue-300"
                               }`}
+                            style={isSelected ? { borderColor: BRAND_THEME.colors.brand.primary, backgroundColor: `${BRAND_THEME.colors.brand.primary}14` } : undefined}
                             onClick={() => setSelectedPayment(payment.id)}
                           >
                             <div className="flex items-start justify-between">

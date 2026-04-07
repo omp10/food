@@ -596,7 +596,8 @@ export default function FoodDetailsPage() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               onClick={() => setShowStockModal(false)}
-              className="fixed inset-0 bg-[#1E5ED8]/40 z-[60]"
+              className="fixed inset-0 z-[60]"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}66` }}
             />
 
             {/* Bottom Sheet Modal */}

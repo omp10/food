@@ -715,11 +715,12 @@ function SimpleCalendar({ selectedDate, onDateSelect, isOpen, onClose }) {
                     className={`h-10 text-sm rounded transition-colors ${!isCurrent
                         ? 'text-gray-300'
                         : isSelectedDate
-                          ? 'bg-[#1E5ED8] text-white'
+                        ? 'text-white'
                           : isTodayDate
                             ? 'bg-gray-100 text-gray-900 font-semibold'
                             : 'text-gray-700 hover:bg-gray-100'
                       }`}
+                    style={isSelectedDate ? { background: BRAND_THEME.gradients.primary } : undefined}
                   >
                     {date.getDate()}
                   </button>
@@ -1811,9 +1812,12 @@ export default function Inventory() {
             )}
             <span className="relative z-10 flex items-center justify-center gap-2">
               <span>All items</span>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                activeTab === "all-items" ? "bg-white text-[#1E5ED8]" : "bg-slate-100 text-slate-600"
-              }`}>
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  activeTab === "all-items" ? "bg-white text-primary" : "bg-slate-100 text-slate-600"
+                }`}
+                style={activeTab === "all-items" ? { color: BRAND_THEME.colors.brand.primary } : undefined}
+              >
                 {totalItems}
               </span>
             </span>
@@ -1846,9 +1850,12 @@ export default function Inventory() {
             )}
             <span className="relative z-10 flex items-center justify-center gap-2">
               <span>Add ons</span>
-              <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                activeTab === "add-ons" ? "bg-white text-[#1E5ED8]" : "bg-slate-100 text-slate-600"
-              }`}>
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  activeTab === "add-ons" ? "bg-white text-primary" : "bg-slate-100 text-slate-600"
+                }`}
+                style={activeTab === "add-ons" ? { color: BRAND_THEME.colors.brand.primary } : undefined}
+              >
                 {addons.length}
               </span>
             </span>
@@ -1978,7 +1985,10 @@ export default function Inventory() {
                 <SlidersHorizontal className="w-4 h-4 text-slate-700" />
                 <span>Filters</span>
                 {selectedFilter !== "all" && (
-                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#1E5ED8]" />
+                  <span
+                    className="absolute top-2 right-2 w-2 h-2 rounded-full"
+                    style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
+                  />
                 )}
               </button>
 
@@ -2772,7 +2782,8 @@ export default function Inventory() {
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => setIsAddPopupOpen(true)}
-            className="rounded-full bg-[#1E5ED8] px-5 py-3 text-sm font-semibold text-white shadow-[0_22px_40px_-24px_rgba(41,121,251,0.55)]"
+            className="rounded-full px-5 py-3 text-sm font-semibold text-white"
+            style={{ background: BRAND_THEME.gradients.primary, boxShadow: `0 22px 40px -24px ${BRAND_THEME.colors.brand.primaryDark}8c` }}
           >
             + Add item
           </motion.button>

@@ -89,13 +89,21 @@ export default function Categories() {
       {/* Search Bar */}
       <div className="px-4 py-6">
         <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[#2979FB] transition-colors" />
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 transition-colors"
+            style={{ color: BRAND_THEME.colors.brand.primary }}
+          />
           <input
             type="text"
             placeholder="Search specialties, cuisines..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-100 dark:border-gray-800 rounded-2xl text-sm font-medium dark:text-white focus:outline-none focus:ring-4 focus:ring-[#2979FB]/5 focus:border-[#2979FB] transition-all placeholder:text-neutral-400"
+            className="w-full pl-12 pr-4 py-4 bg-neutral-50 dark:bg-[#1a1a1a] border border-neutral-100 dark:border-gray-800 rounded-2xl text-sm font-medium dark:text-white focus:outline-none transition-all placeholder:text-neutral-400"
+            style={{
+              borderColor: `${BRAND_THEME.colors.brand.primary}26`,
+              boxShadow: `0 0 0 0px transparent`,
+              outlineColor: BRAND_THEME.colors.brand.primary
+            }}
           />
         </div>
       </div>
@@ -153,7 +161,8 @@ export default function Categories() {
             <p className="text-sm text-neutral-500 mt-2 max-w-[240px]">We couldn't find any categories matching your search. Try another keyword!</p>
             <button 
               onClick={() => setSearchQuery("")}
-              className="mt-8 px-8 py-3 bg-[#2979FB] text-white rounded-2xl text-sm font-bold active:scale-95 transition-all shadow-lg hover:bg-[#1E5ED8]"
+              className="mt-8 px-8 py-3 text-white rounded-2xl text-sm font-bold active:scale-95 transition-all shadow-lg"
+              style={{ background: BRAND_THEME.gradients.primary, boxShadow: `0 10px 24px -18px ${BRAND_THEME.colors.brand.primaryDark}` }}
             >
               Show all categories
             </button>

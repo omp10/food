@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { ArrowLeft, Wallet } from "lucide-react"
 import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import { restaurantAPI } from "@food/api"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -70,9 +71,10 @@ export default function WithdrawalHistoryPage() {
             onClick={() => setWithdrawalHistoryTab('pending')}
             className={`flex-1 px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
               withdrawalHistoryTab === 'pending'
-                ? "bg-[#1E5ED8] text-white"
+                ? "text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
+            style={withdrawalHistoryTab === 'pending' ? { background: BRAND_THEME.gradients.primary } : undefined}
           >
             Withdrawal Pending
           </button>
@@ -80,9 +82,10 @@ export default function WithdrawalHistoryPage() {
             onClick={() => setWithdrawalHistoryTab('successful')}
             className={`flex-1 px-4 py-3 rounded-lg font-medium text-sm transition-colors ${
               withdrawalHistoryTab === 'successful'
-                ? "bg-[#1E5ED8] text-white"
+                ? "text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
+            style={withdrawalHistoryTab === 'successful' ? { background: BRAND_THEME.gradients.primary } : undefined}
           >
             Withdrawal Successful
           </button>

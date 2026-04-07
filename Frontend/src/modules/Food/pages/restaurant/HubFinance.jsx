@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Bell, Menu, ChevronDown, Calendar, Download, ArrowRight, FileText, Wallet, X } from "lucide-react"
 import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import { restaurantAPI } from "@food/api"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -760,9 +761,10 @@ export default function HubFinance() {
             onClick={() => setActiveTab("payouts")}
             className={`flex-1 py-3 px-4 rounded-full font-medium text-sm transition-colors ${
               activeTab === "payouts"
-                ? "bg-[#1E5ED8] text-white"
+                ? "text-white"
                 : "bg-white text-gray-600 border border-gray-300"
             }`}
+            style={activeTab === "payouts" ? { background: BRAND_THEME.gradients.primary } : undefined}
           >
             Payouts
           </button>
@@ -770,9 +772,10 @@ export default function HubFinance() {
             onClick={() => setActiveTab("invoices")}
             className={`flex-1 py-3 px-4 rounded-full font-medium text-sm transition-colors ${
               activeTab === "invoices"
-                ? "bg-[#1E5ED8] text-white"
+                ? "text-white"
                 : "bg-white text-gray-600 border border-gray-300"
             }`}
+            style={activeTab === "invoices" ? { background: BRAND_THEME.gradients.primary } : undefined}
           >
             Invoices & Taxes
           </button>

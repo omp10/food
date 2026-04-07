@@ -1182,7 +1182,8 @@ export default function ItemDetailsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsCategoryPopupOpen(false)}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -1283,7 +1284,8 @@ export default function ItemDetailsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsGstPopupOpen(false)}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primaryDark}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
