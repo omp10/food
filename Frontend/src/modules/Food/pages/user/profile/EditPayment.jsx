@@ -73,7 +73,7 @@ export default function EditPayment() {
     }
 
     updatePaymentMethod(id, formData);
-    navigate("/user/profile/payments");
+    navigate("/food/user/profile/payments");
   };
 
   if (!payment) {
@@ -83,7 +83,7 @@ export default function EditPayment() {
           <Card className={`${BRAND_THEME.tokens.profile.surface} border ${BRAND_THEME.tokens.profile.border}`}>
             <CardContent className="py-8 text-center">
               <p className="text-muted-foreground">Payment method not found</p>
-              <Button onClick={() => navigate("/user/profile/payments")} className={`mt-4 ${BRAND_THEME.tokens.profile.primaryButton}`}>
+              <Button onClick={() => navigate("/food/user/profile/payments")} className={`mt-4 ${BRAND_THEME.tokens.profile.primaryButton}`}>
                 Back to Payment Methods
               </Button>
             </CardContent>
@@ -125,7 +125,7 @@ export default function EditPayment() {
                 </div>
               </div>
               <div className="flex gap-2 pt-4">
-                <Button type="button" onClick={() => navigate("/user/profile/payments")} variant="outline">
+                <Button type="button" onClick={() => navigate("/food/user/profile/payments")} variant="outline">
                   Cancel
                 </Button>
                 <Button type="submit" className={`flex-1 ${BRAND_THEME.tokens.profile.primaryButton}`}>

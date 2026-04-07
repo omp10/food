@@ -96,7 +96,7 @@ const FoodRestaurantCard = memo(function FoodRestaurantCard({
                   aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
                   className={`flex h-11 w-11 items-center justify-center rounded-[20px] shadow-xl transition-all duration-300 ${
                     favorite
-                      ? "bg-red-500 text-white"
+                      ? "bg-[#2979FB] text-white"
                       : "bg-white/90 text-gray-800 backdrop-blur-sm hover:bg-white"
                   }`}
                 >
@@ -109,7 +109,7 @@ const FoodRestaurantCard = memo(function FoodRestaurantCard({
               <CardContent className="flex flex-grow flex-col p-3 pt-3 sm:p-4 sm:pt-4 lg:p-5 lg:pt-5">
                 <div className="mb-2 flex items-start justify-between gap-2 lg:mb-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="line-clamp-1 text-lg font-medium leading-tight tracking-tight text-gray-950 transition-colors duration-300 group-hover:text-[#ef4f5f] dark:text-white lg:text-2xl">
+                    <h3 className="line-clamp-1 text-lg font-medium leading-tight tracking-tight text-gray-950 transition-colors duration-300 group-hover:text-[#2979FB] dark:text-white lg:text-2xl">
                       {restaurant.name}
                     </h3>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -392,10 +392,10 @@ function FoodHomeContent({
                       <div
                         className={`absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-10 bg-gradient-to-br ${
                           index % 3 === 0
-                            ? "from-orange-500 to-red-500"
+                            ? "from-blue-500 to-cyan-500"
                             : index % 3 === 1
-                              ? "from-blue-500 to-purple-500"
-                              : "from-green-500 to-teal-500"
+                              ? "from-blue-500 to-indigo-500"
+                              : "from-sky-500 to-blue-600"
                         }`}
                       />
 

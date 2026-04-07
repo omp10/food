@@ -43,7 +43,7 @@ const RestaurantDishCard = ({
             e.stopPropagation();
             onFavoriteClick(restaurant.id);
           }}
-          className="absolute top-4 right-4 p-2 bg-white/20 backdrop-blur-md rounded-full border border-white/20 text-white hover:bg-white hover:text-red-500 transition-all duration-300"
+          className="absolute top-4 right-4 p-2 bg-white/20 backdrop-blur-md rounded-full border border-white/20 text-white hover:bg-white hover:text-[#2979FB] transition-all duration-300"
         >
           <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
         </button>

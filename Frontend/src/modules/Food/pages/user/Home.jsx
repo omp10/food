@@ -92,7 +92,7 @@ import api, { publicGetOnce, restaurantAPI, adminAPI } from "@food/api";
 import { API_BASE_URL } from "@food/api/config";
 import OptimizedImage from "@food/components/OptimizedImage";
 import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability";
-import HomeHeader from "@food/components/user/home/HomeHeader";
+import FoodHeroHeaderShell from "@food/components/user/home/FoodHeroHeaderShell";
 import PromoRow from "@food/components/user/home/PromoRow";
 import BRAND_THEME from "../../../../config/brandTheme";
 // import FestBanner from "@food/components/user/home/FestBanner";
@@ -118,8 +118,6 @@ const placeholders = [
   'Search "dosa"',
 ];
 
-const STICKY_HEADER_SCROLL_COLOR =
-  BRAND_THEME.tokens.homepage.home.stickyHeaderScrollColor;
 const HOME_FILTER_ACTIVE_CARD_CLASS = BRAND_THEME.tokens.homepage.filters.activeCard;
 const HOME_FILTER_INACTIVE_CARD_CLASS = BRAND_THEME.tokens.homepage.filters.inactiveCard;
 const HOME_FILTER_ACTIVE_TEXT_CLASS = BRAND_THEME.tokens.homepage.filters.activeText;
@@ -1286,8 +1284,6 @@ export default function Home() {
   const routerLocation = useRouterLocation();
   const currentTabFromPath = routerLocation.pathname.endsWith("/quick") ? "quick" : "food";
   const [activeTab, setActiveTab] = useState(currentTabFromPath);
-  const [quickThemeColor, setQuickThemeColor] = useState("#67c6f5");
-
   // Sync activeTab with URL changes (e.g. back/forward button)
   useEffect(() => {
     const isQuick = routerLocation.pathname.endsWith("/quick");
@@ -1296,16 +1292,6 @@ export default function Home() {
       setActiveTab(targetTab);
     }
   }, [routerLocation.pathname]);
-
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    if (tab === "quick") {
-      navigate("/quick");
-    } else {
-      navigate("/");
-    }
-  };
-
 
   // Simple filter toggle function
   const toggleFilter = (filterId) => {
@@ -2404,7 +2390,7 @@ export default function Home() {
               if (linkedRestaurants.length > 0) {
                 const firstRestaurant = linkedRestaurants[0];
                 const restaurantSlug = firstRestaurant.slug || firstRestaurant.restaurantId || firstRestaurant._id;
-                navigate(`/restaurants/${restaurantSlug}`);
+                navigate(`/food/user/restaurants/${restaurantSlug}`);
               }
             }}
             aria-label={`Open hero banner ${currentBannerIndex + 1}`}
@@ -2515,20 +2501,11 @@ export default function Home() {
         </div>
       )}
 
-      {/* Main Header - Mobile Only */}
-      <div
-        ref={stickyHeaderRef}
-        className="md:hidden fixed top-0 left-0 right-0 overflow-x-clip z-[80] transition-colors duration-300"
-        style={{
-          backgroundColor:
-            activeTab === "food" && hasScrolledPastBanner
-              ? STICKY_HEADER_SCROLL_COLOR
-              : "transparent",
-        }}
-      >
-        <HomeHeader 
-          activeTab={activeTab}
-          setActiveTab={handleTabChange}
+      {activeTab === "food" && (
+        <FoodHeroHeaderShell
+          stickyHeaderRef={stickyHeaderRef}
+          bannerShellRef={heroShellRef}
+          hasScrolledPastBanner={hasScrolledPastBanner}
           location={location}
           savedAddressText={savedAddressText}
           handleLocationClick={handleLocationClick}
@@ -2537,37 +2514,26 @@ export default function Home() {
           placeholders={placeholders}
           vegMode={vegMode}
           onVegModeChange={handleVegModeChange}
-          quickThemeColor={quickThemeColor}
-          compact={activeTab === "food"}
-          scrolledHeaderColor={
-            activeTab === "food" && hasScrolledPastBanner
-              ? STICKY_HEADER_SCROLL_COLOR
-              : "transparent"
+          bannerShellProps={{
+            "data-home-hero-shell": "true",
+            style: { backgroundColor: "transparent" },
+          }}
+          bannerContent={
+            headerVideoUrl ? (
+              <div className="relative h-[416px] w-full overflow-hidden">
+                <video
+                  src={headerVideoUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="h-full w-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/10" />
+              </div>
+            ) : null
           }
         />
-      </div>
-
-      {activeTab === "food" && (
-        <section
-          ref={heroShellRef}
-          data-home-hero-shell="true"
-          className="md:hidden relative overflow-hidden"
-          style={{ backgroundColor: "transparent" }}
-        >
-          {headerVideoUrl ? (
-            <div className="relative h-[416px] w-full overflow-hidden">
-              <video
-                src={headerVideoUrl}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="h-full w-full object-cover object-center"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/10" />
-            </div>
-          ) : null}
-        </section>
       )}
 
       <AnimatePresence mode="wait">
@@ -2607,7 +2573,7 @@ export default function Home() {
                           transition={{ duration: 0.35, delay: index * 0.05 }}
                         >
                           <Link
-                            to={`/user/restaurants/${restaurantSlug}`}
+                            to={`/food/user/restaurants/${restaurantSlug}`}
                             className="block rounded-[20px] overflow-hidden border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a1a1a] shadow-sm hover:shadow-md transition-shadow"
                           >
                             <div className="relative h-24 sm:h-28 md:h-32 bg-gray-50">
@@ -2817,7 +2783,7 @@ export default function Home() {
                       }}>
                       <div className="h-full group">
                         <Link
-                          to={`/user/restaurants/${restaurantSlug}`}
+                          to={`/food/user/restaurants/${restaurantSlug}`}
                           className="h-full flex">
                           <Card
                             className={`overflow-hidden gap-0 cursor-pointer border-0 dark:border-gray-800 group bg-white dark:bg-[#1a1a1a] border-background transition-all duration-500 py-0 rounded-[28px] flex flex-col h-full w-full relative shadow-sm hover:shadow-xl ${

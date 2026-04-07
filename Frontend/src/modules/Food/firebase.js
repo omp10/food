@@ -19,10 +19,21 @@ let firebaseAuth = null;
 let googleProvider = null;
 let firebaseRealtimeDb = null;
 
+function hasUsableFirebaseConfig() {
+  return Boolean(
+    firebaseConfig.apiKey &&
+    firebaseConfig.projectId &&
+    firebaseConfig.appId
+  );
+}
+
 /**
  * Ensures Firebase app is initialized but stays silent.
  */
 function initializeBaseApp() {
+  if (!hasUsableFirebaseConfig()) {
+    throw new Error('Firebase config is incomplete');
+  }
   if (app) return app;
   const existingApps = getApps();
   if (existingApps.length > 0) {
@@ -61,6 +72,9 @@ export function getGoogleAuthProvider() {
  */
 export function ensureFirebaseInitialized(options = {}) {
   const { enableAuth = false, enableRealtimeDb = true } = options;
+  if (!hasUsableFirebaseConfig()) {
+    return null;
+  }
   const firebaseApp = initializeBaseApp();
 
   if (enableAuth) {

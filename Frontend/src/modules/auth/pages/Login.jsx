@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react"
 import { motion } from "framer-motion"
-import { Routes, Route, Navigate, Link, useNavigate } from "react-router-dom"
-import { Phone, Lock, ArrowRight, ShieldCheck, Loader2 } from "lucide-react"
+import { Link, useNavigate } from "react-router-dom"
+import { Phone, ShieldCheck, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { authAPI } from "@food/api"
 import { setAuthData } from "@food/utils/auth"
@@ -158,7 +158,7 @@ export default function UnifiedOTPFastLogin() {
 
       setAuthData("user", accessToken, user, refreshToken)
       toast.success("Login successful!")
-      navigate("/user/auth/portal", { replace: true })
+      navigate("/food/user", { replace: true })
     } catch (err) {
       const status = err?.response?.status
       let msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Invalid OTP. Please try again."
@@ -190,188 +190,215 @@ export default function UnifiedOTPFastLogin() {
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
   }
 
-  // Service images (served from public folder)
-  const foodIcon = "/super-app/food.png"
-  const taxiIcon = "/super-app/taxi.png"
-  const groceryIcon = "/super-app/grocery.png"
-  const hotelIcon = "/super-app/hotel.png"
-
-  const services = [
-    { id: 'food', name: 'Food Delivery', icon: foodIcon, label: 'Zomato', color: 'bg-red-500', shadow: 'shadow-red-200' },
-    { id: 'taxi', name: 'Taxi', icon: taxiIcon, label: 'Taxi', color: 'bg-yellow-400', shadow: 'shadow-yellow-200' },
-    { id: 'grocery', name: 'Quick Commerce', icon: groceryIcon, label: 'Blinkit', color: 'bg-green-500', shadow: 'shadow-green-200' },
-    { id: 'hotels', name: 'Hotels', icon: hotelIcon, label: 'Hotels', color: 'bg-blue-500', shadow: 'shadow-blue-200' },
-  ]
+  const authTheme = {
+    bannerBackground: BRAND_THEME.tokens.homepage.header.searchRailGradient || BRAND_THEME.colors.brand.primary,
+    accent: BRAND_THEME.colors.brand.primary,
+    accentSoft: `${BRAND_THEME.colors.brand.primary}1A`, // very soft variant
+    buttonBackground: BRAND_THEME.tokens.button.primaryBackground || BRAND_THEME.colors.brand.primary,
+    buttonShadow: "rgba(41,121,251,0.22)",
+  }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex flex-col pt-0 sm:pt-0">
-      {/* Top Banner section - Zomato Red */}
-      <div className="w-full bg-[#CB202D] dark:bg-[#b01c27] rounded-b-[2.5rem] p-6 text-center text-white relative overflow-hidden shadow-2xl">
-        <div className="absolute inset-0 bg-white/5 opacity-50 blur-3xl rounded-full -top-1/2 -left-1/4 animate-pulse" />
-        <div className="absolute right-0 bottom-0 w-32 h-32 md:w-48 md:h-48 opacity-10 pointer-events-none">
-           <svg viewBox="0 0 200 200" fill="currentColor">
-              <path d="M100 0C44.8 0 0 44.8 0 100s44.8 100 100 100 100-44.8 100-100S155.2 0 100 0zm0 180c-44.1 0-80-35.9-80-80s35.9-80 80-80 80 35.9 80 80-35.9 80-80 80z"/>
-           </svg>
-        </div>
-        
-        <div className="relative z-10 flex flex-col items-center">
-          <motion.div 
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="w-24 h-24 flex items-center justify-center mb-1 overflow-hidden"
-          >
-             {logoUrl ? (
-               <img src={logoUrl} alt={companyName} className="h-full w-full object-contain" />
-             ) : (
-               <span className="text-[#CB202D] text-3xl font-black">
-                 {BRAND_THEME.brandName.charAt(0)}
-               </span>
-             )}
-          </motion.div>
-          <p className="text-xs md:text-base font-bold text-white/90 tracking-[0.2em] uppercase">
-            Fast delivery, better cravings
-          </p>
-        </div>
+    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex flex-col relative font-sans overflow-hidden">
+      <div className="relative z-10 flex-col pt-10 text-center px-4">
+         <div className="flex flex-col items-center justify-center">
+            <div className="w-20 h-20 flex items-center justify-center mb-1">
+              {logoUrl ? (
+                 <img src={logoUrl} alt={companyName} className="max-h-full max-w-full object-contain" />
+              ) : (
+                 <span className="text-3xl font-black text-slate-900 dark:text-white">{BRAND_THEME.brandName.charAt(0)}</span>
+              )}
+            </div>
+            <p className="text-[10px] font-medium text-slate-700 dark:text-slate-300 tracking-[0.12em] uppercase mt-1">
+              Fast delivery, better cravings
+            </p>
+         </div>
       </div>
 
-      <div className="flex-1 max-w-[480px] mx-auto w-full px-6 py-4 flex flex-col justify-center -mt-8 relative z-20">
-        {/* Main Card */}
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-[2rem] p-6 sm:p-8 md:p-12 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] dark:shadow-none border border-gray-50 dark:border-gray-800">
-           <div className="text-center mb-6 space-y-2">
-              <h2 className="text-2xl font-black text-gray-900 dark:text-white">Login or Signup</h2>
-              <div className="h-1 w-12 bg-[#CB202D] mx-auto rounded-full" />
+      <div className="w-full max-w-[360px] mx-auto px-4 mt-4 mb-5 relative z-20 flex flex-col">
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-[1.25rem] p-5 sm:p-6 shadow-none border border-slate-200 dark:border-gray-800">
+           <div className="text-center mb-6 space-y-2 flex-col flex items-center">
+              <div
+                className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-[0.08em] mb-1"
+                style={{ backgroundColor: authTheme.accentSoft, color: authTheme.accent }}
+              >
+                {step === 1 ? "Secure Login" : "OTP Verification"}
+              </div>
+              <h2 className="text-[20px] sm:text-[22px] font-semibold text-gray-900 dark:text-white leading-tight">
+                {step === 1 ? "Login or Signup" : "Enter OTP"}
+              </h2>
+              <p className="text-[13px] text-slate-700 dark:text-slate-300 font-medium">
+                {step === 1
+                  ? "Continue with your phone number."
+                  : `Code sent to +91 ${phoneNumber}`}
+              </p>
+              <div className="h-[2px] w-10 rounded-full mt-1" style={{ backgroundColor: authTheme.accent }} />
            </div>
 
-          <form onSubmit={step === 1 ? handleSendOTP : handleVerifyOTP} className="space-y-5">
-            {step === 1 ? (
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none">
-                      <Phone className="w-5 h-5 text-gray-400 group-focus-within:text-[#CB202D] transition-colors" />
-                    </div>
-                    <div className="absolute left-8 inset-y-0 flex items-center pointer-events-none">
-                       <span className="text-sm font-bold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-800 pr-3">+91</span>
-                    </div>
-                    <input
-                      type="tel"
-                      required
-                      autoFocus
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                      maxLength={10}
-                      className="block w-full pl-20 pr-4 py-3 bg-transparent text-gray-900 dark:text-white border-b-2 border-gray-100 dark:border-gray-800 focus:border-[#CB202D] outline-none transition-all placeholder:text-gray-300 font-bold text-lg"
-                      placeholder="Phone number"
-                    />
-                  </div>
-                </div>
-                <p className="text-[11px] text-gray-400 text-center leading-relaxed">
-                  We will send success notifications and order updates via SMS
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="space-y-4">
-                   <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
-                      <div className="w-10 h-10 bg-[#CB202D]/10 rounded-full flex items-center justify-center">
-                         <ShieldCheck className="w-5 h-5 text-[#CB202D]" />
-                      </div>
-                      <div className="flex-1">
-                         <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest leading-none mb-1">Sent to</p>
-                         <p className="text-sm font-black text-gray-900 dark:text-white">+91 {phoneNumber}</p>
-                      </div>
-                      <button type="button" onClick={handleEditNumber} className="text-xs text-[#CB202D] font-black underline cursor-pointer">Edit</button>
+           <form onSubmit={step === 1 ? handleSendOTP : handleVerifyOTP} className="space-y-4">
+             {step === 1 ? (
+               <div className="space-y-3">
+                 <div className="rounded-[0.9rem] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 relative transition-all focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-400/20">
+                   <label className="block text-[9px] font-medium uppercase tracking-[0.08em] text-slate-600 dark:text-slate-300 mb-2">
+                     Phone Number
+                   </label>
+                   <div className="flex items-center group">
+                     <Phone className="w-[18px] h-[18px] text-slate-600 dark:text-slate-300 mr-2" />
+                     <span className="text-sm font-semibold text-gray-900 dark:text-white mr-3">+91</span>
+                     <div className="w-[1px] h-[20px] bg-slate-200 dark:bg-slate-700 mr-3"></div>
+                     <input
+                       type="tel"
+                       required
+                       autoFocus
+                       value={phoneNumber}
+                       onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                       maxLength={10}
+                       className="flex-1 bg-transparent text-gray-900 dark:text-white outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium text-[15px]"
+                       placeholder="Phone number"
+                     />
                    </div>
+                 </div>
+                 
+                 <div className="rounded-[0.9rem] bg-slate-50 dark:bg-slate-800/40 px-4 py-2.5 text-center text-[11px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800/80">
+                   We will send verification updates via SMS.
+                 </div>
+               </div>
+             ) : (
+               <div className="space-y-4">
+                 <div className="space-y-3 text-center">
+                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                       <div
+                         className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                         style={{ backgroundColor: authTheme.accentSoft }}
+                       >
+                          <ShieldCheck className="w-5 h-5" style={{ color: authTheme.accent }} />
+                       </div>
+                       <div className="flex-1 text-left">
+                          <p className="text-[9px] uppercase font-medium text-slate-600 dark:text-slate-300 tracking-[0.1em] leading-none mb-1">Sent to</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">+91 {phoneNumber}</p>
+                       </div>
+                       <button
+                         type="button"
+                         onClick={handleEditNumber}
+                         className="text-xs font-medium underline"
+                         style={{ color: authTheme.accent }}
+                       >
+                         Edit
+                       </button>
+                    </div>
 
-                  <div className="flex justify-center gap-3 mt-4">
-                    {[0, 1, 2, 3].map((index) => (
-                      <input
-                        key={index}
-                        id={`otp-${index}`}
-                        type="tel"
-                        inputMode="numeric"
-                        required
-                        autoFocus={index === 0}
-                        value={otp[index] || ""}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, "").slice(-1);
-                          if (!val) return;
-                          const newOtp = otp.split("");
-                          newOtp[index] = val;
-                          const combined = newOtp.join("").slice(0, 4);
-                          setOtp(combined);
-                          
-                          // Focus next
-                          if (index < 3 && val) {
-                            document.getElementById(`otp-${index + 1}`)?.focus();
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Backspace") {
-                            if (!otp[index] && index > 0) {
-                              document.getElementById(`otp-${index - 1}`)?.focus();
-                            } else {
-                              const newOtp = otp.split("");
-                              newOtp[index] = "";
-                              setOtp(newOtp.join(""));
-                            }
-                          }
-                        }}
-                        onPaste={(e) => {
-                          e.preventDefault();
-                          const pasteData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
-                          if (pasteData) {
-                            setOtp(pasteData);
-                            document.getElementById(`otp-${Math.min(pasteData.length, 3)}`)?.focus();
-                          }
-                        }}
-                        className="w-14 h-14 sm:w-16 sm:h-16 text-center text-xl sm:text-3xl font-black bg-gray-50 dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 focus:border-[#CB202D] rounded-xl sm:rounded-2xl outline-none transition-all text-gray-900 dark:text-white"
-                        placeholder="-"
-                      />
-                    ))}
-                  </div>
-                  <div className="text-center mt-4">
-                    {resendTimer > 0 ? (
-                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                        Resend OTP in {formatResendTimer(resendTimer)}
-                      </p>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleResendOTP}
-                        disabled={loading}
-                        className="text-xs font-black text-[#CB202D] underline disabled:opacity-60 disabled:cursor-not-allowed"
-                      >
-                        Resend OTP
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+                   <div className="flex justify-between gap-2 mt-2">
+                     {[0, 1, 2, 3].map((index) => (
+                       <input
+                         key={index}
+                         id={`otp-${index}`}
+                         type="tel"
+                         inputMode="numeric"
+                         required
+                         autoFocus={index === 0}
+                         value={otp[index] || ""}
+                         onChange={(e) => {
+                           const val = e.target.value.replace(/\D/g, "").slice(-1);
+                           if (!val) return;
+                           const newOtp = otp.split("");
+                           newOtp[index] = val;
+                           const combined = newOtp.join("").slice(0, 4);
+                           setOtp(combined);
+                           
+                           if (index < 3 && val) {
+                             document.getElementById(`otp-${index + 1}`)?.focus();
+                           }
+                         }}
+                         onKeyDown={(e) => {
+                           if (e.key === "Backspace") {
+                             if (!otp[index] && index > 0) {
+                               document.getElementById(`otp-${index - 1}`)?.focus();
+                             } else {
+                               const newOtp = otp.split("");
+                               newOtp[index] = "";
+                               setOtp(newOtp.join(""));
+                             }
+                           }
+                         }}
+                         onPaste={(e) => {
+                           e.preventDefault();
+                           const pasteData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
+                           if (pasteData) {
+                             setOtp(pasteData);
+                             document.getElementById(`otp-${Math.min(pasteData.length, 3)}`)?.focus();
+                           }
+                         }}
+                         className="w-[3.1rem] h-[3.5rem] sm:w-[3.4rem] sm:h-[3.8rem] text-center text-xl font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-[#2979FB] focus:ring-2 focus:ring-[#2979FB]/20 rounded-xl outline-none transition-all text-gray-900 dark:text-white"
+                         placeholder="-"
+                       />
+                     ))}
+                   </div>
+                   <div className="text-center pt-2">
+                     {resendTimer > 0 ? (
+                       <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                         Resend OTP in {formatResendTimer(resendTimer)}
+                       </p>
+                     ) : (
+                       <button
+                         type="button"
+                         onClick={handleResendOTP}
+                         disabled={loading}
+                         className="text-xs font-medium underline disabled:opacity-60 disabled:cursor-not-allowed"
+                         style={{ color: authTheme.accent }}
+                       >
+                         Resend OTP
+                       </button>
+                     )}
+                   </div>
+                 </div>
+               </div>
+             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-4 rounded-2xl font-black text-lg transition-all relative overflow-hidden shadow-xl ${
+             <button
+               type="submit"
+               disabled={loading}
+              className={`w-full py-3 mt-1 rounded-[1rem] font-semibold text-[15px] transition-all relative overflow-hidden ${
                 loading
-                  ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-50"
-                  : "bg-[#CB202D] hover:bg-[#b01c27] text-white hover:shadow-2xl hover:shadow-[#CB202D]/30 active:scale-[0.98] hover:-translate-y-0.5"
-              }`}
-            >
-              {loading ? (
-                <Loader2 className="w-7 h-7 animate-spin mx-auto text-white" />
-              ) : (
-                step === 1 ? "Get Verification Code" : "Continue"
-              )}
-            </button>
-          </form>
+                  ? "bg-slate-100 dark:bg-slate-800 cursor-not-allowed text-slate-400"
+                  : "text-white active:scale-[0.98]"
+               }`}
+               style={
+                 loading
+                   ? undefined
+                   : {
+                       backgroundColor: authTheme.buttonBackground,
+                     }
+               }
+             >
+               {loading ? (
+                 <Loader2 className="w-5 h-5 animate-spin mx-auto text-current" />
+               ) : (
+                 step === 1 ? "Get Verification Code" : "Continue"
+               )}
+             </button>
+           </form>
         </div>
 
-        <div className="mt-6 text-center space-y-2">
-           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] leading-relaxed">
-             By continuing, you agree to our <br />
-             <Link to="/food/user/profile/terms" className="text-gray-900 dark:text-white underline cursor-pointer hover:text-[#CB202D] transition-colors">Terms of Service</Link> & <Link to="/food/user/profile/privacy" className="text-gray-900 dark:text-white underline cursor-pointer hover:text-[#CB202D] transition-colors">Privacy Policy</Link>
+        <div className="mt-8 text-center flex-col justify-end">
+           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-normal uppercase tracking-[0.08em] mb-1">
+             By continuing, you agree to our
+           </p>
+           <p className="text-[10px] font-normal uppercase tracking-[0.06em]">
+             <Link
+               to="/food/user/profile/terms"
+               className="underline transition-colors hover:opacity-80"
+               style={{ color: authTheme.accent }}
+             >
+               Terms of Service
+             </Link>
+             <span className="text-slate-300 dark:text-slate-600 mx-2">&</span>
+             <Link
+               to="/food/user/profile/privacy"
+               className="underline transition-colors hover:opacity-80"
+               style={{ color: authTheme.accent }}
+             >
+               Privacy Policy
+             </Link>
            </p>
         </div>
       </div>

@@ -40,8 +40,10 @@ export default function AddToCartAnimation({
 
   // Hide pill on cart pages, order pages, and account page (if enabled)
   const iscartPage = location.pathname === '/cart' ||
+    location.pathname === '/food/user/cart' ||
     location.pathname === '/user/cart' ||
     location.pathname.startsWith('/cart/') ||
+    location.pathname.startsWith('/food/user/cart/') ||
     location.pathname.startsWith('/user/cart/');
   const isOrderPage = location.pathname.startsWith('/orders/');
   const isAccountPage = location.pathname === '/account';
@@ -338,7 +340,7 @@ export default function AddToCartAnimation({
       // Step 1: Scale up with glow
       tl.to(linkRef.current, {
         scale: 1.08,
-        boxShadow: '0 10px 25px rgba(235, 89, 14, 0.4)',
+        boxShadow: '0 10px 25px rgba(41, 121, 251, 0.35)',
         duration: 0.15,
         ease: 'power2.out',
         transformOrigin: 'center center',
@@ -347,7 +349,7 @@ export default function AddToCartAnimation({
         // Step 2: Bounce back
         .to(linkRef.current, {
           scale: 1.0,
-          boxShadow: '0 4px 12px rgba(235, 89, 14, 0.3)',
+          boxShadow: '0 4px 12px rgba(41, 121, 251, 0.24)',
           duration: 0.2,
           ease: 'power2.inOut',
         })
@@ -454,7 +456,7 @@ export default function AddToCartAnimation({
                 debugLog('View cart clicked, navigating to:', linkTo);
                 navigate(linkTo);
               }}
-              className={`bg-gradient-to-r from-[#D94F0C] via-[#EB590E] to-[#D94F0C] text-white rounded-full shadow-xl shadow-orange-900/30 px-3 py-2 flex items-center gap-2 hover:from-[#D94F0C] hover:via-[#EB590E] hover:to-[#D94F0C] transition-all duration-300 pointer-events-auto border border-orange-800/30 backdrop-blur-sm cursor-pointer ${pillClassName}`}
+              className={`bg-gradient-to-r from-[#1E5ED8] via-[#2979FB] to-[#1E5ED8] text-white rounded-full shadow-xl shadow-blue-900/25 px-3 py-2 flex items-center gap-2 hover:from-[#194FBB] hover:via-[#1E5ED8] hover:to-[#194FBB] transition-all duration-300 pointer-events-auto border border-blue-800/20 backdrop-blur-sm cursor-pointer ${pillClassName}`}
             >
               {/* Left: Product thumbnails */}
               <div className="flex items-center -space-x-4">

@@ -1,5 +1,5 @@
 import { useParams, Link, useSearchParams } from "react-router-dom"
-import { useState, useEffect, useMemo, useRef, useCallback } from "react"
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import {
@@ -159,16 +159,14 @@ const DeliveryMap = React.memo(({ orderId, order, isVisible, fallbackCustomerCoo
   if (!isVisible || !orderId || !order || !restaurantCoords || !customerCoords) {
     return (
       <div
-        className="relative min-h-[450px] bg-gradient-to-b from-gray-100 to-gray-200"
-        style={{ height: '450px' }}
+        className="relative h-[280px] md:h-[340px] bg-gradient-to-b from-gray-100 to-gray-200"
       />
     );
   }
 
   return (
     <div
-      className="relative w-full min-h-[450px] overflow-visible"
-      style={{ height: '450px' }}
+      className="relative w-full h-[280px] md:h-[340px] overflow-hidden"
     >
       <DeliveryTrackingMap
         orderId={orderId}
@@ -281,7 +279,15 @@ const transformOrderForTracking = (apiOrder, previousOrder = null, explicitResta
     id: apiOrder?.orderId || apiOrder?._id,
     mongoId: apiOrder?._id || null,
     orderId: apiOrder?.orderId || apiOrder?._id,
-    restaurant: apiOrder?.restaurantName || previousOrder?.restaurant || 'Restaurant',
+    restaurant:
+      apiOrder?.restaurantName ||
+      apiOrder?.restaurantId?.restaurantName ||
+      apiOrder?.restaurantId?.name ||
+      (typeof apiOrder?.restaurant === 'string' ? apiOrder.restaurant : null) ||
+      apiOrder?.restaurant?.restaurantName ||
+      apiOrder?.restaurant?.name ||
+      previousOrder?.restaurant ||
+      'Restaurant',
     restaurantPhone:
       apiOrder?.restaurantPhone ||
       apiOrder?.restaurantId?.phone ||
@@ -1164,7 +1170,7 @@ export default function OrderTracking() {
         <div className="max-w-lg mx-auto text-center py-20">
           <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-4">Order Not Found</h1>
           <p className="text-gray-600 mb-6">{error || 'The order you\'re looking for doesn\'t exist.'}</p>
-          <Link to="/user/orders">
+          <Link to="/food/user/orders">
             <Button>Back to Orders</Button>
           </Link>
         </div>
@@ -1176,49 +1182,49 @@ export default function OrderTracking() {
     placed: {
       title: "Order Placed",
       subtitle: "Waiting for restaurant to accept",
-      color: "bg-green-600",
+      color: "bg-[#2979FB]",
       iconType: 'food'
     },
     confirmed: {
       title: "Order Confirmed",
       subtitle: "Restaurant has accepted your order",
-      color: "bg-green-600",
+      color: "bg-[#2979FB]",
       iconType: 'food'
     },
     preparing: {
       title: "Food is being prepared",
       subtitle: typeof estimatedTime === 'number' ? `Arriving in ${estimatedTime} mins` : "Cooking your meal",
-      color: "bg-green-600",
+      color: "bg-[#2979FB]",
       iconType: 'food'
     },
     assigned: {
       title: "Rider is arriving",
       subtitle: "A delivery partner is arriving at the restaurant",
-      color: "bg-green-600",
+      color: "bg-[#2979FB]",
       iconType: 'rider'
     },
     at_pickup: {
       title: "Rider at restaurant",
       subtitle: "Rider is waiting for your order",
-      color: "bg-green-600",
+      color: "bg-[#2979FB]",
       iconType: 'rider'
     },
     ready: {
       title: "Handover in progress",
       subtitle: "Rider is picking up your order",
-      color: "bg-green-600",
+      color: "bg-[#2979FB]",
       iconType: 'rider'
     },
     on_way: {
       title: "Out for delivery",
       subtitle: typeof estimatedTime === 'number' ? `Arriving in ${estimatedTime} mins` : "Rider is out for delivery",
-      color: "bg-green-600",
+      color: "bg-[#2979FB]",
       iconType: 'rider'
     },
     at_drop: {
       title: "Arrived at location",
       subtitle: "Please come to the door",
-      color: "bg-green-600",
+      color: "bg-[#2979FB]",
       iconType: 'rider'
     },
     delivered: {
@@ -1297,7 +1303,7 @@ export default function OrderTracking() {
       >
         {/* Navigation bar */}
         <div className="flex items-center justify-between px-4 py-3">
-          <Link to="/user/orders">
+          <Link to="/food/user/orders">
             <motion.button
               className="w-10 h-10 flex items-center justify-center"
               whileTap={{ scale: 0.9 }}
@@ -1338,7 +1344,7 @@ export default function OrderTracking() {
               {orderStatus === 'preparing' && (
                 <>
                   <span className="w-1 h-1 rounded-full bg-white" />
-                  <span className="text-sm text-orange-200">On time</span>
+                  <span className="text-sm text-blue-200">On time</span>
                 </>
               )}
               <motion.button
@@ -1426,7 +1432,7 @@ export default function OrderTracking() {
               currentStatus.iconType === 'rider' ? 'bg-blue-50' : 
               currentStatus.iconType === 'cancelled' ? 'bg-red-50' : 
               currentStatus.iconType === 'delivered' ? 'bg-green-50' : 
-              'bg-orange-50'
+              'bg-blue-50'
             }`}>
               {currentStatus.iconType === 'rider' ? (
                 <div 
@@ -1516,12 +1522,12 @@ export default function OrderTracking() {
 
         {/* Delivery Details Banner */}
         <motion.div
-          className="bg-yellow-50 rounded-xl p-4 text-center"
+          className="bg-blue-50 rounded-xl p-4 text-center border border-blue-100"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.65 }}
         >
-          <p className="text-yellow-800 font-medium">
+          <p className="text-blue-800 font-medium">
             All your delivery details in one place ??
           </p>
         </motion.div>
@@ -1621,10 +1627,18 @@ export default function OrderTracking() {
         >
           <div className="flex items-center gap-3 p-4 border-b border-dashed border-gray-200">
             <div className="w-12 h-12 rounded-full bg-blue-100 overflow-hidden flex items-center justify-center flex-shrink-0">
-              <div
-                dangerouslySetInnerHTML={{ __html: SAFE_RESTAURANT_PIN }}
-                className="w-7 h-7 [&_svg]:w-full [&_svg]:h-full [&_svg]:block"
-              />
+              {order?.restaurantLogo || order?.restaurantId?.logo || order?.restaurantId?.profileImage ? (
+                <img
+                  src={order?.restaurantLogo || order?.restaurantId?.logo || order?.restaurantId?.profileImage}
+                  alt={order.restaurant}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div
+                  dangerouslySetInnerHTML={{ __html: SAFE_RESTAURANT_PIN }}
+                  className="w-7 h-7 [&_svg]:w-full [&_svg]:h-full [&_svg]:block"
+                />
+              )}
             </div>
             <div className="flex-1">
               <p className="font-semibold text-gray-900">{order.restaurant}</p>

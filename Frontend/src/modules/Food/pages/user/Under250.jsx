@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom"
 import { useState, useMemo, useCallback, useEffect, useRef } from "react"
-import { Star, Clock, MapPin, ArrowDownUp, Timer, ArrowRight, ChevronDown, Bookmark, Share2, Plus, Minus, X } from "lucide-react"
+import { Star, Clock, MapPin, ArrowDownUp, Timer, ArrowRight, ChevronDown, Bookmark, Share2, Plus, Minus, X, AlertCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import AnimatedPage from "@food/components/user/AnimatedPage"
@@ -13,7 +13,7 @@ import { useCart } from "@food/context/CartContext"
 import offerImage from "@food/assets/offerimage.png"
 import AddToCartAnimation from "@food/components/user/AddToCartAnimation"
 import OptimizedImage from "@food/components/OptimizedImage"
-import HomeHeader from "@food/components/user/home/HomeHeader"
+import FoodHeroHeaderShell from "@food/components/user/home/FoodHeroHeaderShell"
 import api from "@food/api"
 import { restaurantAPI, adminAPI } from "@food/api"
 import { isModuleAuthenticated } from "@food/utils/auth"
@@ -25,9 +25,7 @@ const debugWarn = (...args) => {}
 const debugError = (...args) => {}
 const RUPEE_SYMBOL = "\u20B9"
 const UNDER_250_FILTERS_STORAGE_KEY = "food-under-250-filters"
-const STICKY_HEADER_SCROLL_COLOR =
-  BRAND_THEME.tokens.homepage.home.stickyHeaderScrollColor
-
+const UNDER_250_VEG_MODE_KEY = "food-under-250-veg-mode"
 const readUnder250Filters = () => {
   if (typeof window === "undefined") {
     return {
@@ -106,6 +104,15 @@ export default function Under250() {
   const touchEndYRef = useRef(0)
   const isBannerSwipingRef = useRef(false)
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
+  const [vegMode, setVegMode] = useState(() => {
+    if (typeof window === "undefined") return false
+    return window.localStorage.getItem(UNDER_250_VEG_MODE_KEY) === "true"
+  })
+  const [prevVegMode, setPrevVegMode] = useState(vegMode)
+  const [showVegModePopup, setShowVegModePopup] = useState(false)
+  const [showSwitchOffPopup, setShowSwitchOffPopup] = useState(false)
+  const [vegModeOption, setVegModeOption] = useState("all")
+  const isHandlingSwitchOff = useRef(false)
   const placeholders = useMemo(
     () => [
       'Search "burger"',
@@ -137,6 +144,29 @@ export default function Under250() {
   const handleApply = () => {
     setSelectedSort(draftSelectedSort)
     setShowSortPopup(false)
+  }
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    window.localStorage.setItem(UNDER_250_VEG_MODE_KEY, vegMode ? "true" : "false")
+  }, [vegMode])
+
+  const handleVegModeChange = (newValue) => {
+    if (isHandlingSwitchOff.current) return
+
+    if (newValue && !prevVegMode) {
+      setShowVegModePopup(true)
+      return
+    }
+
+    if (!newValue && prevVegMode) {
+      isHandlingSwitchOff.current = true
+      setShowSwitchOffPopup(true)
+      return
+    }
+
+    setVegMode(newValue)
+    setPrevVegMode(newValue)
   }
 
   // Helper function to parse delivery time (e.g., "12-15 mins" -> 12 or average)
@@ -173,6 +203,16 @@ export default function Under250() {
   // Sort and filter restaurants based on selected sort and filters
   const sortedAndFilteredRestaurants = useMemo(() => {
     let filtered = under250Restaurants.map(r => ({ ...r, menuItems: [...(r.menuItems || [])] }))
+
+    if (vegMode) {
+      filtered = filtered
+        .map((restaurant) => {
+          const vegItems = (restaurant.menuItems || []).filter((item) => item?.isVeg)
+          if (vegItems.length === 0) return null
+          return { ...restaurant, menuItems: vegItems }
+        })
+        .filter(Boolean)
+    }
 
     // Apply category filter
     if (activeCategory) {
@@ -242,7 +282,7 @@ export default function Under250() {
     }
 
     return filtered
-  }, [under250Restaurants, selectedSort, under30MinsFilter, activeCategory, categories])
+  }, [under250Restaurants, selectedSort, under30MinsFilter, activeCategory, categories, vegMode])
 
   // Fetch under-250 banner from public API
   useEffect(() => {
@@ -648,7 +688,7 @@ export default function Under250() {
     // Check authentication
     if (!isModuleAuthenticated('user')) {
       toast.error("Please login to add items to cart")
-      navigate('/user/auth/login', { state: { from: location.pathname } })
+      navigate('/food/user/auth/login', { state: { from: location.pathname } })
       return
     }
 
@@ -785,7 +825,7 @@ export default function Under250() {
     const itemId = item.id || item._id
     const restaurantSlug = item.restaurantSlug || item.slug || ""
     const shareUrl = restaurantSlug
-      ? `${window.location.origin}/user/restaurants/${restaurantSlug}${itemId ? `?dish=${encodeURIComponent(itemId)}` : ""}`
+      ? `${window.location.origin}/food/user/restaurants/${restaurantSlug}${itemId ? `?dish=${encodeURIComponent(itemId)}` : ""}`
       : window.location.href
 
     try {
@@ -810,7 +850,7 @@ export default function Under250() {
     const itemId = selectedItem.id || selectedItem._id
     const restaurantSlug = selectedItem.restaurantSlug || selectedItem.slug || ""
     const shareUrl = restaurantSlug
-      ? `${window.location.origin}/user/restaurants/${restaurantSlug}${itemId ? `?dish=${encodeURIComponent(itemId)}` : ""}`
+      ? `${window.location.origin}/food/user/restaurants/${restaurantSlug}${itemId ? `?dish=${encodeURIComponent(itemId)}` : ""}`
       : window.location.href
     const shareText = `Check out ${selectedItem.name || "this dish"} from ${selectedItem.restaurant || "Under 250"}`
     const encodedUrl = encodeURIComponent(shareUrl)
@@ -871,61 +911,49 @@ export default function Under250() {
   return (
 
     <div className={`relative min-h-screen bg-white dark:bg-[#0a0a0a] ${shouldShowGrayscale ? 'grayscale opacity-75' : ''}`}>
-      <div
-        ref={stickyHeaderRef}
-        className="md:hidden fixed top-0 left-0 right-0 overflow-x-clip z-[80] transition-colors duration-300"
-        style={{
-          backgroundColor: hasScrolledPastBanner ? STICKY_HEADER_SCROLL_COLOR : "transparent",
-        }}
-      >
-        <HomeHeader
-          activeTab="food"
-          setActiveTab={() => {}}
-          location={location}
-          savedAddressText={location?.area || location?.city || ""}
-          handleLocationClick={openLocationSelector}
-          handleSearchFocus={handleSearchFocus}
-          placeholderIndex={placeholderIndex}
-          placeholders={placeholders}
-          vegMode={false}
-          onVegModeChange={() => {}}
-          compact
-          scrolledHeaderColor={hasScrolledPastBanner ? STICKY_HEADER_SCROLL_COLOR : "transparent"}
-        />
-      </div>
-
-      <section
-        ref={bannerShellRef}
-        data-banner-shell="true"
-        className="md:hidden relative overflow-hidden"
-      >
-        {bannerImages.length > 0 ? (
-          <div
-            className="h-[416px] w-full"
-            onTouchStart={handleBannerTouchStart}
-            onTouchMove={handleBannerTouchMove}
-            onTouchEnd={handleBannerTouchEnd}
-          >
+      <FoodHeroHeaderShell
+        stickyHeaderRef={stickyHeaderRef}
+        bannerShellRef={bannerShellRef}
+        hasScrolledPastBanner={hasScrolledPastBanner}
+        location={location}
+        savedAddressText={location?.area || location?.city || ""}
+        handleLocationClick={openLocationSelector}
+        handleSearchFocus={handleSearchFocus}
+        placeholderIndex={placeholderIndex}
+        placeholders={placeholders}
+        showVegMode={false}
+        vegMode={vegMode}
+        onVegModeChange={handleVegModeChange}
+        bannerShellProps={{ "data-banner-shell": "true" }}
+        bannerContent={
+          bannerImages.length > 0 ? (
             <div
-              className="flex h-full w-full transition-transform duration-500 ease-out"
-              style={{ transform: `translateX(-${currentBannerIndex * 100}%)` }}
+              className="h-[416px] w-full"
+              onTouchStart={handleBannerTouchStart}
+              onTouchMove={handleBannerTouchMove}
+              onTouchEnd={handleBannerTouchEnd}
             >
-              {bannerImages.map((bannerImage, index) => (
-                <div key={`${bannerImage}-${index}`} className="relative h-full w-full shrink-0">
-                  <OptimizedImage
-                    src={bannerImage}
-                    alt={`Under 250 Banner ${index + 1}`}
-                    className="h-full w-full"
-                    objectFit="cover"
-                    priority={index === 0}
-                    sizes="100vw"
-                  />
-                </div>
-              ))}
+              <div
+                className="flex h-full w-full transition-transform duration-500 ease-out"
+                style={{ transform: `translateX(-${currentBannerIndex * 100}%)` }}
+              >
+                {bannerImages.map((bannerImage, index) => (
+                  <div key={`${bannerImage}-${index}`} className="relative h-full w-full shrink-0">
+                    <OptimizedImage
+                      src={bannerImage}
+                      alt={`Under 250 Banner ${index + 1}`}
+                      className="h-full w-full"
+                      objectFit="cover"
+                      priority={index === 0}
+                      sizes="100vw"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ) : null}
-      </section>
+          ) : null
+        }
+      />
 
       {/* Content Section */}
       <div className="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 space-y-0 pt-2 sm:pt-3 md:pt-4 lg:pt-6 pb-6 md:pb-8 lg:pb-10">
@@ -948,7 +976,7 @@ export default function Under250() {
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
-                <div className={`w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden shadow-md transition-all ${!activeCategory ? 'ring-2 ring-[#EB590E] ring-offset-2' : ''}`}>
+                <div className={`w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden shadow-md transition-all ${!activeCategory ? 'ring-2 ring-[#2979FB] ring-offset-2' : ''}`}>
                   <OptimizedImage
                     src={offerImage}
                     alt="All"
@@ -958,7 +986,7 @@ export default function Under250() {
                     placeholder="blur"
                   />
                 </div>
-                <span className={`text-xs sm:text-sm md:text-base font-semibold text-gray-800 dark:text-gray-200 text-center pb-1 ${!activeCategory ? 'text-[#EB590E]' : ''}`}>
+                <span className={`text-xs sm:text-sm md:text-base font-semibold text-gray-800 dark:text-gray-200 text-center pb-1 ${!activeCategory ? 'text-[#2979FB]' : ''}`}>
                   All
                 </span>
               </motion.div>
@@ -973,7 +1001,7 @@ export default function Under250() {
                       whileTap={{ scale: 0.95 }}
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     >
-                      <div className={`w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden shadow-md transition-all ${isActive ? 'ring-2 ring-[#EB590E] ring-offset-2' : ''}`}>
+                      <div className={`w-14 h-14 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden shadow-md transition-all ${isActive ? 'ring-2 ring-[#2979FB] ring-offset-2' : ''}`}>
                         <OptimizedImage
                           src={category.image}
                           alt={category.name}
@@ -983,7 +1011,7 @@ export default function Under250() {
                           placeholder="blur"
                         />
                       </div>
-                      <span className={`text-xs sm:text-sm md:text-base font-semibold text-gray-800 dark:text-gray-200 text-center pb-1 ${isActive ? 'text-[#EB590E]' : ''}`}>
+                      <span className={`text-xs sm:text-sm md:text-base font-semibold text-gray-800 dark:text-gray-200 text-center pb-1 ${isActive ? 'text-[#2979FB]' : ''}`}>
                         {category.name.length > 7 ? `${category.name.slice(0, 7)}...` : category.name}
                       </span>
                     </motion.div>
@@ -1010,7 +1038,7 @@ export default function Under250() {
               variant="outline"
               onClick={() => setUnder30MinsFilter(!under30MinsFilter)}
               className={`h-8 sm:h-9 md:h-10 px-3 sm:px-4 md:px-5 rounded-md flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 font-medium transition-all text-sm md:text-base ${under30MinsFilter
-                ? 'bg-[#EB590E] text-white border border-[#EB590E] hover:bg-[#D94F0C]'
+                ? 'bg-[#2979FB] text-white border border-[#2979FB] hover:bg-[#1E5ED8]'
                 : 'bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300'
                 }`}
             >
@@ -1147,11 +1175,11 @@ export default function Under250() {
                                   )}
                                 </div>
                                 {quantity > 0 ? (
-                                  <Link to="/user/cart" onClick={(e) => e.stopPropagation()}>
+                                  <Link to="/food/user/cart" onClick={(e) => e.stopPropagation()}>
                                     <Button
                                       variant={"outline"}
                                       size="sm"
-                                      className="bg-[#FFF2EB] text-[#EB590E] border-[#EB590E] hover:bg-[#EB590E] hover:text-white h-7 md:h-8 lg:h-9 px-3 md:px-4 lg:px-5 text-xs md:text-sm lg:text-base"
+                                      className="bg-blue-50 text-[#2979FB] border-[#2979FB] hover:bg-[#2979FB] hover:text-white h-7 md:h-8 lg:h-9 px-3 md:px-4 lg:px-5 text-xs md:text-sm lg:text-base"
                                     >
                                       View cart
                                     </Button>
@@ -1163,7 +1191,7 @@ export default function Under250() {
                                     disabled={shouldShowGrayscale}
                                     className={`h-7 md:h-8 lg:h-9 px-3 md:px-4 lg:px-5 text-xs md:text-sm lg:text-base ${shouldShowGrayscale
                                       ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 border-gray-300 dark:border-gray-700 cursor-not-allowed opacity-50'
-                                      : 'bg-[#FFF2EB] text-[#EB590E] border-[#EB590E] hover:bg-[#EB590E] hover:text-white'
+                                      : 'bg-blue-50 text-[#2979FB] border-[#2979FB] hover:bg-[#2979FB] hover:text-white'
                                       }`}
                                     onClick={(e) => {
                                       e.stopPropagation()
@@ -1183,7 +1211,7 @@ export default function Under250() {
                     </div>
 
                     {/* View Full Menu Button */}
-                    <Link className="flex justify-center mt-2 md:mt-3 lg:mt-4" to={`/user/restaurants/${restaurantSlug}?under250=true`}>
+                    <Link className="flex justify-center mt-2 md:mt-3 lg:mt-4" to={`/food/user/restaurants/${restaurantSlug}?under250=true`}>
                       <Button
                         variant="outline"
                         className="w-min align-center text-center rounded-lg md:rounded-xl mx-auto bg-gray-50 dark:bg-[#1a1a1a] hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-white text-gray-700 border-gray-200 dark:border-gray-800 h-9 md:h-10 lg:h-11 px-4 md:px-6 lg:px-8 text-sm md:text-base lg:text-lg"
@@ -1234,7 +1262,7 @@ export default function Under250() {
                 <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Sort By</h2>
                 <button
                   onClick={handleClearAll}
-                  className="text-[#EB590E] dark:text-[#F97316] font-medium text-sm md:text-base"
+                  className="text-[#2979FB] dark:text-blue-400 font-medium text-sm md:text-base"
                 >
                   Clear all
                 </button>
@@ -1248,11 +1276,11 @@ export default function Under250() {
                       key={option.id || 'relevance'}
                       onClick={() => setDraftSelectedSort(option.id)}
                       className={`px-4 md:px-5 lg:px-6 py-3 md:py-4 rounded-xl border text-left transition-colors ${draftSelectedSort === option.id
-                        ? 'border-[#EB590E] bg-[#FFF2EB] dark:bg-orange-900/20'
-                        : 'border-gray-200 dark:border-gray-800 hover:border-[#EB590E]'
+                        ? 'border-[#2979FB] bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 dark:border-gray-800 hover:border-[#2979FB]'
                         }`}
                     >
-                      <span className={`text-sm md:text-base lg:text-lg font-medium ${draftSelectedSort === option.id ? 'text-[#EB590E] dark:text-[#F97316]' : 'text-gray-700 dark:text-gray-300'}`}>
+                      <span className={`text-sm md:text-base lg:text-lg font-medium ${draftSelectedSort === option.id ? 'text-[#2979FB] dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
                         {option.label}
                       </span>
                     </button>
@@ -1270,7 +1298,7 @@ export default function Under250() {
                 </button>
                 <button
                   onClick={handleApply}
-                  className="flex-1 py-3 md:py-4 font-semibold rounded-xl transition-colors text-sm md:text-base bg-[#EB590E] text-white hover:bg-[#D94F0C]"
+                  className="flex-1 py-3 md:py-4 font-semibold rounded-xl transition-colors text-sm md:text-base bg-[#2979FB] text-white hover:bg-[#1E5ED8]"
                 >
                   Apply
                 </button>
@@ -1415,7 +1443,7 @@ export default function Under250() {
                 {selectedItem.customisable && (
                   <div className="flex items-center gap-2 mb-4">
                     <div className="flex-1 h-0.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#EB590E] rounded-full" style={{ width: '50%' }} />
+                      <div className="h-full bg-[#2979FB] rounded-full" style={{ width: '50%' }} />
                     </div>
                     <span className="text-xs text-gray-600 dark:text-gray-400 font-medium whitespace-nowrap">
                       highly reordered
@@ -1551,11 +1579,188 @@ export default function Under250() {
                   <button
                     key={option.id}
                     onClick={() => handleShareOption(option.id)}
-                    className="rounded-2xl border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm font-medium text-gray-800 dark:text-gray-200 hover:border-[#EB590E] hover:text-[#EB590E] transition-colors"
+                    className="rounded-2xl border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm font-medium text-gray-800 dark:text-gray-200 hover:border-[#2979FB] hover:text-[#2979FB] transition-colors"
                   >
                     {option.label}
                   </button>
                 ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showVegModePopup && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => {
+                setShowVegModePopup(false)
+                setVegMode(false)
+                setPrevVegMode(false)
+              }}
+              className="fixed inset-0 bg-black/30 z-[9998] backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -10 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
+              className="fixed z-[9999] left-4 right-4 top-24 mx-auto bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl p-4 w-[calc(100%-2rem)] max-w-xs"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-3">
+                See veg dishes from
+              </h3>
+
+              <div className="space-y-2 mb-4">
+                <label
+                  className="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => setVegModeOption("all")}
+                >
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="radio"
+                      name="under250VegModeOption"
+                      value="all"
+                      checked={vegModeOption === "all"}
+                      onChange={() => setVegModeOption("all")}
+                      className="sr-only"
+                    />
+                    <div
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                        vegModeOption === "all"
+                          ? "border-green-600 dark:border-green-500 bg-green-600 dark:bg-green-500"
+                          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a]"
+                      }`}
+                    >
+                      {vegModeOption === "all" && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white dark:bg-white" />
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    All restaurants
+                  </span>
+                </label>
+
+                <label
+                  className="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => setVegModeOption("pure-veg")}
+                >
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="radio"
+                      name="under250VegModeOption"
+                      value="pure-veg"
+                      checked={vegModeOption === "pure-veg"}
+                      onChange={() => setVegModeOption("pure-veg")}
+                      className="sr-only"
+                    />
+                    <div
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                        vegModeOption === "pure-veg"
+                          ? "border-green-600 dark:border-green-500 bg-green-600 dark:bg-green-500"
+                          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a]"
+                      }`}
+                    >
+                      {vegModeOption === "pure-veg" && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white dark:bg-white" />
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    Pure Veg restaurants only
+                  </span>
+                </label>
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowVegModePopup(false)
+                  setVegMode(true)
+                  setPrevVegMode(true)
+                }}
+                className={`w-full font-semibold py-2.5 rounded-xl transition-colors mb-2 text-sm ${BRAND_THEME.tokens.homepage.filters.primaryButton}`}
+              >
+                Apply
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSwitchOffPopup && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => {
+                setShowSwitchOffPopup(false)
+                isHandlingSwitchOff.current = false
+                setVegMode(true)
+              }}
+              className="fixed inset-0 bg-black/50 z-[9998] backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
+              className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-white rounded-2xl shadow-2xl w-[85%] max-w-sm p-6">
+                <div className="flex justify-center mb-4">
+                  <div className="w-20 h-20 rounded-full bg-pink-100 flex items-center justify-center">
+                    <AlertCircle
+                      className="w-20 h-20 text-white bg-red-500/90 rounded-full p-2"
+                      strokeWidth={2.5}
+                    />
+                  </div>
+                </div>
+
+                <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">
+                  Switch off Veg Mode?
+                </h2>
+
+                <p className="text-gray-600 text-center mb-6 text-sm">
+                  You'll see all restaurants, including those serving non-veg dishes
+                </p>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      setShowSwitchOffPopup(false)
+                      isHandlingSwitchOff.current = false
+                      setVegMode(false)
+                      setPrevVegMode(false)
+                    }}
+                    className="w-full bg-transparent text-red-600 font-normal py-1 text-normal rounded-xl hover:bg-red-50 transition-colors text-base"
+                  >
+                    Switch off
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowSwitchOffPopup(false)
+                      isHandlingSwitchOff.current = false
+                      setVegMode(true)
+                    }}
+                    className="w-full text-gray-900 font-normal py-1 text-center rounded-xl hover:bg-gray-200 transition-colors text-base"
+                  >
+                    Keep using this mode
+                  </button>
+                </div>
               </div>
             </motion.div>
           </>

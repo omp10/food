@@ -576,7 +576,7 @@ Order again from this restaurant in the ${companyName} app.`
 
   const handleViewOrderDetails = (order) => {
     setActiveMenuOrderId(null)
-    navigate(`/user/orders/${order.id}/details`)
+    navigate(`/food/user/orders/${order.id}`)
   }
 
   // Open rating modal for an order
@@ -656,7 +656,7 @@ Order again from this restaurant in the ${companyName} app.`
     return (
       <div className="min-h-screen bg-gray-50 pb-10">
         <div className="bg-white p-4 flex items-center shadow-sm sticky top-0 z-10">
-          <Link to="/user">
+          <Link to="/food/user">
             <ArrowLeft className="w-6 h-6 text-gray-700 cursor-pointer" />
           </Link>
           <h1 className="ml-4 text-xl font-semibold text-gray-800">Your Orders</h1>
@@ -672,14 +672,14 @@ Order again from this restaurant in the ${companyName} app.`
     return (
       <div className="min-h-screen bg-gray-50 pb-10">
         <div className="bg-white p-4 flex items-center shadow-sm sticky top-0 z-10">
-          <Link to="/user">
+          <Link to="/food/user">
             <ArrowLeft className="w-6 h-6 text-gray-700 cursor-pointer" />
           </Link>
           <h1 className="ml-4 text-xl font-semibold text-gray-800">Your Orders</h1>
         </div>
         <div className="px-4 py-8 text-center">
           <p className="text-gray-600">You haven't placed any orders yet</p>
-          <Link to="/user">
+          <Link to="/food/user">
             <button className="mt-4 font-medium" style={{ color: BRAND_THEME.tokens.orders.primaryText }}>Start Ordering</button>
           </Link>
         </div>
@@ -691,7 +691,7 @@ Order again from this restaurant in the ${companyName} app.`
     <div className="min-h-screen bg-gray-50 pb-10 font-sans">
       {/* Header */}
       <div className="bg-white p-4 flex items-center shadow-sm sticky top-0 z-10">
-        <Link to="/user">
+        <Link to="/food/user">
           <ArrowLeft className="w-6 h-6 text-gray-700 cursor-pointer" />
         </Link>
         <h1 className="ml-4 text-xl font-semibold text-gray-800">Your Orders</h1>
@@ -774,7 +774,7 @@ Order again from this restaurant in the ${companyName} app.`
                         </p>
                       )}
                       {order.restaurantId && (
-                        <Link to={`/user/restaurants/${order.restaurantId}`}>
+                        <Link to={`/food/user/restaurants/${order.restaurantId}`}>
                           <button className="text-xs font-medium flex items-center mt-1 hover:text-blue-700" style={{ color: BRAND_THEME.tokens.orders.primaryText }}>
                             View menu <span className="ml-0.5">&gt;</span>
                           </button>
@@ -957,8 +957,8 @@ Order again from this restaurant in the ${companyName} app.`
                     )}
                   </div>
                   <div className="flex items-center ml-4">
-                    <Link to={`/user/orders/${order.id}`}>
-                      <button className="text-xs text-[#EB590E] font-medium hover:text-[#D94F0C] flex items-center gap-1">
+                    <Link to={`/food/user/orders/${order.id}`}>
+                      <button className="text-xs font-medium flex items-center gap-1 hover:opacity-80" style={{ color: BRAND_THEME.tokens.orders.primaryText }}>
                         View Details
                         <ChevronRight className="w-4 h-4" />
                       </button>
@@ -993,11 +993,11 @@ Order again from this restaurant in the ${companyName} app.`
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm text-gray-800">You rated</span>
-                        <div className="flex bg-yellow-400 text-white px-1 rounded text-[10px] items-center gap-0.5 h-4">
+                        <div className="flex px-1 rounded text-[10px] items-center gap-0.5 h-4 text-white" style={{ backgroundImage: BRAND_THEME.tokens.orders.primaryGradient }}>
                           R {order.restaurantRating}<Star className="w-2 h-2 fill-current" />
                         </div>
                         {order.deliveryPartnerId && (
-                          <div className="flex bg-blue-500 text-white px-1 rounded text-[10px] items-center gap-0.5 h-4">
+                          <div className="flex bg-green-500 text-white px-1 rounded text-[10px] items-center gap-0.5 h-4">
                             D {order.deliveryPartnerRating}<Star className="w-2 h-2 fill-current" />
                           </div>
                         )}
@@ -1009,7 +1009,8 @@ Order again from this restaurant in the ${companyName} app.`
                       <button
                         type="button"
                         onClick={() => handleOpenRating(order)}
-                        className="text-xs text-[#EB590E] font-medium mt-0.5 flex items-center"
+                        className="text-xs font-medium mt-0.5 flex items-center"
+                        style={{ color: BRAND_THEME.tokens.orders.primaryText }}
                       >
                         Rate restaurant & delivery <span className="ml-0.5">&gt;</span>
                       </button>
@@ -1019,7 +1020,7 @@ Order again from this restaurant in the ${companyName} app.`
                       <p className="text-xs text-gray-500">{order.status === 'preparing' ? 'Preparing' : order.status === 'outForDelivery' ? 'Out for delivery' : order.status === 'confirmed' ? 'Order confirmed' : ''}</p>
                       {/* Countdown Timer */}
                       {countdowns[order.id] && countdowns[order.id] > 0 && (
-                        <div className="flex items-center gap-1 mt-1 text-xs text-[#EB590E] font-medium">
+                        <div className="flex items-center gap-1 mt-1 text-xs font-medium" style={{ color: BRAND_THEME.tokens.orders.primaryText }}>
                           <Clock size={12} />
                           <span>{countdowns[order.id]} min{countdowns[order.id] !== 1 ? 's' : ''} remaining</span>
                         </div>
@@ -1031,7 +1032,7 @@ Order again from this restaurant in the ${companyName} app.`
                   {isDelivered && !paymentFailed && (
                     <button
                       onClick={() => handleReorder(order)}
-                      className="bg-[#EB590E] hover:bg-[#D94F0C] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1 shadow-sm transition-colors"
+                      className={`${BRAND_THEME.tokens.orders.primaryButton} px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1 shadow-sm transition-colors`}
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
                       Reorder
@@ -1042,11 +1043,6 @@ Order again from this restaurant in the ${companyName} app.`
             )
           })
         )}
-      </div>
-
-      {/* Footer Branding */}
-      <div className="flex justify-center mt-8 mb-4">
-        <h1 className="text-4xl font-black text-gray-200 tracking-tighter italic">appzeto</h1>
       </div>
 
       {/* Rating & Feedback Modal */}
@@ -1088,8 +1084,8 @@ Order again from this restaurant in the ${companyName} app.`
                       >
                         <Star
                           className={`w-10 h-10 transition-all ${isActive
-                              ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
-                              : "text-gray-300 hover:text-yellow-200"
+                              ? "text-[#2979FB] fill-[#2979FB] drop-shadow-lg"
+                              : "text-gray-300 hover:text-blue-200"
                             }`}
                         />
                       </button>
@@ -1123,8 +1119,8 @@ Order again from this restaurant in the ${companyName} app.`
                         >
                           <Star
                             className={`w-10 h-10 transition-all ${isActive
-                                ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
-                                : "text-gray-300 hover:text-yellow-200"
+                                ? "text-[#2979FB] fill-[#2979FB] drop-shadow-lg"
+                                : "text-gray-300 hover:text-blue-200"
                               }`}
                           />
                         </button>
@@ -1194,7 +1190,7 @@ Order again from this restaurant in the ${companyName} app.`
                 <button
                   type="button"
                   onClick={handleSystemShareFromModal}
-                  className="w-full rounded-2xl bg-[#EB590E] px-4 py-3 text-sm font-semibold text-white flex items-center justify-center gap-2 hover:bg-[#D94F0C] transition-colors"
+                  className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${BRAND_THEME.tokens.orders.primaryButton}`}
                 >
                   <Share2 className="w-4 h-4" />
                   Share via apps

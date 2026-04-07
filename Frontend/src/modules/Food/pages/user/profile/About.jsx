@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom"
+﻿import { Link } from "react-router-dom"
 import { useState, useEffect } from "react"
+
 import { ArrowLeft, ArrowRight, Heart, Users, Shield, Clock, Star, Award, FileText, Lock, Loader2, Receipt, Truck, XCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import AnimatedPage from "@food/components/user/AnimatedPage"
@@ -10,11 +11,7 @@ import api from "@food/api"
 import { API_ENDPOINTS } from "@food/api/config"
 import { useCompanyName } from "@food/hooks/useCompanyName"
 import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
-
-const debugLog = (...args) => {}
-const debugWarn = (...args) => {}
-const debugError = (...args) => {}
-
+import BRAND_THEME from "../../../../../config/brandTheme"
 
 // Icon mapping
 const iconMap = {
@@ -74,7 +71,7 @@ export default function About() {
         setAboutData(response.data.data || {})
       }
     } catch (error) {
-      debugError('Error fetching about data:', error)
+      setAboutData({})
     } finally {
       setLoading(false)
     }
@@ -82,23 +79,31 @@ export default function About() {
 
   if (loading) {
     return (
-      <AnimatedPage className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-[#0a0a0a] dark:to-[#1a1a1a]">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-600 dark:text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-          </div>
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-[#0a0a0a] dark:to-[#1a1a1a] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-10 w-10 animate-spin text-[#2979FB]" />
+          <p className="text-sm text-gray-500">Loading About…</p>
         </div>
-      </AnimatedPage>
+      </div>
     )
   }
 
+  const displayAppName = (aboutData.appName || companyName || "About").replace(/appzeto/gi, "Iggymet")
+  const normalizeLogo = () => {
+    const candidate = logoUrl || aboutData.logo?.url || aboutData.logo
+    if (candidate && typeof candidate === "string" && candidate.trim().startsWith("http")) {
+      return candidate.trim()
+    }
+    return quickSpicyLogo
+  }
+  const heroLogo = normalizeLogo()
+
   return (
-    <AnimatedPage className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-[#0a0a0a] dark:to-[#1a1a1a]">
-      <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8">
+    <AnimatedPage className={`min-h-screen ${BRAND_THEME.tokens.profile.pageBackground}`}>
+      <div className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 lg:py-10 space-y-6 md:space-y-8 lg:space-y-10">
         {/* Header */}
-        <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
-          <Link to="/user/profile">
+        <div className="flex items-center gap-3 md:gap-4 mb-2 md:mb-0">
+          <Link to="/food/user/profile">
             <Button variant="ghost" size="icon" className="h-9 w-9 md:h-10 md:w-10 p-0 hover:bg-gray-100 dark:hover:bg-gray-800">
               <ArrowLeft className="h-5 w-5 md:h-6 md:w-6 text-gray-900 dark:text-white" />
             </Button>
@@ -113,20 +118,20 @@ export default function About() {
           transition={{ duration: 0.5 }}
         >
           <Card className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-lg border-0 dark:border-gray-800 mb-6 overflow-hidden">
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 p-8 md:p-10 text-center">
+            <div className="bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-950/20 dark:to-slate-900/20 pt-10 pb-12 px-9 md:pt-14 md:pb-15 md:px-12 text-center">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                className="flex justify-center mb-6"
+                className="flex justify-center mb-0"
               >
-                <div className="relative">
-                  <div className="absolute inset-0 bg-[#EB590E] rounded-full blur-2xl opacity-30 animate-pulse" />
-                  <div className="relative bg-white dark:bg-gray-800 rounded-full p-4 md:p-6 shadow-xl">
+                <div className="relative p-4 md:p-5 lg:p-6">
+                  <div className="absolute inset-0 bg-[#2979FB] rounded-2xl blur-3xl opacity-0 animate-pulse" />
+                  <div className="relative bg-transparent dark:bg-transparent rounded-2xl p-4 md:p-5 lg:p-6 shadow-none">
                     <img
-                      src={logoUrl || quickSpicyLogo}
-                      alt={`${aboutData.appName} Logo`}
-                      className="h-16 w-16 md:h-20 md:w-20 object-contain rounded-full"
+                      src={heroLogo}
+                      alt={`${displayAppName} Logo`}
+                      className="h-20 w-20 md:h-24 md:w-24 lg:h-28 lg:w-28 object-contain"
                       onError={(e) => {
                         if (e.target.src !== quickSpicyLogo) {
                           e.target.src = quickSpicyLogo
@@ -143,7 +148,7 @@ export default function About() {
                 transition={{ delay: 0.3, duration: 0.5 }}
                 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-2"
               >
-                {aboutData.appName || companyName || "About"}
+                {displayAppName}
               </motion.h2>
 
               <motion.p
@@ -175,7 +180,7 @@ export default function About() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.5 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 md:gap-6 mb-6"
           >
             {aboutData.features.map((feature, index) => {
               const IconComponent = iconMap[feature.icon] || Heart
@@ -189,13 +194,13 @@ export default function About() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <Card className="bg-white dark:bg-[#1a1a1a] rounded-xl shadow-md border-0 dark:border-gray-800 hover:shadow-xl transition-shadow duration-300 h-full">
-                    <CardContent className="p-5 md:p-6">
-                      <div className="flex items-start gap-4">
-                        <div className={`${feature.bgColor} rounded-xl p-3 flex-shrink-0`}>
-                          <IconComponent className={`h-6 w-6 md:h-7 md:w-7 ${feature.color}`} />
+                    <CardContent className="p-4 md:p-5">
+                      <div className="flex items-center gap-3">
+                        <div className={`${feature.bgColor} rounded-lg p-2.5 flex-shrink-0`}>
+                          <IconComponent className={`h-5 w-5 md:h-6 md:w-6 ${feature.color}`} />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                          <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white mb-1">
                             {feature.title}
                           </h3>
                           <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
@@ -225,14 +230,14 @@ export default function About() {
               </h3>
               <div className="space-y-3">
                 <Link
-                  to="/user/profile/terms"
+                  to="/food/user/profile/terms"
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
                 >
                   <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-2 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors">
                     <FileText className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-base font-medium text-gray-900 dark:text-white group-hover:text-[#EB590E] dark:group-hover:text-[#F97316] transition-colors">
+                    <div className="text-base font-medium text-gray-900 dark:text-white group-hover:text-[#2979FB] dark:group-hover:text-blue-400 transition-colors">
                       Terms and Conditions
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-500">
@@ -243,14 +248,14 @@ export default function About() {
                 </Link>
 
                 <Link
-                  to="/user/profile/privacy"
+                  to="/food/user/profile/privacy"
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
                 >
                   <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-2 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors">
                     <Lock className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-base font-medium text-gray-900 dark:text-white group-hover:text-[#EB590E] dark:group-hover:text-[#F97316] transition-colors">
+                    <div className="text-base font-medium text-gray-900 dark:text-white group-hover:text-[#2979FB] dark:group-hover:text-blue-400 transition-colors">
                       Privacy Policy
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-500">
@@ -261,14 +266,14 @@ export default function About() {
                 </Link>
 
                 <Link
-                  to="/user/profile/refund"
+                  to="/food/user/profile/refund"
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
                 >
                   <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-2 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors">
                     <Receipt className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-base font-medium text-gray-900 dark:text-white group-hover:text-[#EB590E] dark:group-hover:text-[#F97316] transition-colors">
+                    <div className="text-base font-medium text-gray-900 dark:text-white group-hover:text-[#2979FB] dark:group-hover:text-blue-400 transition-colors">
                       Refund Policy
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-500">
@@ -279,14 +284,14 @@ export default function About() {
                 </Link>
 
                 <Link
-                  to="/user/profile/shipping"
+                  to="/food/user/profile/shipping"
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
                 >
                   <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-2 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors">
                     <Truck className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-base font-medium text-gray-900 dark:text-white group-hover:text-[#EB590E] dark:group-hover:text-[#F97316] transition-colors">
+                    <div className="text-base font-medium text-gray-900 dark:text-white group-hover:text-[#2979FB] dark:group-hover:text-blue-400 transition-colors">
                       Shipping Policy
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-500">
@@ -297,14 +302,14 @@ export default function About() {
                 </Link>
 
                 <Link
-                  to="/user/profile/cancellation"
+                  to="/food/user/profile/cancellation"
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
                 >
                   <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-2 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors">
                     <XCircle className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                   </div>
                   <div className="flex-1">
-                    <div className="text-base font-medium text-gray-900 dark:text-white group-hover:text-[#EB590E] dark:group-hover:text-[#F97316] transition-colors">
+                    <div className="text-base font-medium text-gray-900 dark:text-white group-hover:text-[#2979FB] dark:group-hover:text-blue-400 transition-colors">
                       Cancellation Policy
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-500">
@@ -326,12 +331,11 @@ export default function About() {
           className="text-center mt-8 mb-4"
         >
           <p className="text-sm text-gray-500 dark:text-gray-500">
-            � {new Date().getFullYear()} {companyName}. All rights reserved.
+            © {new Date().getFullYear()} {companyName || "Iggymet"}. All rights reserved.
           </p>
         </motion.div>
       </div>
     </AnimatedPage>
   )
 }
-
 

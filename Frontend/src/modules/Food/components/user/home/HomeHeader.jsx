@@ -76,6 +76,7 @@ export default function HomeHeader({
   placeholders,
   vegMode = false,
   onVegModeChange,
+  showVegMode = true,
   bannerContent,
   quickThemeColor,
   compact = false,
@@ -366,7 +367,7 @@ export default function HomeHeader({
             </div>
           </div>
 
-          {isFood ? (
+          {isFood && showVegMode ? (
             <div
               onClick={() => onVegModeChange?.(!vegMode)}
               className="h-[46px] min-w-[54px] px-1 flex flex-col items-center justify-center cursor-pointer"
@@ -380,6 +381,8 @@ export default function HomeHeader({
                 />
               </div>
             </div>
+          ) : isFood ? (
+            <div className="w-[52px] shrink-0" aria-hidden="true" />
           ) : (
             <button
               type="button"

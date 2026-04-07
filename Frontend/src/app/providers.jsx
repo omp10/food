@@ -1,5 +1,4 @@
 import { BrowserRouter, HashRouter } from 'react-router-dom'
-import { Toaster } from 'sonner'
 import { StrictMode, Fragment } from 'react'
 import { Provider as ReduxProvider } from 'react-redux'
 import { store } from './store'
@@ -36,7 +35,6 @@ export function AppProviders({ children }) {
               <CartProvider>
                 <Router>
                   {children}
-                  <Toaster position="top-center" richColors offset="80px" />
                 </Router>
               </CartProvider>
             </ReduxProvider>

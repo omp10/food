@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowLeft, X, Pencil, Loader2, Camera, Upload } from "lucide-react"
+import { ArrowLeft, X, Pencil, Loader2, Camera, Upload, User } from "lucide-react"
 import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
 import { Label } from "@food/components/ui/label"
@@ -26,7 +26,6 @@ import { toast } from "sonner"
 import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import { ImageSourcePicker } from "@food/components/ImageSourcePicker"
 import { isFlutterBridgeAvailable } from "@food/utils/imageUploadUtils"
-import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
 import BRAND_THEME from "../../../../../config/brandTheme"
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
@@ -49,7 +48,7 @@ const genderOptions = [
 // Load profile data from localStorage (legacy + current keys)
 const loadProfileFromStorage = () => {
   try {
-    const candidates = ["user_user", "userProfile", "appzeto_user_profile"]
+    const candidates = ["user_user", "userProfile", "iggymet_user_profile"]
     for (const key of candidates) {
       const stored = localStorage.getItem(key)
       if (stored) return JSON.parse(stored)
@@ -135,7 +134,6 @@ export default function EditProfile() {
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [profileImage, setProfileImage] = useState(initialProfile?.profileImage || "")
   const [imagePreview, setImagePreview] = useState(initialProfile?.profileImage || "")
-  const [brandLogoUrl, setBrandLogoUrl] = useState("")
   const [photoPickerOpen, setPhotoPickerOpen] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({
     mobile: "",
@@ -173,37 +171,6 @@ export default function EditProfile() {
       gender: formData.gender || "",
     })
   }, [formData, profileImage])
-
-  useEffect(() => {
-    const syncBranding = async () => {
-      try {
-        const cached = getCachedSettings()
-        if (cached?.logo?.url) {
-          setBrandLogoUrl(cached.logo.url)
-          return
-        }
-        const settings = await loadBusinessSettings()
-        if (settings?.logo?.url) {
-          setBrandLogoUrl(settings.logo.url)
-        }
-      } catch (error) {
-        debugWarn("Failed to load edit profile branding logo:", error)
-      }
-    }
-
-    syncBranding()
-
-    const handleSettingsUpdate = () => {
-      const cached = getCachedSettings()
-      setBrandLogoUrl(cached?.logo?.url || "")
-    }
-
-    window.addEventListener("businessSettingsUpdated", handleSettingsUpdate)
-    return () => window.removeEventListener("businessSettingsUpdated", handleSettingsUpdate)
-  }, [])
-
-  // Get avatar initial
-  const avatarInitial = formData.name?.charAt(0).toUpperCase() || BRAND_THEME.brandName.charAt(0).toUpperCase()
 
   // Check if form has changes
   useEffect(() => {
@@ -405,7 +372,7 @@ export default function EditProfile() {
         toast.success('Profile updated successfully')
 
         // Navigate back
-        navigate("/user/profile")
+        navigate("/food/user/profile")
       }
     } catch (error) {
       debugError('Error updating profile:', error)
@@ -453,18 +420,10 @@ export default function EditProfile() {
                 />
               )}
               <AvatarFallback
-                className="text-white text-3xl font-semibold overflow-hidden"
+                className="flex items-center justify-center bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-300"
                 style={{ backgroundColor: BRAND_THEME.tokens.profile.avatarBackground }}
               >
-                {brandLogoUrl ? (
-                  <img
-                    src={brandLogoUrl}
-                    alt={BRAND_THEME.brandName}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  avatarInitial
-                )}
+                <User className="h-10 w-10" />
               </AvatarFallback>
             </Avatar>
             {/* Edit Icon */}

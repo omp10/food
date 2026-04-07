@@ -44,7 +44,7 @@ export const BRAND_THEME = {
   },
   tokens: {
     app: {
-      pageBackground: "#F8FAFC",
+      pageBackground: "#FFFFFF",
       cardBackground: "#FFFFFF",
       sectionBackground: "#FFFFFF",
       sectionAltBackground: "#F1F5F9",
@@ -63,8 +63,8 @@ export const BRAND_THEME = {
       primaryBackground: "#2979FB",
       primaryHover: "#1E5ED8",
       primaryText: "#FFFFFF",
-      accentBackground: "#FA0000",
-      accentHover: "#DC2626",
+      accentBackground: "#1E5ED8",
+      accentHover: "#194FBB",
       accentText: "#FFFFFF",
     },
     footer: {
@@ -86,7 +86,7 @@ export const BRAND_THEME = {
     },
     productDetail: {
       pageBackground:
-        "bg-gradient-to-b from-blue-50/70 via-white to-slate-50 dark:from-[#0a0a0a] dark:via-[#0a0a0a] dark:to-[#0a0a0a]",
+        "bg-white dark:bg-[#0a0a0a]",
       primaryBadge: "bg-[#2979FB] text-white",
       priceText: "text-[#2979FB]",
       breadcrumbHover: "hover:text-[#2979FB]",
@@ -117,7 +117,7 @@ export const BRAND_THEME = {
     },
     cart: {
       pageBackground:
-        "bg-gradient-to-b from-blue-50/60 via-white to-slate-50 dark:from-[#0a0a0a] dark:via-[#0a0a0a] dark:to-[#0a0a0a]",
+        "bg-white dark:bg-[#0a0a0a]",
       primaryText: "#2979FB",
       primarySurface: "#EAF2FF",
       primaryBorder: "#2979FB",
@@ -141,7 +141,7 @@ export const BRAND_THEME = {
     },
     profile: {
       pageBackground:
-        "bg-gradient-to-b from-blue-50/60 via-white to-slate-50 dark:from-[#0a0a0a] dark:via-[#0a0a0a] dark:to-[#0a0a0a]",
+        "bg-white dark:bg-[#0a0a0a]",
       sectionAccent: "#2979FB",
       accentBar: "bg-[#2979FB]",
       avatarBackground: "#2979FB",
@@ -167,7 +167,7 @@ export const BRAND_THEME = {
     },
     support: {
       pageBackground:
-        "bg-gradient-to-b from-blue-50/60 via-white to-slate-50 dark:from-[#0a0a0a] dark:via-[#0a0a0a] dark:to-[#0a0a0a]",
+        "bg-white dark:bg-[#0a0a0a]",
       iconSurface: "bg-blue-50 dark:bg-blue-950/30",
       iconText: "text-[#2979FB] dark:text-blue-300",
       heroSurface:
@@ -214,8 +214,8 @@ export const BRAND_THEME = {
       vegAccent: "#22C55E",
       successBackground: "#DCFCE7",
       successText: "#16A34A",
-      dangerBackground: "#FFE5E5",
-      dangerText: "#FA0000",
+      dangerBackground: "#FEF2F2",
+      dangerText: "#DC2626",
     },
     motion: {
       easing: {
@@ -285,7 +285,7 @@ export const BRAND_THEME = {
       header: {
         scrolledBackground: "#FFFFFF",
         iconAccent: "#2979FB",
-        cartBadgeBackground: "#FA0000",
+        cartBadgeBackground: "#1E5ED8",
         searchRailGradient: "linear-gradient(180deg, #2979FB 0%, #1E5ED8 100%)",
         heroOverlay:
           "bg-[linear-gradient(180deg,rgba(20,77,176,0.36),rgba(7,20,52,0.22))] shadow-[0_16px_34px_rgba(0,0,0,0.18)]",
@@ -315,12 +315,12 @@ export const BRAND_THEME = {
         exploreOverlayPalette: [
           "from-blue-500 to-cyan-500",
           "from-blue-500 to-indigo-500",
-          "from-red-500 to-pink-500",
+          "from-sky-500 to-blue-600",
         ],
         restaurantCard: {
           featuredDishBadge:
             "bg-[linear-gradient(135deg,rgba(15,23,42,0.82),rgba(30,94,216,0.76))] backdrop-blur-lg text-white border border-white/20",
-          bookmarkActive: "bg-[#FA0000] text-white",
+          bookmarkActive: "bg-[#2979FB] text-white",
           bookmarkIdle:
             "bg-white/90 backdrop-blur-sm text-gray-800 hover:bg-white hover:text-[#2979FB]",
           nameHover: "group-hover:text-[#2979FB]",
@@ -329,12 +329,12 @@ export const BRAND_THEME = {
           ratingActive: "bg-[#22C55E] text-white",
           ratingIdle: "bg-gray-400 text-white",
           metaIcon: "text-[#2979FB] dark:text-blue-300",
-          offerIcon: "text-[#FA0000]",
+          offerIcon: "text-amber-500",
           offerText: "text-gray-700 dark:text-gray-300",
         },
         promoCards: {
-          offersGradient: "linear-gradient(145deg, #FA0000, #C40000)",
-          offersShadow: "rgba(250,0,0,0.30)",
+          offersGradient: "linear-gradient(145deg, #2979FB, #1E5ED8)",
+          offersShadow: "rgba(41,121,251,0.30)",
           pureVegEnabledGradient: "linear-gradient(145deg, #166534, #22C55E)",
           pureVegDisabledGradient: "linear-gradient(145deg, #15803D, #22C55E)",
           pureVegShadow: "rgba(34,197,94,0.35)",
@@ -361,8 +361,8 @@ export const BRAND_THEME = {
   },
   gradients: {
     primary: "linear-gradient(135deg, #2979FB 0%, #1E5ED8 100%)",
-    hero: "linear-gradient(180deg, #EAF2FF 0%, #FFFFFF 100%)",
-    accent: "linear-gradient(135deg, #FA0000 0%, #C40000 100%)",
+    hero: "linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 100%)",
+    accent: "linear-gradient(135deg, #5AA2FF 0%, #2979FB 100%)",
   },
 };
 

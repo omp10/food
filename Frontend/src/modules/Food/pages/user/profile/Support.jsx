@@ -8,6 +8,7 @@ import { Card, CardContent } from "@food/components/ui/card"
 import { orderAPI, restaurantAPI, supportAPI, authAPI } from "@food/api"
 import { toast } from "sonner"
 import { ArrowLeft, Building2, HelpCircle, ShoppingBag, ChevronRight } from "lucide-react"
+import BRAND_THEME from "../../../../../config/brandTheme"
 
 export default function Support() {
   const [step, setStep] = useState("pick")
@@ -107,7 +108,7 @@ export default function Support() {
   const statusClasses = (status) => {
     const s = String(status || "").toLowerCase()
     if (s === "resolved" || s === "closed") return "bg-green-100 text-green-700"
-    if (s === "open") return "bg-amber-100 text-amber-700"
+    if (s === "open") return "bg-blue-100 text-blue-700"
     return "bg-slate-100 text-slate-700"
   }
 
@@ -205,10 +206,10 @@ export default function Support() {
   )
 
   return (
-    <AnimatedPage className="min-h-screen bg-[#f5f5f5] dark:bg-[#0a0a0a]">
+    <AnimatedPage className={`min-h-screen ${BRAND_THEME.tokens.profile.pageBackground}`}>
       <div className="max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-4 sm:py-6 md:py-8 pb-20">
         <div className="mb-4">
-          <Link to="/user/profile">
+          <Link to="/food/user/profile">
             <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
               <ArrowLeft className="h-5 w-5 text-black dark:text-white" />
             </Button>
@@ -287,12 +288,12 @@ export default function Support() {
                 <h3 className="font-semibold text-slate-900 dark:text-white">Issue type</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {orderIssues.map((it) => (
-                    <Button key={it} variant={issueType === it ? "default" : "outline"} onClick={() => setIssueType(it)}>{it}</Button>
+                    <Button key={it} variant={issueType === it ? "default" : "outline"} className={issueType === it ? BRAND_THEME.tokens.profile.primaryButton : ""} onClick={() => setIssueType(it)}>{it}</Button>
                   ))}
                 </div>
                 <Textarea placeholder="Describe the issue (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
                 <div className="flex gap-2">
-                  <Button onClick={() => submitTicket({ type: "order", orderId: selectedOrder._id || selectedOrder.id, issueType, description })} disabled={!issueType || submitting}>
+                  <Button className={BRAND_THEME.tokens.profile.primaryButton} onClick={() => submitTicket({ type: "order", orderId: selectedOrder._id || selectedOrder.id, issueType, description })} disabled={!issueType || submitting}>
                     {submitting ? "Submitting..." : "Submit Ticket"}
                   </Button>
                   <Button variant="outline" onClick={() => setStep("pick")}>Cancel</Button>
@@ -332,12 +333,12 @@ export default function Support() {
                 <h3 className="font-semibold text-slate-900 dark:text-white">Issue type</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {restaurantIssues.map((it) => (
-                    <Button key={it} variant={issueType === it ? "default" : "outline"} onClick={() => setIssueType(it)}>{it}</Button>
+                    <Button key={it} variant={issueType === it ? "default" : "outline"} className={issueType === it ? BRAND_THEME.tokens.profile.primaryButton : ""} onClick={() => setIssueType(it)}>{it}</Button>
                   ))}
                 </div>
                 <Textarea placeholder="Describe the issue (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
                 <div className="flex gap-2">
-                  <Button onClick={() => submitTicket({ type: "restaurant", restaurantId: selectedRestaurant._id || selectedRestaurant.id, issueType, description })} disabled={!issueType || submitting}>
+                  <Button className={BRAND_THEME.tokens.profile.primaryButton} onClick={() => submitTicket({ type: "restaurant", restaurantId: selectedRestaurant._id || selectedRestaurant.id, issueType, description })} disabled={!issueType || submitting}>
                     {submitting ? "Submitting..." : "Submit Ticket"}
                   </Button>
                   <Button variant="outline" onClick={() => setStep("pick")}>Cancel</Button>
@@ -350,7 +351,7 @@ export default function Support() {
                 <Input placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
                 <Textarea placeholder="Describe your issue" value={description} onChange={(e) => setDescription(e.target.value)} />
                 <div className="flex gap-2">
-                  <Button onClick={() => submitTicket({ type: "other", issueType: subject || "Other", description })} disabled={!subject || submitting}>
+                  <Button className={BRAND_THEME.tokens.profile.primaryButton} onClick={() => submitTicket({ type: "other", issueType: subject || "Other", description })} disabled={!subject || submitting}>
                     {submitting ? "Submitting..." : "Submit Ticket"}
                   </Button>
                   <Button variant="outline" onClick={() => setStep("pick")}>Cancel</Button>

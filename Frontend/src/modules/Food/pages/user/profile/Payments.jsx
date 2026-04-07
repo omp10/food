@@ -34,7 +34,7 @@ export default function Payments() {
             <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Payment Methods</h1>
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">Manage your payment methods</p>
           </div>
-          <Link to="/user/profile/payments/new" className="w-full sm:w-auto">
+          <Link to="/food/user/profile/payments/new" className="w-full sm:w-auto">
             <Button className={`w-full sm:w-auto ${BRAND_THEME.tokens.profile.primaryButton} text-sm sm:text-base`}>
               <Plus className="h-4 w-4 mr-2" />
               Add Payment Method
@@ -48,7 +48,7 @@ export default function Payments() {
               <CreditCard className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-xl font-semibold mb-2">No payment methods saved yet</h3>
               <p className="text-muted-foreground mb-6">Add your first payment method to get started with orders</p>
-              <Link to="/user/profile/payments/new">
+              <Link to="/food/user/profile/payments/new">
                 <Button className={BRAND_THEME.tokens.profile.primaryButton}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Your First Payment Method
@@ -103,7 +103,7 @@ export default function Payments() {
                         Set as Default
                       </Button>
                     )}
-                    <Link to={`/user/profile/payments/${payment.id}/edit`}>
+                    <Link to={`/food/user/profile/payments/${payment.id}/edit`}>
                       <Button variant="outline" size="sm" className="flex items-center gap-1">
                         <Edit className="h-4 w-4" />
                         Edit
