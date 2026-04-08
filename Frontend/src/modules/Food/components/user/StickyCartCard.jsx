@@ -3,6 +3,7 @@ import { X, ChevronRight } from "lucide-react"
 import { useCart } from "@food/context/CartContext"
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import BRAND_THEME from "@/config/brandTheme"
 
 export default function StickyCartCard() {
   const { cart, getCartCount } = useCart()

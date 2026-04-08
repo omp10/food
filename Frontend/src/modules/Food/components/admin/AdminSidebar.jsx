@@ -733,42 +733,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
             </div>
           </div>
 
-          {/* Admin Panel Label */}
-          {!isCollapsed && (
-            <div className="mb-3 animate-[slideIn_0.4s_ease-out_0.1s_both]">
-              <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider text-left">
-                Admin Panel
-              </h2>
-              <div className="mt-2 rounded-xl border border-neutral-800 bg-neutral-900/80 p-1">
-                <div className="grid grid-cols-2 gap-1">
-                  <button
-                    type="button"
-                    onClick={() => switchAdminModule("food")}
-                    className={cn(
-                      "rounded-lg px-2 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-all",
-                      !isQuickAdmin
-                        ? "bg-white text-neutral-900 shadow"
-                        : "text-neutral-400 hover:text-white"
-                    )}
-                  >
-                    Food
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => switchAdminModule("quick")}
-                    className={cn(
-                      "rounded-lg px-2 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-all",
-                      isQuickAdmin
-                        ? "bg-[#0c831f] text-white shadow-[0_6px_20px_rgba(12,131,31,0.35)]"
-                        : "text-neutral-400 hover:text-white"
-                    )}
-                  >
-                    Quick
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Admin Panel Label removed (Food/Quick toggle hidden) */}
 
           {/* Search Bar */}
           {!isCollapsed && (
