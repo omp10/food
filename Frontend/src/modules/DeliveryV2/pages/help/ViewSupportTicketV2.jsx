@@ -7,6 +7,7 @@ import {
 import { deliveryAPI } from '@food/api';
 import { toast } from 'sonner';
 import useDeliveryBackNavigation from '../../hooks/useDeliveryBackNavigation';
+import BRAND_THEME from '@/config/brandTheme';
 
 /**
  * ViewSupportTicketV2 - Restored Old UI for Ticket Details.
@@ -39,7 +40,7 @@ export const ViewSupportTicketV2 = () => {
     fetchTicket();
   }, [ticketId]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="w-8 h-8 animate-spin text-orange-500" /></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="w-8 h-8 animate-spin" style={{ color: BRAND_THEME.colors.brand.primary }} /></div>;
   if (!ticket) return <div className="p-20 text-center text-gray-400 font-bold uppercase tracking-widest h-screen">Ticket Not Found</div>;
 
   const getStatusColor = (status) => {
@@ -86,13 +87,13 @@ export const ViewSupportTicketV2 = () => {
          </div>
 
          {/* Response Section */}
-         <div className="bg-white rounded-3xl p-6 shadow-sm border border-orange-100 flex items-start gap-4">
-            <div className="w-10 h-10 rounded-2xl bg-orange-50 flex items-center justify-center shrink-0">
-               <ShieldCheck className="w-5 h-5 text-orange-500" />
+         <div className="bg-white rounded-3xl p-6 shadow-sm border border-blue-100 flex items-start gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
+               <ShieldCheck className="w-5 h-5" style={{ color: BRAND_THEME.colors.brand.primary }} />
             </div>
             <div className="space-y-2">
                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Support Response</p>
-               <p className="text-xs text-orange-600 font-bold leading-relaxed italic">
+               <p className="text-xs font-bold leading-relaxed italic" style={{ color: BRAND_THEME.colors.brand.primary }}>
                  {ticket.adminResponse || "Our support team is currently reviewing your ticket. You'll receive a notification once there is an update."}
                </p>
                {ticket.respondedAt && (

@@ -36,6 +36,7 @@ import { clearModuleAuth, clearAuthData, getCurrentUser } from "@food/utils/auth
 import { restaurantAPI } from "@food/api"
 import { firebaseAuth, ensureFirebaseInitialized } from "@food/firebase"
 import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -1562,7 +1563,8 @@ export default function ExploreMore() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSuccessPopupOpen(false)}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-[10000]"
+              className="fixed inset-0 z-[10000]"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primary}80` }}
             />
 
             {/* Success Modal */}
@@ -1614,7 +1616,8 @@ export default function ExploreMore() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primary}80` }}
               onClick={() => setExistingScheduleOpen(false)}
             />
 

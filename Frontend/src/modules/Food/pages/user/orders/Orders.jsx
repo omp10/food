@@ -1082,11 +1082,12 @@ Order again from this restaurant in the ${companyName} app.`
                         onClick={() => setSelectedRestaurantRating(num)}
                         className="p-2 transition-transform hover:scale-125 active:scale-95"
                       >
-                        <Star
+                          <Star
                           className={`w-10 h-10 transition-all ${isActive
-                              ? "text-[#2979FB] fill-[#2979FB] drop-shadow-lg"
+                              ? "drop-shadow-lg"
                               : "text-gray-300 hover:text-blue-200"
                             }`}
+                          style={isActive ? { color: BRAND_THEME.colors.brand.primary, fill: BRAND_THEME.colors.brand.primary } : undefined}
                         />
                       </button>
                     )
@@ -1119,9 +1120,10 @@ Order again from this restaurant in the ${companyName} app.`
                         >
                           <Star
                             className={`w-10 h-10 transition-all ${isActive
-                                ? "text-[#2979FB] fill-[#2979FB] drop-shadow-lg"
+                                ? "drop-shadow-lg"
                                 : "text-gray-300 hover:text-blue-200"
                               }`}
+                            style={isActive ? { color: BRAND_THEME.colors.brand.primary, fill: BRAND_THEME.colors.brand.primary } : undefined}
                           />
                         </button>
                       )

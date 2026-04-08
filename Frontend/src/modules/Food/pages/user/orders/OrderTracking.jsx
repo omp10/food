@@ -1182,49 +1182,49 @@ export default function OrderTracking() {
     placed: {
       title: "Order Placed",
       subtitle: "Waiting for restaurant to accept",
-      color: "bg-[#2979FB]",
+      color: BRAND_THEME.colors.brand.primary,
       iconType: 'food'
     },
     confirmed: {
       title: "Order Confirmed",
       subtitle: "Restaurant has accepted your order",
-      color: "bg-[#2979FB]",
+      color: BRAND_THEME.colors.brand.primary,
       iconType: 'food'
     },
     preparing: {
       title: "Food is being prepared",
       subtitle: typeof estimatedTime === 'number' ? `Arriving in ${estimatedTime} mins` : "Cooking your meal",
-      color: "bg-[#2979FB]",
+      color: BRAND_THEME.colors.brand.primary,
       iconType: 'food'
     },
     assigned: {
       title: "Rider is arriving",
       subtitle: "A delivery partner is arriving at the restaurant",
-      color: "bg-[#2979FB]",
+      color: BRAND_THEME.colors.brand.primary,
       iconType: 'rider'
     },
     at_pickup: {
       title: "Rider at restaurant",
       subtitle: "Rider is waiting for your order",
-      color: "bg-[#2979FB]",
+      color: BRAND_THEME.colors.brand.primary,
       iconType: 'rider'
     },
     ready: {
       title: "Handover in progress",
       subtitle: "Rider is picking up your order",
-      color: "bg-[#2979FB]",
+      color: BRAND_THEME.colors.brand.primary,
       iconType: 'rider'
     },
     on_way: {
       title: "Out for delivery",
       subtitle: typeof estimatedTime === 'number' ? `Arriving in ${estimatedTime} mins` : "Rider is out for delivery",
-      color: "bg-[#2979FB]",
+      color: BRAND_THEME.colors.brand.primary,
       iconType: 'rider'
     },
     at_drop: {
       title: "Arrived at location",
       subtitle: "Please come to the door",
-      color: "bg-[#2979FB]",
+      color: BRAND_THEME.colors.brand.primary,
       iconType: 'rider'
     },
     delivered: {

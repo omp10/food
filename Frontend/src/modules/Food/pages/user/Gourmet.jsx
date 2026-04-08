@@ -242,7 +242,7 @@ export default function Gourmet() {
                           {/* Offer Badge */}
                           {restaurant.offer && (
                             <div className="flex items-center gap-2 text-sm">
-                              <BadgePercent className="h-4 w-4 text-[#2979FB] dark:text-blue-300" strokeWidth={2} />
+                              <BadgePercent className="h-4 w-4" strokeWidth={2} style={{ color: BRAND_THEME.colors.brand.primary }} />
                               <span className={BRAND_THEME.tokens.homepage.shared.bodyText}>{restaurant.offer}</span>
                             </div>
                           )}

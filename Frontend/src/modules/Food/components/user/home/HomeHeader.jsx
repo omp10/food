@@ -269,12 +269,12 @@ export default function HomeHeader({
                       <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         Notifications
                         {unreadCount > 0 && (
-                          <Badge variant="secondary" className="border-none text-[10px] h-4 bg-blue-100 text-[#2979FB]">
+                          <Badge variant="secondary" className="border-none text-[10px] h-4" style={{ backgroundColor: `${BRAND_THEME.colors.brand.primary}1a`, color: BRAND_THEME.colors.brand.primary }}>
                             {unreadCount} New
                           </Badge>
                         )}
                       </h3>
-                      <Link to="/food/user/notifications" className="text-xs font-bold text-[#2979FB]">
+                      <Link to="/food/user/notifications" className="text-xs font-bold" style={{ color: BRAND_THEME.colors.brand.primary }}>
                         {mergedNotifications.length > 0 ? "View All" : ""}
                       </Link>
                     </div>
@@ -282,7 +282,7 @@ export default function HomeHeader({
                       {mergedNotifications.length > 0 ? (
                         mergedNotifications.slice(0, 5).map((item) => (
                           <div key={item.id} className="p-4 flex items-start gap-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                            <div className="mt-1 p-2 rounded-full bg-blue-100/60 text-[#2979FB]">
+                            <div className="mt-1 p-2 rounded-full" style={{ backgroundColor: `${BRAND_THEME.colors.brand.primary}1a`, color: BRAND_THEME.colors.brand.primary }}>
                               <Bell className="h-4 w-4" />
                             </div>
                             <div className="flex-1 min-w-0">

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+ï»¿import { Link } from "react-router-dom"
 import { useState } from "react"
 
 import { Heart, Star, Clock, MapPin, ArrowRight, ArrowLeft, Bookmark } from "lucide-react"
@@ -80,7 +80,7 @@ export default function Favorites() {
               <div>
                 <h1 className="text-lg sm:text-xl md:text-2xl font-bold">My Favorites</h1>
                 <p className="text-gray-700 dark:text-gray-300 mt-1 text-sm font-semibold">
-                  {dishFavorites.length || 0} {dishFavorites.length === 1 ? "dish" : "dishes"} • {restaurantFavorites.length || 0} {restaurantFavorites.length === 1 ? "restaurant" : "restaurants"}
+                  {dishFavorites.length || 0} {dishFavorites.length === 1 ? "dish" : "dishes"} ï¿½ {restaurantFavorites.length || 0} {restaurantFavorites.length === 1 ? "restaurant" : "restaurants"}
                 </p>
               </div>
             </div>
@@ -93,9 +93,10 @@ export default function Favorites() {
             onClick={() => setActiveTab("restaurants")}
             className={`px-4 py-2 font-medium transition-colors ${
               activeTab === "restaurants"
-                ? "border-b-2 border-[#2979FB] text-[#2979FB]"
+                ? "border-b-2"
                 : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
             }`}
+            style={activeTab === "restaurants" ? { borderColor: BRAND_THEME.colors.brand.primary, color: BRAND_THEME.colors.brand.primary } : undefined}
           >
             Restaurants ({restaurantFavorites.length})
           </button>
@@ -103,9 +104,10 @@ export default function Favorites() {
             onClick={() => setActiveTab("dishes")}
             className={`px-4 py-2 font-medium transition-colors ${
               activeTab === "dishes"
-                ? "border-b-2 border-[#2979FB] text-[#2979FB]"
+                ? "border-b-2"
                 : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
             }`}
+            style={activeTab === "dishes" ? { borderColor: BRAND_THEME.colors.brand.primary, color: BRAND_THEME.colors.brand.primary } : undefined}
           >
             Dishes ({dishFavorites.length})
           </button>
@@ -253,7 +255,7 @@ export default function Favorites() {
                               )}
                               <span className="text-muted-foreground font-medium text-xs">{dish.foodType || "N/A"}</span>
                             </div>
-                            <div className="text-sm font-bold text-[#2979FB]">
+                            <div className="text-sm font-bold" style={{ color: BRAND_THEME.colors.brand.primary }}>
                               {"\u20B9"}{Math.round(dish.price || 0)}
                             </div>
                           </div>
@@ -274,4 +276,5 @@ export default function Favorites() {
     </AnimatedPage>
   )
 }
+
 

@@ -2384,7 +2384,7 @@ function RestaurantDetailsContent() {
                               {isRecommendedItem(item) && (
                                 <div className="flex items-center gap-2 mt-1">
                                   <div className="h-1.5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div className="h-full bg-[#2979FB] w-3/4"></div>
+                                    <div className="h-full w-3/4" style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}></div>
                                   </div>
                                   <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Highly reordered</span>
                                 </div>
@@ -2463,34 +2463,41 @@ function RestaurantDetailsContent() {
                                   animate={{ opacity: 1, scale: 1 }}
                                   className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white border font-bold px-4 py-1.5 rounded-lg shadow-md flex items-center gap-1 ${shouldShowGrayscale
                                     ? 'border-gray-300 text-gray-400 cursor-not-allowed opacity-50'
-                                    : 'border-[#2979FB] text-[#2979FB] hover:bg-blue-50'
+                                    : 'text-white'
                                     }`}
+                                  style={
+                                    shouldShowGrayscale
+                                      ? undefined
+                                      : { borderColor: BRAND_THEME.colors.brand.primary, background: BRAND_THEME.gradients.primary }
+                                  }
                                 >
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation()
-                                      if (!shouldShowGrayscale) {
-                                        updateItemQuantity(item, Math.max(0, quantity - 1), e)
-                                      }
-                                    }}
-                                    disabled={shouldShowGrayscale}
-                                    className={shouldShowGrayscale ? 'text-gray-400 cursor-not-allowed' : 'text-[#2979FB] hover:text-[#1E5ED8]'}
-                                  >
+                                    if (!shouldShowGrayscale) {
+                                      updateItemQuantity(item, Math.max(0, quantity - 1), e)
+                                    }
+                                  }}
+                                  disabled={shouldShowGrayscale}
+                                  className={shouldShowGrayscale ? 'text-gray-400 cursor-not-allowed' : ''}
+                                  style={shouldShowGrayscale ? undefined : { color: BRAND_THEME.colors.brand.primary }}
+                                >
                                     <Minus size={14} />
                                   </button>
                                   <span className={`mx-2 text-sm ${shouldShowGrayscale ? 'text-gray-400' : ''}`}>{quantity}</span>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation()
-                                      if (!shouldShowGrayscale) {
-                                        updateItemQuantity(item, quantity + 1, e)
-                                      }
-                                    }}
-                                    disabled={shouldShowGrayscale}
-                                    className={shouldShowGrayscale ? 'text-gray-400 cursor-not-allowed' : 'text-[#2979FB] hover:text-[#1E5ED8]'}
-                                  >
-                                    <Plus size={14} className="stroke-[3px]" />
-                                  </button>
+                                    if (!shouldShowGrayscale) {
+                                      updateItemQuantity(item, quantity + 1, e)
+                                    }
+                                  }}
+                                  disabled={shouldShowGrayscale}
+                                  className={shouldShowGrayscale ? 'text-gray-400 cursor-not-allowed' : ''}
+                                  style={shouldShowGrayscale ? undefined : { color: BRAND_THEME.colors.brand.primary }}
+                                >
+                                  <Plus size={14} className="stroke-[3px]" />
+                                </button>
                                 </motion.div>
                               ) : (
                                 <motion.button
@@ -2507,8 +2514,13 @@ function RestaurantDetailsContent() {
                                   disabled={shouldShowGrayscale}
                                   className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white border font-bold px-6 py-1.5 rounded-lg shadow-md flex items-center gap-1 transition-colors ${shouldShowGrayscale
                                     ? 'border-gray-300 text-gray-400 cursor-not-allowed opacity-50'
-                                    : 'border-[#2979FB] text-[#2979FB] hover:bg-blue-50'
+                                    : 'text-white'
                                     }`}
+                                  style={
+                                    shouldShowGrayscale
+                                      ? undefined
+                                      : { borderColor: BRAND_THEME.colors.brand.primary, background: BRAND_THEME.gradients.primary }
+                                  }
                                 >
                                   ADD <Plus size={14} className="stroke-[3px]" />
                                 </motion.button>
@@ -2604,13 +2616,13 @@ function RestaurantDetailsContent() {
 
                                         {/* Highly Reordered Progress Bar - Show if recommended */}
                                         {isRecommendedItem(item) && (
-                                          <div className="flex items-center gap-2 mt-1">
-                                            <div className="h-1.5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                              <div className="h-full bg-[#2979FB] w-3/4"></div>
-                                            </div>
-                                            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Highly reordered</span>
+                                        <div className="flex items-center gap-2 mt-1">
+                                          <div className="h-1.5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                            <div className="h-full w-3/4" style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}></div>
                                           </div>
-                                        )}
+                                          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Highly reordered</span>
+                                        </div>
+                                      )}
 
                                         <div className="flex items-center gap-3 mt-1">
                                           <p className="font-semibold text-gray-900 dark:text-white">{getFoodPriceLabel(item)}</p>
@@ -2685,8 +2697,13 @@ function RestaurantDetailsContent() {
                                             animate={{ opacity: 1, scale: 1 }}
                                             className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white border font-bold px-4 py-1.5 rounded-lg shadow-md flex items-center gap-1 ${shouldShowGrayscale
                                               ? 'border-gray-300 text-gray-400 cursor-not-allowed opacity-50'
-                                              : 'border-[#2979FB] text-[#2979FB] hover:bg-blue-50'
+                                              : 'text-white'
                                               }`}
+                                            style={
+                                              shouldShowGrayscale
+                                                ? undefined
+                                                : { borderColor: BRAND_THEME.colors.brand.primary, background: BRAND_THEME.gradients.primary }
+                                            }
                                           >
                                             <button
                                               onClick={(e) => {
@@ -2696,7 +2713,8 @@ function RestaurantDetailsContent() {
                                                 }
                                               }}
                                               disabled={shouldShowGrayscale}
-                                              className={shouldShowGrayscale ? 'text-gray-400 cursor-not-allowed' : 'text-[#2979FB] hover:text-[#1E5ED8]'}
+                                              className={shouldShowGrayscale ? 'text-gray-400 cursor-not-allowed' : ''}
+                                              style={shouldShowGrayscale ? undefined : { color: BRAND_THEME.colors.brand.primary }}
                                             >
                                               <Minus size={14} />
                                             </button>
@@ -2709,7 +2727,8 @@ function RestaurantDetailsContent() {
                                                 }
                                               }}
                                               disabled={shouldShowGrayscale}
-                                              className={shouldShowGrayscale ? 'text-gray-400 cursor-not-allowed' : 'text-[#2979FB] hover:text-[#1E5ED8]'}
+                                              className={shouldShowGrayscale ? 'text-gray-400 cursor-not-allowed' : ''}
+                                              style={shouldShowGrayscale ? undefined : { color: BRAND_THEME.colors.brand.primary }}
                                             >
                                               <Plus size={14} className="stroke-[3px]" />
                                             </button>
@@ -2729,8 +2748,13 @@ function RestaurantDetailsContent() {
                                             disabled={shouldShowGrayscale}
                                             className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white border font-bold px-6 py-1.5 rounded-lg shadow-md flex items-center gap-1 transition-colors ${shouldShowGrayscale
                                               ? 'border-gray-300 text-gray-400 cursor-not-allowed opacity-50'
-                                              : 'border-[#2979FB] text-[#2979FB] hover:bg-blue-50'
+                                              : 'text-white'
                                               }`}
+                                            style={
+                                              shouldShowGrayscale
+                                                ? undefined
+                                                : { borderColor: BRAND_THEME.colors.brand.primary, background: BRAND_THEME.gradients.primary }
+                                            }
                                           >
                                             ADD <Plus size={14} className="stroke-[3px]" />
                                           </motion.button>
@@ -2874,7 +2898,8 @@ function RestaurantDetailsContent() {
                   {/* Close Button */}
                   <div className="border-t border-gray-200 dark:border-gray-800 px-4 py-4 bg-white dark:bg-[#1a1a1a]">
                     <Button
-                      className="w-full bg-[#2979FB] hover:bg-[#1E5ED8] text-white border-0 flex items-center justify-center gap-2 py-6 rounded-xl font-bold transition-all shadow-lg"
+                      className="w-full text-white border-0 flex items-center justify-center gap-2 py-6 rounded-xl font-bold transition-all shadow-lg"
+                      style={{ background: BRAND_THEME.gradients.primary }}
                       onClick={() => setShowMenuSheet(false)}
                     >
                       <X className="h-5 w-5" />
@@ -3009,9 +3034,14 @@ function RestaurantDetailsContent() {
                           }))
                         }
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 transition-all w-full ${filters.highlyReordered
-                          ? "border-[#2979FB] dark:border-[#2979FB] bg-[#EAF2FF] dark:bg-blue-950/30 text-[#2979FB] dark:text-blue-300"
+                          ? "border-transparent"
                           : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
                           }`}
+                      style={
+                        filters.highlyReordered
+                          ? { borderColor: BRAND_THEME.colors.brand.primary, backgroundColor: `${BRAND_THEME.colors.brand.primary}14`, color: BRAND_THEME.colors.brand.primary }
+                          : undefined
+                      }
                       >
                         <RotateCcw className="h-4 w-4" />
                         <span className="font-medium">Highly reordered</span>
@@ -3055,7 +3085,8 @@ function RestaurantDetailsContent() {
                       Clear All
                     </button>
                     <Button
-                      className="bg-[#2979FB] hover:bg-[#1E5ED8] text-white px-6 py-2.5 rounded-lg font-bold"
+                      className="text-white px-6 py-2.5 rounded-lg font-bold"
+                      style={{ background: BRAND_THEME.gradients.primary }}
                       onClick={() => setShowFilterSheet(false)}
                     >
                       Apply {activeFilterCount > 0 && `(${activeFilterCount})`}
@@ -3114,9 +3145,9 @@ function RestaurantDetailsContent() {
                             className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2a2a2a]"
                           >
                             {outlet?.isNearest && (
-                              <div className="flex items-center gap-1.5 mb-2 px-2 py-1 bg-[#EAF2FF] dark:bg-blue-950/30 rounded-md">
-                                <Zap className="h-3.5 w-3.5 text-[#2979FB] dark:text-blue-300 fill-[#2979FB] dark:fill-blue-300" />
-                                <span className="text-xs font-semibold text-[#2979FB] dark:text-blue-300">
+                              <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded-md" style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}>
+                                <Zap className="h-3.5 w-3.5" style={{ color: BRAND_THEME.colors.brand.primary }} />
+                                <span className="text-xs font-semibold" style={{ color: BRAND_THEME.colors.brand.primary }}>
                                   Nearest available outlet
                                 </span>
                               </div>
@@ -3269,7 +3300,8 @@ function RestaurantDetailsContent() {
                   {/* Done Button */}
                   <div className="border-t border-gray-200 dark:border-gray-800 px-4 py-4">
                     <Button
-                      className="w-full bg-[#2979FB] hover:bg-[#1E5ED8] text-white py-3 rounded-lg font-bold"
+                      className="w-full text-white py-3 rounded-lg font-bold"
+                      style={{ background: BRAND_THEME.gradients.primary }}
                       onClick={() => {
                         setShowManageCollections(false)
                       }}
@@ -3478,8 +3510,9 @@ function RestaurantDetailsContent() {
                       <Button
                         className={`flex-1 h-[44px] rounded-lg font-semibold flex items-center justify-center gap-2 ${shouldShowGrayscale
                           ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-600 cursor-not-allowed opacity-50'
-                          : 'bg-[#2979FB] hover:bg-[#1E5ED8] text-white'
+                          : 'text-white'
                           }`}
+                        style={shouldShowGrayscale ? undefined : { background: BRAND_THEME.gradients.primary }}
                         onClick={(e) => {
                           if (!shouldShowGrayscale) {
                             updateItemQuantity(
@@ -3589,7 +3622,7 @@ function RestaurantDetailsContent() {
                                 {day} {month} {item.label}
                               </span>
                               {isSelected && (
-                                <div className="h-0.5 w-full bg-[#2979FB] mt-0.5" />
+                                <div className="h-0.5 w-full mt-0.5" style={{ backgroundColor: BRAND_THEME.colors.brand.primary }} />
                               )}
                             </button>
                           )
@@ -3620,7 +3653,8 @@ function RestaurantDetailsContent() {
                   {/* Confirm Button - Fixed at bottom */}
                   <div className="px-4 pb-4 pt-2 border-t border-gray-100">
                     <Button
-                      className="w-full bg-[#2979FB] hover:bg-[#1E5ED8] text-white py-3 rounded-lg font-semibold"
+                      className="w-full text-white py-3 rounded-lg font-semibold"
+                      style={{ background: BRAND_THEME.gradients.primary }}
                       onClick={() => {
                         setShowScheduleSheet(false)
                         // Handle schedule confirmation
@@ -3678,7 +3712,7 @@ function RestaurantDetailsContent() {
                         </h3>
                         <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 flex items-start justify-between gap-4">
                           <div className="flex items-start gap-3 flex-1">
-                            <Lock className="h-5 w-5 text-[#2979FB] dark:text-blue-300 flex-shrink-0 mt-0.5" />
+                            <Lock className="h-5 w-5 flex-shrink-0 mt-0.5" style={{ color: BRAND_THEME.colors.brand.primary }} />
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
                                 {restaurant.restaurantOffers.goldOffer?.description || "Free delivery above ₹99"}
@@ -3689,7 +3723,8 @@ function RestaurantDetailsContent() {
                             </div>
                           </div>
                           <Button
-                            className="bg-[#2979FB] hover:bg-[#1E5ED8] text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap"
+                            className="text-white text-sm px-4 py-2 rounded-lg whitespace-nowrap"
+                            style={{ background: BRAND_THEME.gradients.primary }}
                             onClick={() => {
                               // Handle add gold
                             }}
@@ -3775,12 +3810,13 @@ function RestaurantDetailsContent() {
                   {/* Close Button */}
                   <div className="border-t border-gray-200 dark:border-gray-800 px-4 py-4 bg-white dark:bg-[#1a1a1a]">
                     <Button
-                      className="w-full bg-[#2979FB] hover:bg-[#1E5ED8] text-white border-0 flex items-center justify-center gap-2 py-6 rounded-xl font-bold transition-all shadow-lg"
-                      onClick={() => setShowOffersSheet(false)}
-                    >
-                      <X className="h-5 w-5" />
-                      Close
-                    </Button>
+            className="w-full text-white border-0 flex items-center justify-center gap-2 py-6 rounded-xl font-bold transition-all shadow-lg"
+            style={{ background: BRAND_THEME.gradients.primary }}
+            onClick={() => setShowOffersSheet(false)}
+          >
+            <X className="h-5 w-5" />
+            Close
+          </Button>
                   </div>
                 </motion.div>
               </>

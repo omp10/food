@@ -231,7 +231,8 @@ export default function PhoneNumbersPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={handleCancelEdit}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primary}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -281,7 +282,8 @@ export default function PhoneNumbersPage() {
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                       placeholder="Enter phone number"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2"
+                  style={{ borderColor: BRAND_THEME.colors.brand.primary, boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}33` }}
                     />
                   </div>
                 </div>
@@ -298,9 +300,10 @@ export default function PhoneNumbersPage() {
                   disabled={!phoneNumber.trim()}
                   className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-colors ${
                     phoneNumber.trim()
-                      ? "bg-[#1E5ED8] text-white hover:bg-gray-800"
+                      ? "text-white"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
+                  style={phoneNumber.trim() ? { background: BRAND_THEME.gradients.primary } : undefined}
                 >
                   Save
                 </button>
@@ -319,7 +322,8 @@ export default function PhoneNumbersPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsCountryCodeOpen(false)}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-[60]"
+              className="fixed inset-0 z-[60]"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primary}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -384,7 +388,8 @@ export default function PhoneNumbersPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={handleCancelOtp}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primary}80` }}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -426,7 +431,8 @@ export default function PhoneNumbersPage() {
                         value={digit}
                         onChange={(e) => handleOtpChange(index, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                        className="w-12 h-12 text-center text-lg font-semibold border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-12 h-12 text-center text-lg font-semibold border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                        style={{ borderColor: BRAND_THEME.colors.brand.primary, boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}33` }}
                         autoFocus={index === 0}
                       />
                     ))}
@@ -435,7 +441,8 @@ export default function PhoneNumbersPage() {
                   <div className="text-center">
                     <button
                       onClick={handleResendOtp}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      className="text-sm font-medium"
+                      style={{ color: BRAND_THEME.colors.brand.primary }}
                     >
                       Resend OTP
                     </button>
@@ -454,9 +461,10 @@ export default function PhoneNumbersPage() {
                   disabled={otp.join("").length !== 6}
                   className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-colors ${
                     otp.join("").length === 6
-                      ? "bg-[#1E5ED8] text-white hover:bg-gray-800"
+                      ? "text-white"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
+                  style={otp.join("").length === 6 ? { background: BRAND_THEME.gradients.primary } : undefined}
                 >
                   Verify
                 </button>

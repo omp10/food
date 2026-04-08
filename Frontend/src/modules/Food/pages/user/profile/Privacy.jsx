@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom"
+ï»¿import { Link, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { ArrowLeft, Lock, Loader2 } from "lucide-react"
 import { motion } from "framer-motion"
@@ -84,8 +84,8 @@ export default function Privacy() {
                 prose-headings:font-black prose-headings:text-gray-900 dark:prose-headings:text-white
                 prose-p:text-gray-600 dark:prose-p:text-gray-400 prose-p:leading-relaxed
                 prose-strong:text-gray-900 dark:prose-strong:text-white
-                prose-a:text-[#2979FB] dark:prose-a:text-blue-300
                 prose-li:text-gray-600 dark:prose-li:text-gray-400"
+              style={{ '--tw-prose-links': BRAND_THEME.colors.brand.primary, '--tw-prose-invert-links': BRAND_THEME.colors.brand.primary }}
               dangerouslySetInnerHTML={{ __html: privacyData.content }}
             />
           ) : (
@@ -98,12 +98,13 @@ export default function Privacy() {
 
         <p className="text-center mt-10 text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] leading-relaxed">
           Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} <br />
-          © {new Date().getFullYear()} Iggymet. All Rights Reserved.
+          ï¿½ {new Date().getFullYear()} Iggymet. All Rights Reserved.
         </p>
       </div>
     </AnimatedPage>
   )
 }
+
 
 
 

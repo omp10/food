@@ -15,6 +15,7 @@ import {
 import { deliveryAPI } from "@food/api"
 import { toast } from "sonner"
 import { clearModuleAuth } from "@food/utils/auth"
+import BRAND_THEME from "@/config/brandTheme"
 
 /**
  * ProfileV2 - 1:1 EXACT Restoration of the Legacy Profile Hub.
@@ -152,7 +153,8 @@ export const ProfileV2 = () => {
             </div>
             <button
               onClick={handleShareReferral}
-              className="shrink-0 bg-black text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest shadow-md"
+              className="shrink-0 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest shadow-md"
+              style={{ background: BRAND_THEME.colors.brand.primary }}
             >
               Share
             </button>
@@ -193,7 +195,7 @@ export const ProfileV2 = () => {
       {/* Logout Confirm Popup */}
       {showLogoutConfirm && (
         <div 
-          className="fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center px-4"
+          className="fixed inset-0 bg-[#2979FB]/40 z-[1000] flex items-center justify-center px-4"
           onClick={() => setShowLogoutConfirm(false)}
         >
           <div 

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Search, Wallet, Eye, CheckCircle, XCircle, Loader2, Package, QrCode } from "lucide-react"
 import { adminAPI } from "@food/api"
 import { toast } from "sonner"
+import BRAND_THEME from "@/config/brandTheme"
 import {
   Dialog,
   DialogContent,
@@ -211,7 +212,7 @@ export default function DeliveryWithdrawal() {
 
           {loading ? (
             <div className="py-20 text-center">
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-4" />
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" style={{ color: BRAND_THEME.colors.brand.primary }} />
               <p className="text-slate-600">Loading withdrawal requests…</p>
             </div>
           ) : (
@@ -272,7 +273,7 @@ export default function DeliveryWithdrawal() {
                                   title="Approve"
                                 >
                                   {processingAction === req.id ? (
-                                    <Loader2 className="w-4 h-4 text-green-600 animate-spin" />
+                                    <Loader2 className="w-4 h-4 animate-spin" style={{ color: BRAND_THEME.colors.brand.primary }} />
                                   ) : (
                                     <CheckCircle className="w-4 h-4 text-green-600" />
                                   )}

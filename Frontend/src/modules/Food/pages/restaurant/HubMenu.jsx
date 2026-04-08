@@ -1517,7 +1517,7 @@ export default function HubMenu() {
                         value={filter.id}
                         checked={activeFilter === filter.id}
                         onChange={() => handleFilterSelect(filter.id)}
-                        className="w-5 h-5 text-[#1E5ED8] border-gray-300 focus:ring-[#1E5ED8]"
+                        className="w-5 h-5 border-gray-300 focus:ring-2"
                         style={{ accentColor: BRAND_THEME.colors.brand.primary }}
                       />
                     </label>
@@ -1639,7 +1639,7 @@ export default function HubMenu() {
                         value={option.id}
                         checked={availabilityReason === option.id}
                         onChange={() => setAvailabilityReason(option.id)}
-                        className="w-5 h-5 text-[#1E5ED8] border-gray-300 focus:ring-[#1E5ED8]"
+                        className="w-5 h-5 border-gray-300 focus:ring-2"
                         style={{ accentColor: BRAND_THEME.colors.brand.primary }}
                       />
                           <span className="text-sm font-medium text-gray-900">{option.label}</span>
@@ -1652,7 +1652,8 @@ export default function HubMenu() {
                               onChange={(e) => setCustomDateTime(e.target.value)}
                               min={new Date().toISOString().slice(0, 16)}
                               max={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E5ED8] focus:border-[#1E5ED8]"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+                              style={{ borderColor: BRAND_THEME.colors.brand.primary, boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}33` }}
                               required
                             />
                           </div>
@@ -1676,7 +1677,7 @@ export default function HubMenu() {
                         value="manual"
                         checked={availabilityReason === "manual"}
                         onChange={() => setAvailabilityReason("manual")}
-                        className="w-5 h-5 text-[#1E5ED8] border-gray-300 focus:ring-[#1E5ED8]"
+                        className="w-5 h-5 border-gray-300 focus:ring-2"
                         style={{ accentColor: BRAND_THEME.colors.brand.primary }}
                       />
                       <span className="text-sm font-medium text-gray-900">I will turn it on myself</span>
@@ -1715,7 +1716,8 @@ export default function HubMenu() {
           <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => setIsAddPopupOpen(true)}
-          className="px-4 py-2 border bg-[#1E5ED8] text-white border-gray-800 rounded-lg text-sm font-bold"
+          className="px-4 py-2 border text-white border-gray-800 rounded-lg text-sm font-bold"
+          style={{ background: BRAND_THEME.gradients.primary }}
         >
           + ADD
         </motion.button>)}
@@ -1743,7 +1745,8 @@ export default function HubMenu() {
               {isMenuOpen && (
                 <>
                   <motion.div
-                    className="fixed inset-0 bg-[#1E5ED8]/40 z-30"
+                    className="fixed inset-0 z-30"
+                    style={{ backgroundColor: `${BRAND_THEME.colors.brand.primary}66` }}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -1900,7 +1903,8 @@ export default function HubMenu() {
                       value={editCategoryName}
                       onChange={(e) => setEditCategoryName(e.target.value)}
                       placeholder="Enter category name"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2"
+                      style={{ borderColor: BRAND_THEME.colors.brand.primary, boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}33` }}
                       autoFocus
                     />
                   </div>
@@ -1920,9 +1924,10 @@ export default function HubMenu() {
                       disabled={!editCategoryName.trim()}
                       className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-colors ${
                         editCategoryName.trim()
-                          ? "bg-[#1E5ED8] text-white hover:bg-gray-800"
+                          ? "text-white"
                           : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
+                      style={editCategoryName.trim() ? { background: BRAND_THEME.gradients.primary } : undefined}
                     >
                       Save
                     </button>
@@ -1987,7 +1992,8 @@ export default function HubMenu() {
                         }
                       }}
                       placeholder="Enter sub-category name"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2"
+                      style={{ borderColor: BRAND_THEME.colors.brand.primary, boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}33` }}
                       autoFocus
                     />
                     {selectedGroupForSubCategory && (
@@ -2001,9 +2007,10 @@ export default function HubMenu() {
                     disabled={!subCategoryName.trim()}
                     className={`w-full py-3 px-4 rounded-lg text-sm font-semibold transition-colors ${
                       subCategoryName.trim()
-                        ? "bg-[#1E5ED8] text-white hover:bg-gray-800"
+                        ? "text-white"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
+                    style={subCategoryName.trim() ? { background: BRAND_THEME.gradients.primary } : undefined}
                   >
                     Continue
                   </button>
@@ -2065,7 +2072,8 @@ export default function HubMenu() {
                         }
                       }}
                       placeholder="Enter category name"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2"
+                      style={{ borderColor: BRAND_THEME.colors.brand.primary, boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}33` }}
                       autoFocus
                     />
                   </div>
@@ -2074,9 +2082,10 @@ export default function HubMenu() {
                     disabled={!newCategoryName.trim()}
                     className={`w-full py-3 px-4 rounded-lg text-sm font-semibold transition-colors ${
                       newCategoryName.trim()
-                        ? "bg-[#1E5ED8] text-white hover:bg-gray-800"
+                        ? "text-white"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
+                    style={newCategoryName.trim() ? { background: BRAND_THEME.gradients.primary } : undefined}
                   >
                     Continue
                   </button>

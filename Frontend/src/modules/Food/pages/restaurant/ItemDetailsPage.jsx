@@ -865,10 +865,11 @@ export default function ItemDetailsPage() {
                         setDirection(index > currentImageIndex ? 1 : -1)
                         setCurrentImageIndex(index)
                       }}
-                      className={`transition-all duration-300 rounded-full ${index === currentImageIndex
-                        ? "w-8 h-2 bg-[#1E5ED8]"
-                        : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
-                        }`}
+                    className={`transition-all duration-300 rounded-full ${index === currentImageIndex
+                      ? "w-8 h-2"
+                      : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
+                      }`}
+                    style={index === currentImageIndex ? { backgroundColor: BRAND_THEME.colors.brand.primary } : undefined}
                     />
                   ))}
                 </div>
@@ -1201,7 +1202,8 @@ export default function ItemDetailsPage() {
                       setIsCategoryPopupOpen(false)
                       navigate('/restaurant/menu-categories')
                     }}
-                    className="p-2 rounded-lg bg-[#1E5ED8] text-white hover:bg-gray-800 transition-colors flex items-center gap-1.5"
+                    className="p-2 rounded-lg text-white transition-colors flex items-center gap-1.5"
+                    style={{ background: BRAND_THEME.gradients.primary }}
                     title="Add Category"
                   >
                     <Plus className="w-4 h-4" />
@@ -1228,7 +1230,8 @@ export default function ItemDetailsPage() {
                         setIsCategoryPopupOpen(false)
                         navigate('/restaurant/menu-categories')
                       }}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-[#1E5ED8] text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 text-white rounded-lg font-semibold transition-colors"
+                      style={{ background: BRAND_THEME.gradients.primary }}
                     >
                       <Plus className="w-5 h-5" />
                       Add Category
@@ -1353,9 +1356,10 @@ export default function ItemDetailsPage() {
             onClick={handleSave}
             disabled={uploadingImages}
             className={`${isNewItem ? 'w-full' : 'flex-1'} py-3 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${!uploadingImages
-              ? "bg-[#1E5ED8] text-white hover:bg-[#1E5ED8]"
+              ? "text-white"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
+            style={!uploadingImages ? { background: BRAND_THEME.gradients.primary } : undefined}
           >
             {uploadingImages ? (
               <>

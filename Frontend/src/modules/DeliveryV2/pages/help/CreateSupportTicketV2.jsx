@@ -3,6 +3,7 @@ import { ArrowLeft, Loader2, Send } from 'lucide-react';
 import { deliveryAPI } from '@food/api';
 import { toast } from 'sonner';
 import useDeliveryBackNavigation from '../../hooks/useDeliveryBackNavigation';
+import BRAND_THEME from '@/config/brandTheme';
 
 /**
  * CreateSupportTicketV2 - Restored Old UI for Ticket Creation.
@@ -106,7 +107,8 @@ export const CreateSupportTicketV2 = () => {
          <button 
            onClick={handleSubmit}
            disabled={loading}
-           className="w-full bg-black text-white p-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50"
+           className="w-full text-white p-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50"
+           style={{ background: BRAND_THEME.colors.brand.primary, boxShadow: `0 14px 30px -18px ${BRAND_THEME.colors.brand.primaryDark}` }}
          >
            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
            Submit Ticket

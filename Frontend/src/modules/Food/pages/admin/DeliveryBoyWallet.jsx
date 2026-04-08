@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { Search, PiggyBank, Loader2, Package } from "lucide-react"
 import { adminAPI } from "@food/api"
 import { toast } from "sonner"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -65,7 +66,7 @@ export default function DeliveryBoyWallet() {
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
           <div className="flex items-center gap-3">
-            <PiggyBank className="w-5 h-5 text-emerald-600" />
+            <PiggyBank className="w-5 h-5" style={{ color: BRAND_THEME.colors.brand.primary }} />
             <h1 className="text-2xl font-bold text-slate-900">Delivery boy Wallet</h1>
           </div>
           <p className="text-sm text-slate-600 mt-1">

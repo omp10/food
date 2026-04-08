@@ -389,12 +389,12 @@ export default function SignupStep2() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="bg-white px-4 py-3 flex items-center gap-4 border-b border-gray-200">
         <button
           onClick={goBack}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          className="p-2 hover:bg-gradient-to-b from-blue-50 via-white to-blue-100 rounded-full transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -418,10 +418,15 @@ export default function SignupStep2() {
           <button
             type="submit"
             disabled={isSubmitting || !uploadedDocs.profilePhoto || !uploadedDocs.aadharPhoto || !uploadedDocs.panPhoto || !uploadedDocs.drivingLicensePhoto}
-            className={`w-full py-4 rounded-lg font-bold text-white text-base transition-colors mt-6 ${isSubmitting || !uploadedDocs.profilePhoto || !uploadedDocs.aadharPhoto || !uploadedDocs.panPhoto || !uploadedDocs.drivingLicensePhoto
+            className={`w-full py-4 rounded-lg font-bold text-white text-base transition-all mt-6 ${isSubmitting || !uploadedDocs.profilePhoto || !uploadedDocs.aadharPhoto || !uploadedDocs.panPhoto || !uploadedDocs.drivingLicensePhoto
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-[#00B761] hover:bg-[#00A055]"
+              : ""
               }`}
+            style={
+              isSubmitting || !uploadedDocs.profilePhoto || !uploadedDocs.aadharPhoto || !uploadedDocs.panPhoto || !uploadedDocs.drivingLicensePhoto
+                ? undefined
+                : { background: "linear-gradient(135deg, #2979FB 0%, #1E5ED8 100%)", boxShadow: "0 12px 28px -18px #1E5ED8" }
+            }
           >
             {isSubmitting ? "Submitting..." : "Complete Signup"}
           </button>

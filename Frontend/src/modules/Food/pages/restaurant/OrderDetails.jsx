@@ -891,13 +891,16 @@ export default function OrderDetails() {
                 {orderData.timeline.map((event, index) => (
                   <div key={index} className="relative flex items-start gap-3">
                     {/* Icon */}
-                    <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center ${
-                      event.status === "completed" 
-                        ? "bg-[#1E5ED8]" 
-                        : event.status === "rejected"
-                        ? "bg-red-600"
-                        : "bg-gray-400"
-                    }`}>
+                    <div
+                      className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center ${
+                        event.status === "completed"
+                          ? "text-white"
+                          : event.status === "rejected"
+                            ? "bg-red-600"
+                            : "bg-gray-400"
+                      }`}
+                      style={event.status === "completed" ? { background: BRAND_THEME.gradients.primary } : undefined}
+                    >
                       {event.status === "completed" ? (
                         <CheckCircle className="w-4 h-4 text-white" />
                       ) : (
@@ -926,7 +929,8 @@ export default function OrderDetails() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             transition={{ duration: 0.3 }}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 max-w-sm bg-gradient-to-r from-[#1E5ED8] to-[#3B82F6]"
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 max-w-sm"
+            style={{ background: BRAND_THEME.gradients.primary }}
           >
             {isGeneratingPDF ? (
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

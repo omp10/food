@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { UtensilsCrossed, ChevronRight, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import BRAND_THEME from "@/config/brandTheme";
 
 const CookingAnimation = memo(() => (
   <div className="relative w-12 h-12 flex items-center justify-center rounded-xl bg-blue-50 border border-blue-100 overflow-visible shadow-[0_4px_15px_rgba(41,121,251,0.16)] shrink-0">
@@ -11,7 +12,7 @@ const CookingAnimation = memo(() => (
       <motion.div animate={{ opacity: [0, 0.8, 0], y: [0, -8, -12], scale: [0.8, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity, delay: 1, ease: "easeOut" }} className="w-1.5 h-3 bg-blue-400/60 rounded-full blur-[1px]" />
     </div>
     <motion.div animate={{ rotate: [-2, 2, -2] }} transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }} className="relative z-10 mt-1">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#2979FB] drop-shadow-sm">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-sm" style={{ color: BRAND_THEME.colors.brand.primary }}>
         {/* Cooker Body */}
         <path d="M6 10h12v6a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4v-6z" />
         {/* Lid Rim */}
@@ -27,7 +28,7 @@ const CookingAnimation = memo(() => (
     </motion.div>
     {/* Flame below */}
     <motion.div animate={{ opacity: [0.4, 0.8, 0.4], scaleX: [0.8, 1.2, 0.8] }} transition={{ duration: 0.6, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-0 w-full flex justify-center z-0">
-      <div className="w-4 h-1 bg-[#2979FB] blur-[2px] rounded-full" />
+      <div className="w-4 h-1 blur-[2px] rounded-full" style={{ backgroundColor: BRAND_THEME.colors.brand.primary }} />
     </motion.div>
   </div>
 ));
@@ -389,11 +390,11 @@ function OrderTrackingCardInner({ hasBottomNav = true }) {
               <p className="text-gray-900 font-bold text-base md:text-lg truncate tracking-tight">{restaurantName}</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <p className="text-gray-500 font-medium text-xs md:text-sm truncate">{statusText}</p>
-                <ChevronRight className="w-3.5 h-3.5 text-[#2979FB] shrink-0 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="w-3.5 h-3.5 shrink-0 group-hover:translate-x-1 transition-transform" style={{ color: BRAND_THEME.colors.brand.primary }} />
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-[#2979FB] to-[#1E5ED8] shadow-lg shadow-blue-500/20 rounded-xl px-4 py-2 shrink-0 flex flex-col items-center justify-center border border-blue-200">
+            <div className="rounded-xl px-4 py-2 shrink-0 flex flex-col items-center justify-center border" style={{ background: BRAND_THEME.gradients.primary, borderColor: `${BRAND_THEME.colors.brand.primary}33`, boxShadow: `0 15px 35px -20px ${BRAND_THEME.colors.brand.primaryDark}` }}>
               <p className="text-blue-50 text-[10px] font-bold uppercase tracking-wider opacity-95 leading-tight mb-[2px]">
                 arriving in
               </p>

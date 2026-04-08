@@ -61,22 +61,23 @@ export default function Payments() {
             {paymentMethods.map((payment) => (
               <Card
                 key={payment.id}
-                className={`shadow-sm ${BRAND_THEME.tokens.profile.surface} border ${payment.isDefault ? "border-[#2979FB] bg-blue-50/60 dark:bg-blue-950/20" : "border-gray-200 dark:border-gray-800"}`}
+                className={`shadow-sm ${BRAND_THEME.tokens.profile.surface} border ${payment.isDefault ? "" : "border-gray-200 dark:border-gray-800"}`}
+                style={payment.isDefault ? { borderColor: BRAND_THEME.colors.brand.primary, backgroundColor: `${BRAND_THEME.colors.brand.primary}10` } : undefined}
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
-                      <CreditCard className={`h-5 w-5 ${payment.isDefault ? "text-[#2979FB]" : "text-muted-foreground"}`} />
+                      <CreditCard className={`h-5 w-5 ${payment.isDefault ? "" : "text-muted-foreground"}`} style={payment.isDefault ? { color: BRAND_THEME.colors.brand.primary } : undefined} />
                       {getCardTypeName(payment.type)} Card
                     </CardTitle>
                     {payment.isDefault && <Badge className={BRAND_THEME.tokens.profile.primaryButton}>Default</Badge>}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="p-4 rounded-lg border border-blue-100 bg-blue-50/70 dark:bg-blue-950/20 dark:border-blue-900/40">
+                  <div className="p-4 rounded-lg border" style={{ borderColor: `${BRAND_THEME.colors.brand.primary}33`, backgroundColor: `${BRAND_THEME.colors.brand.primary}0f` }}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center text-[#2979FB] font-bold">
+                        <div className="h-12 w-12 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center font-bold" style={{ color: BRAND_THEME.colors.brand.primary }}>
                           {getCardTypeName(payment.type).slice(0, 1)}
                         </div>
                         <div>
@@ -85,7 +86,7 @@ export default function Payments() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-6 text-sm pt-3 border-t border-blue-100 dark:border-blue-900/40">
+                    <div className="flex items-center gap-6 text-sm pt-3 border-t" style={{ borderColor: `${BRAND_THEME.colors.brand.primary}33` }}>
                       <div>
                         <span className="text-muted-foreground">Expires: </span>
                         <span className="font-semibold">{formatExpiry(payment.expiryMonth, payment.expiryYear)}</span>

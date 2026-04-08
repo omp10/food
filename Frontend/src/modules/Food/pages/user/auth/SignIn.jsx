@@ -213,7 +213,8 @@ export default function SignIn() {
                   placeholder="Phone number"
                   value={formData.phone}
                   onChange={handleChange}
-                  className={`flex-1 h-12 md:h-14 text-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 rounded-lg rounded-l-none focus-visible:ring-1 focus-visible:ring-[#2979FB] focus-visible:border-[#2979FB] ${error ? "border-red-500" : ""} transition-all`}
+                  className={`flex-1 h-12 md:h-14 text-lg bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white border-gray-300 dark:border-gray-700 rounded-lg rounded-l-none focus-visible:ring-1 ${error ? "border-red-500" : ""} transition-all`}
+                  style={{ boxShadow: `0 0 0 1px ${error ? "" : "transparent"}`, outlineColor: BRAND_THEME.colors.brand.primary, borderColor: error ? undefined : BRAND_THEME.colors.brand.primary }}
                   aria-invalid={error ? "true" : "false"}
                 />
               </div>
@@ -229,7 +230,8 @@ export default function SignIn() {
             <Button
               type="submit"
               form="user-signin-form"
-              className="w-full h-12 md:h-14 bg-[#2979FB] hover:bg-[#1E5ED8] text-white font-bold text-base md:text-lg rounded-lg transition-all hover:shadow-lg active:scale-[0.98]"
+              className="w-full h-12 md:h-14 text-white font-bold text-base md:text-lg rounded-lg transition-all hover:shadow-lg active:scale-[0.98]"
+              style={{ background: BRAND_THEME.gradients.primary }}
               disabled={isLoading}
             >
               {isLoading ? (

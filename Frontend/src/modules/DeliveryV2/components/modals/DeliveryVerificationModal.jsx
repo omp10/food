@@ -13,7 +13,7 @@ const Backdrop = ({ onClose }) => (
     initial={{ opacity: 0 }} 
     animate={{ opacity: 1 }} 
     exit={{ opacity: 0 }}
-    className="absolute inset-0 bg-black/40 -z-10 pointer-events-auto" 
+    className="absolute inset-0 bg-[#2979FB]/30 -z-10 pointer-events-auto" 
     onClick={onClose}
   />
 );
@@ -288,7 +288,7 @@ const PaymentModal = ({ order, otpString, onComplete, onClose }) => {
         {showQrModal && (
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-200 bg-black/80 flex items-center justify-center p-6 pointer-events-auto"
+            className="fixed inset-0 z-200 bg-[#2979FB]/80 flex items-center justify-center p-6 pointer-events-auto"
             onClick={() => setShowQrModal(false)}
           >
             <motion.div 

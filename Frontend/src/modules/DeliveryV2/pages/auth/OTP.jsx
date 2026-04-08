@@ -6,6 +6,7 @@ import { Input } from "@food/components/ui/input"
 import { Button } from "@food/components/ui/button"
 import { deliveryAPI } from "@food/api"
 import { setAuthData as storeAuthData } from "@food/utils/auth"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -485,9 +486,9 @@ export default function DeliveryOTP() {
           className="absolute left-4 top-1/2 -translate-y-1/2"
           aria-label="Go back"
         >
-          <ArrowLeft className="h-5 w-5 text-black" />
+          <ArrowLeft className="h-5 w-5 text-slate-900" />
         </button>
-        <h1 className="text-lg font-bold text-black">OTP Verification</h1>
+        <h1 className="text-lg font-bold text-slate-900">OTP Verification</h1>
       </div>
 
       {/* Main Content */}
@@ -495,13 +496,13 @@ export default function DeliveryOTP() {
         <div className="max-w-md mx-auto w-full space-y-8">
           {/* Message */}
           <div className="text-center space-y-2">
-            <p className="text-base text-black">
+            <p className="text-base text-slate-900">
               {showNameInput
                 ? "You're almost done! Please tell us your name to complete registration."
                 : "We have sent a verification code to"}
             </p>
             {!showNameInput && (
-              <p className="text-base text-black font-medium">
+              <p className="text-base text-slate-900 font-medium">
                 {getPhoneNumber()}
               </p>
             )}
@@ -583,14 +584,15 @@ export default function DeliveryOTP() {
                     disabled={isLoading}
                     autoComplete="off"
                     autoFocus={false}
-                    className="w-12 h-12 text-center text-lg font-semibold p-0 border border-black rounded-md focus-visible:ring-0 focus-visible:border-black bg-white"
+                    className="w-12 h-12 text-center text-lg font-semibold p-0 border rounded-md focus-visible:ring-0 bg-white"
+                    style={{ borderColor: BRAND_THEME.colors.brand.primary }}
                   />
                 ))}
               </div>
 
               {/* Resend Section */}
               <div className="text-center space-y-1">
-                <p className="text-sm text-black">
+                <p className="text-sm text-slate-900">
                   Didn't get the OTP?
                 </p>
                 {resendTimer > 0 ? (
@@ -615,7 +617,7 @@ export default function DeliveryOTP() {
           {showNameInput && (
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-black text-left">
+                <label className="block text-sm font-medium text-slate-900 text-left">
                   Full name
                 </label>
                 <Input

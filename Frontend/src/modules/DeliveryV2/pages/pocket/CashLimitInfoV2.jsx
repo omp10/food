@@ -7,6 +7,7 @@ import { deliveryAPI } from '@food/api';
 import { toast } from 'sonner';
 import { formatCurrency } from '@food/utils/currency';
 import useDeliveryBackNavigation from '../../hooks/useDeliveryBackNavigation';
+import BRAND_THEME from '@/config/brandTheme';
 
 /**
  * CashLimitInfoV2 - 1:1 Match with Old AvailableCashLimit Component.
@@ -60,12 +61,12 @@ export const CashLimitInfoV2 = () => {
            <p className="text-sm font-semibold text-gray-800">{label}</p>
            {subLabel && <p className="text-[10px] text-gray-400 font-medium leading-tight mt-0.5">{subLabel}</p>}
         </div>
-        <p className="text-sm font-bold text-black">{value}</p>
+        <p className="text-sm font-bold text-gray-900">{value}</p>
      </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#f6e9dc] font-poppins pb-32">
+    <div className="min-h-screen bg-white font-poppins pb-32">
        {/* Header */}
        <div className="bg-white border-b border-gray-200 px-4 py-4 safe-top flex items-center gap-4">
           <button onClick={goBack} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -76,7 +77,7 @@ export const CashLimitInfoV2 = () => {
 
        {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-             <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+             <Loader2 className="w-8 h-8 animate-spin" style={{ color: BRAND_THEME.colors.brand.primary }} />
              <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Checking Limits...</p>
           </div>
        ) : (
@@ -120,7 +121,8 @@ export const CashLimitInfoV2 = () => {
              <div className="px-2">
                 <button 
                   onClick={goBack}
-                  className="w-full py-4 bg-black text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all"
+                  className="w-full py-4 text-white rounded-xl font-bold text-sm active:scale-95 transition-all"
+                  style={{ background: BRAND_THEME.colors.brand.primary, boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}` }}
                 >
                    Okay
                 </button>

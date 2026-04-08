@@ -456,7 +456,8 @@ export default function AddToCartAnimation({
                 debugLog('View cart clicked, navigating to:', linkTo);
                 navigate(linkTo);
               }}
-              className={`bg-gradient-to-r from-[#1E5ED8] via-[#2979FB] to-[#1E5ED8] text-white rounded-full shadow-xl shadow-blue-900/25 px-3 py-2 flex items-center gap-2 hover:from-[#194FBB] hover:via-[#1E5ED8] hover:to-[#194FBB] transition-all duration-300 pointer-events-auto border border-blue-800/20 backdrop-blur-sm cursor-pointer ${pillClassName}`}
+              className={`text-white rounded-full shadow-xl px-3 py-2 flex items-center gap-2 transition-all duration-300 pointer-events-auto backdrop-blur-sm cursor-pointer ${pillClassName}`}
+              style={{ background: BRAND_THEME.gradients.primary, boxShadow: `0 20px 50px -25px ${BRAND_THEME.colors.brand.primaryDark}` }}
             >
               {/* Left: Product thumbnails */}
               <div className="flex items-center -space-x-4">

@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react"
 import { Package, Truck, CheckCircle, Clock, XCircle, Loader2 } from "lucide-react"
 import { adminAPI } from "@food/api"
 import { toast } from "sonner"
+import BRAND_THEME from "@/config/brandTheme"
 import OrdersTopbar from "@food/components/admin/orders/OrdersTopbar"
 import OrderDetectDeliveryTable from "@food/components/admin/orders/OrderDetectDeliveryTable"
 import ViewOrderDetectDeliveryDialog from "@food/components/admin/orders/ViewOrderDetectDeliveryDialog"
@@ -422,7 +423,7 @@ export default function OrderDetectDelivery() {
               <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
             </div>
             <div className="p-3 bg-blue-50 rounded-lg">
-              <Package className="w-6 h-6 text-blue-600" />
+              <Package className="w-6 h-6" style={{ color: BRAND_THEME.colors.brand.primary }} />
             </div>
           </div>
         </div>
@@ -430,10 +431,10 @@ export default function OrderDetectDelivery() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-500 mb-1">Ordered</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.ordered}</p>
+              <p className="text-2xl font-bold" style={{ color: BRAND_THEME.colors.brand.primary }}>{stats.ordered}</p>
             </div>
             <div className="p-3 bg-blue-50 rounded-lg">
-              <Clock className="w-6 h-6 text-blue-600" />
+              <Clock className="w-6 h-6" style={{ color: BRAND_THEME.colors.brand.primary }} />
             </div>
           </div>
         </div>

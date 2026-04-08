@@ -405,7 +405,8 @@ export default function MenuCategoriesPage() {
                     value={formData.name}
                     onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="Enter category name"
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#1E5ED8] focus:ring-2 focus:ring-[#1E5ED8]/20"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2"
+                    style={{ borderColor: BRAND_THEME.colors.brand.primary, boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}20` }}
                   />
                 </div>
 
@@ -414,7 +415,8 @@ export default function MenuCategoriesPage() {
                   <select
                     value={formData.foodTypeScope}
                     onChange={(e) => setFormData((prev) => ({ ...prev, foodTypeScope: e.target.value }))}
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#1E5ED8] focus:ring-2 focus:ring-[#1E5ED8]/20"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2"
+                    style={{ borderColor: BRAND_THEME.colors.brand.primary, boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}20` }}
                   >
                     <option value="Veg">Veg</option>
                     <option value="Non-Veg">Non-Veg</option>
@@ -429,7 +431,8 @@ export default function MenuCategoriesPage() {
                     value={formData.type}
                     onChange={(e) => setFormData((prev) => ({ ...prev, type: e.target.value }))}
                     placeholder="Examples: Starters, Desserts, Drinks"
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#1E5ED8] focus:ring-2 focus:ring-[#1E5ED8]/20"
+                    className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2"
+                    style={{ borderColor: BRAND_THEME.colors.brand.primary, boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}20` }}
                   />
                 </div>
 

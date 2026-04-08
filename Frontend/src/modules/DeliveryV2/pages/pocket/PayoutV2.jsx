@@ -9,6 +9,7 @@ import {
 import { deliveryAPI } from '@food/api';
 import { toast } from 'sonner';
 import useDeliveryBackNavigation from '../../hooks/useDeliveryBackNavigation';
+import BRAND_THEME from '@/config/brandTheme';
 
 /**
  * PayoutV2 - 1:1 Match with Old Payout UI.
@@ -98,7 +99,7 @@ export const PayoutV2 = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6e9dc] font-poppins pb-24">
+    <div className="min-h-screen bg-white font-poppins pb-24">
       {/* Header (Old Style) */}
       <div className="bg-white border-b border-gray-200 px-4 py-4 safe-top flex items-center gap-4">
         <button
@@ -114,7 +115,7 @@ export const PayoutV2 = () => {
       <div className="px-4 py-6">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-gray-400 mb-4" />
+            <Loader2 className="w-8 h-8 animate-spin mb-4" style={{ color: BRAND_THEME.colors.brand.primary }} />
             <p className="text-gray-600 text-base">Loading withdrawal history...</p>
           </div>
         ) : withdrawals.length > 0 ? (

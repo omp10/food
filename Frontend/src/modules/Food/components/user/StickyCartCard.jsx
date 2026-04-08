@@ -119,7 +119,8 @@ export default function StickyCartCard() {
                 {/* View Cart Button */}
                 <Link
                   to="/food/user/cart"
-                  className="flex-shrink-0 bg-[#2979FB] hover:bg-[#1E5ED8] text-white px-4 py-2.5 md:px-5 md:py-3 rounded-lg font-semibold transition-colors shadow-lg shadow-blue-500/20"
+                  className="flex-shrink-0 text-white px-4 py-2.5 md:px-5 md:py-3 rounded-lg font-semibold transition-colors shadow-lg"
+                  style={{ background: BRAND_THEME.gradients.primary, boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}` }}
                 >
                   <div className="text-center">
                     <div className="text-xs md:text-sm opacity-90">View Cart</div>

@@ -805,9 +805,10 @@ export default function HubFinance() {
                       disabled={!(financeData?.currentCycle?.estimatedPayout > 0)}
                       className={`w-full py-3 px-4 rounded-lg font-semibold flex items-center justify-center gap-2 mt-4 transition-colors ${
                         financeData?.currentCycle?.estimatedPayout > 0
-                          ? "bg-[#1E5ED8] text-white hover:bg-gray-800"
+                          ? "text-white"
                           : "bg-gray-200 text-gray-500 cursor-not-allowed"
                       }`}
+                      style={financeData?.currentCycle?.estimatedPayout > 0 ? { background: BRAND_THEME.gradients.primary } : undefined}
                     >
                       <Wallet className="h-5 w-5" />
                       Withdraw
@@ -1028,7 +1029,8 @@ export default function HubFinance() {
                   <div className="relative" ref={downloadMenuRef}>
                     <button 
                       onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                      className="bg-[#1E5ED8] text-white rounded-lg px-4 py-3 flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
+                      className="text-white rounded-lg px-4 py-3 flex items-center justify-center gap-2 transition-colors"
+                      style={{ background: BRAND_THEME.gradients.primary }}
                     >
                       <Download className="w-4 h-4" />
                       <span className="text-sm font-medium">Get report</span>
@@ -1204,7 +1206,8 @@ export default function HubFinance() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[#1E5ED8]/50 z-50"
+              className="fixed inset-0 z-50"
+              style={{ backgroundColor: `${BRAND_THEME.colors.brand.primary}80` }}
               onClick={() => setShowWithdrawalModal(false)}
             />
             <motion.div
@@ -1303,7 +1306,8 @@ export default function HubFinance() {
                       }
                     }}
                     disabled={submittingWithdrawal || !withdrawalAmount || parseFloat(withdrawalAmount) <= 0 || parseFloat(withdrawalAmount) > (financeData?.currentCycle?.estimatedPayout || 0)}
-                    className="flex-1 px-4 py-3 bg-[#1E5ED8] text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="flex-1 px-4 py-3 text-white rounded-lg font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    style={!submittingWithdrawal && withdrawalAmount && parseFloat(withdrawalAmount) > 0 && parseFloat(withdrawalAmount) <= (financeData?.currentCycle?.estimatedPayout || 0) ? { background: BRAND_THEME.gradients.primary } : undefined}
                   >
                     {submittingWithdrawal ? 'Submitting...' : 'Submit Request'}
                   </button>

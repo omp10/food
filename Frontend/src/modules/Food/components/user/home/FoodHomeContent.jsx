@@ -479,7 +479,8 @@ function FoodHomeContent({
             <Button
               variant="outline"
               onClick={loadMoreRestaurants}
-              className="border-gray-300 text-sm font-medium hover:border-[#2979FB] hover:text-[#2979FB]"
+              className="border-gray-300 text-sm font-medium"
+              style={{ color: BRAND_THEME.colors.brand.primary, borderColor: BRAND_THEME.colors.brand.primary }}
             >
               Load more restaurants
             </Button>

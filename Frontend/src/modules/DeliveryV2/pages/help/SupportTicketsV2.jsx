@@ -7,6 +7,7 @@ import {
 import { deliveryAPI } from '@food/api';
 import { toast } from 'sonner';
 import useDeliveryBackNavigation from '../../hooks/useDeliveryBackNavigation';
+import BRAND_THEME from '@/config/brandTheme';
 
 /**
  * SupportTicketsV2 - Restored Old UI for Support Ticket Hub.
@@ -57,7 +58,8 @@ export const SupportTicketsV2 = () => {
         {/* Create Action */}
         <button 
           onClick={() => navigate("/food/delivery/help/tickets/create")}
-          className="w-full bg-black text-white p-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all"
+          className="w-full text-white p-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all"
+          style={{ background: BRAND_THEME.colors.brand.primary, boxShadow: `0 14px 30px -18px ${BRAND_THEME.colors.brand.primaryDark}` }}
         >
           <Plus className="w-5 h-5" />
           Raise New Ticket
@@ -88,7 +90,7 @@ export const SupportTicketsV2 = () => {
                 <div className="flex justify-between items-start mb-3">
                    <div className="flex-1 pr-4">
                       <div className="flex items-center gap-2 mb-1">
-                         <h4 className="text-sm font-black text-gray-950 group-hover:text-blue-600 transition-colors uppercase tracking-tight line-clamp-1">{ticket.subject}</h4>
+                         <h4 className="text-sm font-black text-gray-950 group-hover:text-[#2979FB] transition-colors uppercase tracking-tight line-clamp-1">{ticket.subject}</h4>
                          {ticket.ticketId && <span className="text-[9px] font-mono font-bold bg-gray-100 px-2 py-0.5 rounded">#{ticket.ticketId}</span>}
                       </div>
                       <p className="text-xs text-gray-500 font-medium line-clamp-1">{ticket.description}</p>

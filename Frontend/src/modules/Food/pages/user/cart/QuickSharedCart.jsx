@@ -351,9 +351,10 @@ export default function QuickSharedCart() {
                   onClick={() => setSelectedPaymentMethod("cash")}
                   className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left ${
                     selectedPaymentMethod === "cash"
-                      ? "border-[#2979FB] bg-blue-50"
+                      ? ""
                       : "border-slate-200"
                   }`}
+                  style={selectedPaymentMethod === "cash" ? { borderColor: BRAND_THEME.colors.brand.primary, backgroundColor: `${BRAND_THEME.colors.brand.primary}14` } : undefined}
                 >
                   <span className="flex items-center gap-3 font-semibold text-slate-900">
                     <Wallet className="h-4 w-4" />
@@ -367,9 +368,10 @@ export default function QuickSharedCart() {
                   onClick={() => setSelectedPaymentMethod("razorpay")}
                   className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-left ${
                     selectedPaymentMethod === "razorpay"
-                      ? "border-[#2979FB] bg-blue-50"
+                      ? ""
                       : "border-slate-200"
                   }`}
+                  style={selectedPaymentMethod === "razorpay" ? { borderColor: BRAND_THEME.colors.brand.primary, backgroundColor: `${BRAND_THEME.colors.brand.primary}14` } : undefined}
                 >
                   <span className="flex items-center gap-3 font-semibold text-slate-900">
                     <CreditCard className="h-4 w-4" />

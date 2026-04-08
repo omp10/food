@@ -10,6 +10,7 @@ import WeekSelector from '@delivery/components/WeekSelector';
 import { deliveryAPI } from '@food/api';
 import { toast } from 'sonner';
 import useDeliveryBackNavigation from '../../hooks/useDeliveryBackNavigation';
+import BRAND_THEME from '@/config/brandTheme';
 
 /**
  * PocketStatementV2 - 1:1 Match with Old PocketStatement UI.
@@ -119,7 +120,7 @@ export const PocketStatementV2 = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6e9dc] font-poppins pb-32">
+    <div className="min-h-screen bg-white font-poppins pb-32">
        {/* Header (Old Style) */}
        <div className="bg-white border-b border-gray-200 px-4 py-4 safe-top flex items-center gap-4">
           <button 
@@ -146,19 +147,19 @@ export const PocketStatementV2 = () => {
              <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="text-left">
                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Orders</p>
-                   <p className="text-base font-bold text-black leading-none">
+                   <p className="text-base font-bold text-gray-900 leading-none">
                       ₹{summary.totalEarning.toFixed(0)}
                    </p>
                 </div>
                 <div>
                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Bonus</p>
-                   <p className="text-base font-bold text-black leading-none">
+                   <p className="text-base font-bold text-gray-900 leading-none">
                       ₹{summary.totalBonus.toFixed(0)}
                    </p>
                 </div>
                 <div className="text-right">
                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Total</p>
-                   <p className="text-base font-bold text-[#ff8100] leading-none">
+                   <p className="text-base font-bold leading-none" style={{ color: BRAND_THEME.colors.brand.primary }}>
                       ₹{summary.grandTotal.toFixed(0)}
                    </p>
                 </div>
@@ -168,7 +169,7 @@ export const PocketStatementV2 = () => {
           {/* Orders List */}
           {loading ? (
              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+                <Loader2 className="w-8 h-8 animate-spin" style={{ color: BRAND_THEME.colors.brand.primary }} />
                 <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Loading Statement...</p>
              </div>
           ) : orders.length === 0 ? (
@@ -202,7 +203,7 @@ export const PocketStatementV2 = () => {
                             <div className="flex items-start gap-4">
                                <div className={`w-2 h-2 rounded mt-1.5 ${
                                   index % 3 === 0 ? 'bg-green-500' : 
-                                  index % 3 === 1 ? 'bg-orange-500' : 'bg-blue-500'
+                                  index % 3 === 1 ? 'bg-[#2979FB]' : 'bg-blue-500'
                                }`}></div>
                                <div>
                                   <p className="text-gray-900 text-sm font-bold mb-0.5">

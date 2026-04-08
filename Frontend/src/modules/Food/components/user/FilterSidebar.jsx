@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { X, SlidersHorizontal, ArrowDownUp, IndianRupee, UtensilsCrossed, Check } from "lucide-react";
 import { Checkbox } from "@food/components/ui/checkbox";
@@ -97,9 +97,13 @@ const FilterSidebar = ({
                             onChange={() => setSortBy(opt.id)}
                           />
                           <div className={`w-5 h-5 rounded-full border-2 transition-all duration-200 flex items-center justify-center ${
-                            sortBy === opt.id ? 'border-[#2979FB] bg-[#2979FB]' : 'border-gray-300 dark:border-gray-700'
+                            sortBy === opt.id ? '' : 'border-gray-300 dark:border-gray-700'
                           }`}>
                             {sortBy === opt.id && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                          {sortBy === opt.id && (
+                            <div className="absolute inset-0 rounded-full" style={{ background: BRAND_THEME.gradients.primary, borderColor: BRAND_THEME.colors.brand.primary }} />
+                          )}
                           </div>
                         </div>
                       </label>
@@ -147,3 +151,4 @@ const FilterSidebar = ({
 };
 
 export default React.memo(FilterSidebar);
+

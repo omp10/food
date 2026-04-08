@@ -735,8 +735,8 @@ export default function AddressSelectorPage() {
                         {[addr.additionalDetails, addr.street, addr.city, addr.state].filter(Boolean).join(", ")}
                       </p>
                     </div>
-                    <div className="h-6 w-6 rounded-full border border-gray-200 dark:border-gray-700 mt-2 flex items-center justify-center group-hover:border-[#2979FB]">
-                       <ChevronRight className="h-3 w-3 text-gray-400 group-hover:text-[#2979FB]" />
+                    <div className="h-6 w-6 rounded-full border border-gray-200 dark:border-gray-700 mt-2 flex items-center justify-center" style={{ borderColor: BRAND_THEME.colors.brand.primary }}>
+                       <ChevronRight className="h-3 w-3 text-gray-400" style={{ color: BRAND_THEME.colors.brand.primary }} />
                     </div>
                   </button>
                 )

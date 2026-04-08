@@ -9,6 +9,7 @@ import { deliveryAPI } from '@food/api';
 import { formatCurrency } from '@food/utils/currency';
 import { toast } from 'sonner';
 import useDeliveryBackNavigation from '../../hooks/useDeliveryBackNavigation';
+import BRAND_THEME from '@/config/brandTheme';
 
 /**
  * DeductionStatementV2 - 1:1 Match with Old DeductionStatement UI.
@@ -56,7 +57,7 @@ export const DeductionStatementV2 = () => {
   }, [weekRange]);
 
   return (
-    <div className="min-h-screen bg-[#f6e9dc] font-poppins pb-32">
+    <div className="min-h-screen bg-white font-poppins pb-32">
        {/* Header (Old Style) */}
        <div className="bg-white border-b border-gray-200 px-4 py-4 safe-top flex items-center gap-4">
           <button 
@@ -75,7 +76,7 @@ export const DeductionStatementV2 = () => {
           {/* Transactions List */}
           {loading ? (
              <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-orange-500 mb-4" />
+                <Loader2 className="w-8 h-8 animate-spin mb-4" style={{ color: BRAND_THEME.colors.brand.primary }} />
                 <p className="text-gray-600 text-sm font-medium">Loading deductions...</p>
              </div>
           ) : deductions.length === 0 ? (
@@ -85,7 +86,7 @@ export const DeductionStatementV2 = () => {
                    {[...Array(3)].map((_, i) => (
                       <div key={i} className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 w-64 opacity-50">
                          <div className="flex items-start gap-3">
-                            <div className={`w-2 h-2 rounded mt-1 ${i === 0 ? 'bg-green-500' : i === 1 ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
+                            <div className={`w-2 h-2 rounded mt-1 ${i === 0 ? 'bg-green-500' : i === 1 ? 'bg-[#2979FB]' : 'bg-blue-500'}`}></div>
                             <div className="flex-1 space-y-2">
                                <div className="h-1.5 bg-gray-100 rounded w-3/4"></div>
                                <div className="h-1.5 bg-gray-100 rounded w-1/2"></div>
@@ -108,7 +109,7 @@ export const DeductionStatementV2 = () => {
                          <div className="flex items-center gap-3">
                             <div className={`w-2 h-2 rounded ${ 
                                index % 3 === 0 ? 'bg-green-500' : 
-                               index % 3 === 1 ? 'bg-orange-500' : 'bg-blue-500'
+                               index % 3 === 1 ? 'bg-[#2979FB]' : 'bg-blue-500'
                             }`}></div>
                             <div>
                                <p className="text-gray-900 text-sm font-bold leading-tight">{item.description || 'System Deduction'}</p>

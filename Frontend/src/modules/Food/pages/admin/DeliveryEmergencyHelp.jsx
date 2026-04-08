@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { Phone, Save, Loader2, AlertCircle, CheckCircle2 } from "lucide-react"
 import { adminAPI } from "@food/api"
 import { toast } from "sonner"
+import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -227,7 +228,8 @@ export default function DeliveryEmergencyHelp() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                style={{ background: BRAND_THEME.colors.brand.primary }}
               >
                 {saving ? (
                   <>

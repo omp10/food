@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
+import BRAND_THEME from "@/config/brandTheme"
 import { 
   User,
   Utensils,
@@ -93,7 +94,8 @@ export default function MenuOverlay({ showMenu, setShowMenu }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             onClick={() => setShowMenu(false)}
-            className="fixed inset-0 bg-[#1E5ED8]/40 z-[100] backdrop-blur-sm"
+            className="fixed inset-0 z-[100] backdrop-blur-sm"
+            style={{ backgroundColor: `${BRAND_THEME.colors.brand.primary}66` }}
           />
           
           {/* Menu Sheet - Full bottom slide */}
@@ -165,8 +167,9 @@ export default function MenuOverlay({ showMenu, setShowMenu }) {
                       className={`flex flex-col items-center justify-center gap-2 p-3 md:p-4 rounded-xl transition-all shadow-md hover:shadow-lg ${
                         option.isLogout
                           ? "bg-red-500 hover:bg-red-600 text-white"
-                          : "bg-gradient-to-br from-[#ff8100] to-[#ff9500] hover:from-[#e67300] hover:to-[#e68500] text-white"
+                          : "text-white"
                       }`}
+                      style={option.isLogout ? undefined : { background: BRAND_THEME.gradients.primary }}
                     >
                       <motion.div
                         initial={{ scale: 0, rotate: -180 }}

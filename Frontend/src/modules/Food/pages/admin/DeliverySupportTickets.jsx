@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { MessageSquare, Search, Clock, CheckCircle, XCircle, Loader2, Eye, Edit } from "lucide-react"
 import { adminAPI } from "@food/api"
 import { toast } from "sonner"
+import BRAND_THEME from "@/config/brandTheme"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@food/components/ui/dialog"
 import { Textarea } from "@food/components/ui/textarea"
 const debugLog = (...args) => {}
@@ -464,7 +465,8 @@ export default function DeliverySupportTickets() {
                 <div className="flex flex-col sm:flex-row gap-3 pt-5 border-t border-gray-200">
                   <button
                     onClick={() => handleRespond(selectedTicket)}
-                    className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm"
+                    className="px-5 py-2.5 text-white rounded-lg font-medium transition-colors shadow-sm"
+                    style={{ background: BRAND_THEME.colors.brand.primary }}
                   >
                     {selectedTicket.adminResponse ? "Edit Response" : "Send Response"}
                   </button>
@@ -541,7 +543,8 @@ export default function DeliverySupportTickets() {
             <button
               onClick={handleUpdateTicket}
               disabled={updating || !responseText.trim()}
-              className="flex min-w-[140px] items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-w-[140px] items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ background: BRAND_THEME.colors.brand.primary }}
             >
               {updating ? (
                 <>

@@ -77,7 +77,7 @@ export default function Coupons() {
                 <div key={offer?.id || offer?.offerId || code} className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="h-10 w-10 rounded-xl bg-blue-50 text-[#2979FB] flex items-center justify-center shrink-0">
+                      <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${BRAND_THEME.colors.brand.primary}14`, color: BRAND_THEME.colors.brand.primary }}>
                         <TicketPercent className="h-5 w-5" />
                       </div>
                       <div className="min-w-0">
@@ -90,7 +90,7 @@ export default function Coupons() {
                       </div>
                     </div>
 
-                    <Button type="button" variant="outline" className="h-9 px-3 rounded-xl" onClick={() => handleCopy(code)}>
+                    <Button type="button" variant="outline" className="h-9 px-3 rounded-xl" onClick={() => handleCopy(code)} style={{ borderColor: BRAND_THEME.colors.brand.primary, color: BRAND_THEME.colors.brand.primary }}>
                       <Copy className="h-4 w-4 mr-2" />
                       Copy
                     </Button>

@@ -31,7 +31,7 @@ const RestaurantDishCard = ({
         {/* Floating Badges */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">
           {restaurant.offer && (
-             <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1">
+             <div className="text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1" style={{ background: BRAND_THEME.gradients.primary }}>
                <BadgePercent className="w-3 h-3" />
                {restaurant.offer}
              </div>
@@ -43,7 +43,8 @@ const RestaurantDishCard = ({
             e.stopPropagation();
             onFavoriteClick(restaurant.id);
           }}
-          className="absolute top-4 right-4 p-2 bg-white/20 backdrop-blur-md rounded-full border border-white/20 text-white hover:bg-white hover:text-[#2979FB] transition-all duration-300"
+          className="absolute top-4 right-4 p-2 bg-white/20 backdrop-blur-md rounded-full border border-white/20 text-white hover:bg-white transition-all duration-300"
+          style={{ color: isFavorite ? BRAND_THEME.colors.brand.primary : undefined }}
         >
           <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
         </button>

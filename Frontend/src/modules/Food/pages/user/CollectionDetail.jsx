@@ -77,7 +77,7 @@ export default function CollectionDetail() {
               <Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-lg mb-4">This collection is empty</p>
               <Link to="/user">
-                <Button className="bg-[#2979FB] hover:bg-[#1E5ED8] text-white">
+                <Button className="text-white" style={{ background: BRAND_THEME.gradients.primary }}>
                   Explore Restaurants
                 </Button>
               </Link>

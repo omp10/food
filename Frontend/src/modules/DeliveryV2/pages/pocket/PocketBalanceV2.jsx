@@ -8,11 +8,12 @@ import { deliveryAPI } from '@food/api';
 import { toast } from 'sonner';
 import { formatCurrency } from '@food/utils/currency';
 import useDeliveryBackNavigation from '../../hooks/useDeliveryBackNavigation';
+import BRAND_THEME from '@/config/brandTheme';
 
 /**
  * PocketBalanceV2 - 1:1 Match with Old PocketBalance Page.
  * Features: Big Withdraw amount display, Withdraw button, and Detail rows.
- * Background: #f6e9dc
+ * Background: white
  * Font: Poppins
  */
 export const PocketBalanceV2 = () => {
@@ -106,12 +107,12 @@ export const PocketBalanceV2 = () => {
            <p className="text-sm font-semibold text-gray-800">{label}</p>
            {subLabel && <p className="text-[10px] text-gray-400 font-medium leading-tight mt-0.5">{subLabel}</p>}
         </div>
-        <p className="text-sm font-bold text-black">{value}</p>
+        <p className="text-sm font-bold text-gray-900">{value}</p>
      </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#f6e9dc] font-poppins pb-32">
+    <div className="min-h-screen bg-[white] font-poppins pb-32">
        {/* Header */}
        <div className="bg-white border-b border-gray-200 px-4 py-4 safe-top flex items-center gap-4">
           <button onClick={goBack} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -122,7 +123,7 @@ export const PocketBalanceV2 = () => {
 
        {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-             <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+             <Loader2 className="w-8 h-8 animate-spin" style={{ color: BRAND_THEME.colors.brand.primary }} />
              <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Loading Balance...</p>
           </div>
        ) : (
@@ -143,16 +144,19 @@ export const PocketBalanceV2 = () => {
              {/* Top Withdraw Section */}
              <div className="bg-white p-8 mb-4 text-center border-b border-gray-100 shadow-sm">
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Withdrawable Amount</p>
-                <h2 className="text-5xl font-black text-black mb-6 tracking-tighter">₹{walletState.withdrawableAmount.toFixed(0)}</h2>
+                <h2 className="text-5xl font-black text-gray-900 mb-6 tracking-tighter">₹{walletState.withdrawableAmount.toFixed(0)}</h2>
                 
                 <button 
                   onClick={handleWithdraw}
                   disabled={!walletState.canWithdraw || withdrawSubmitting}
-                  className={`w-full py-4 rounded-xl font-bold text-sm shadow-lg transition-all active:scale-[0.98] ${
-                     walletState.canWithdraw 
-                     ? 'bg-black text-white' 
-                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  } flex items-center justify-center gap-2`}
+                  className={`w-full py-4 rounded-xl font-bold text-sm shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
+                    walletState.canWithdraw ? '' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                  style={
+                    walletState.canWithdraw
+                      ? { background: BRAND_THEME.colors.brand.primary, color: '#FFFFFF', boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}` }
+                      : undefined
+                  }
                 >
                    {withdrawSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                    {withdrawSubmitting ? 'Processing...' : 'Withdraw'}

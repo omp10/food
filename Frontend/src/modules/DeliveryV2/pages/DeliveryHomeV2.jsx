@@ -39,7 +39,7 @@ function BottomPopup({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[600] flex items-end">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-[#2979FB]/30" onClick={onClose} />
       <motion.div
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
@@ -565,12 +565,12 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
     <div className="relative h-screen w-full bg-white text-gray-900 overflow-hidden flex flex-col">
       {/* ─── 1. TOP HEADER (Premium Dark Gray) ─── */}
       {currentTab !== 'history' && (
-      <div className="absolute top-0 inset-x-0 bg-[#121212]/95 backdrop-blur-2xl shadow-2xl z-[200] safe-top pb-2 border-b border-white/10">
+      <div className="absolute top-0 inset-x-0 bg-white backdrop-blur-2xl shadow-2xl z-[200] safe-top pb-2 border-b border-gray-200">
         <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-4">
              <div 
                 onClick={() => navigate('/food/delivery/profile')}
-                className="w-10 h-10 rounded-full border border-white/20 p-0.5 shadow-xl overflow-hidden bg-white/5 cursor-pointer active:scale-95 transition-all"
+                className="w-10 h-10 rounded-full border border-blue-100 p-0.5 shadow-xl overflow-hidden bg-white cursor-pointer active:scale-95 transition-all"
              >
                 <img src={profileImage || "https://i.ibb.co/3m2Yh7r/Appzeto-Brand-Image.png"} alt="Profile" className="w-full h-full object-cover rounded-full" />
              </div>
@@ -587,9 +587,9 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                     deliveryAPI.updateOnlineStatus(false).catch(() => {});
                  }
                }}
-               className={`relative w-[92px] h-8 rounded-full p-1 transition-all duration-500 flex items-center ${isOnline ? 'bg-green-500 shadow-lg shadow-green-500/20' : 'bg-gray-400'}`}
+               className={`relative w-[92px] h-8 rounded-full p-1 transition-all duration-500 flex items-center ${isOnline ? 'bg-green-500 shadow-lg shadow-green-500/20' : 'bg-gray-300'}`}
              >
-               <div className={`flex items-center justify-between w-full px-2 text-[8.5px] font-black uppercase tracking-widest text-white`}>
+               <div className={`flex items-center justify-between w-full px-2 text-[8.5px] font-black uppercase tracking-widest ${isOnline ? 'text-white' : 'text-gray-700'}`}>
                  <span>{isOnline ? 'Online' : ''}</span>
                  <span>{!isOnline ? 'Offline' : ''}</span>
                </div>
@@ -598,8 +598,8 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
           </div>
           <div className="flex items-center gap-3">
              <button onClick={() => setShowEmergencyPopup(true)} className="w-9 h-9 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20 active:scale-95 transition-all shadow-lg"><AlertTriangle className="w-4 h-4" /></button>
-             <button onClick={() => navigate('/food/delivery/help/id-card')} className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20 active:scale-95 transition-all shadow-lg"><Contact className="w-4 h-4" /></button>
-             <button onClick={() => navigate('/food/delivery/notifications')} className="relative w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/10 active:scale-95 transition-all shadow-lg"><Bell className="w-4 h-4" />{notificationUnreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-400 border border-[#1f1f1f]" />}</button>
+             <button onClick={() => navigate('/food/delivery/help/id-card')} className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#2979FB] border border-blue-100 active:scale-95 transition-all shadow-lg"><Contact className="w-4 h-4" /></button>
+             <button onClick={() => navigate('/food/delivery/notifications')} className="relative w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#2979FB] border border-blue-100 active:scale-95 transition-all shadow-lg"><Bell className="w-4 h-4" />{notificationUnreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-400 border border-white" />}</button>
           </div>
         </div>
 
@@ -686,7 +686,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
              
              {/* SIMULATION INDICATOR */}
              {isSimMode && (
-               <div className="absolute top-[180px] left-4 right-4 z-[100] bg-black/80 backdrop-blur-md rounded-xl p-4 border border-white/20 flex items-center justify-between shadow-2xl">
+               <div className="absolute top-[180px] left-4 right-4 z-[100] bg-[#2979FB]/70 backdrop-blur-md rounded-xl p-4 border border-white/20 flex items-center justify-between shadow-2xl">
                   <div className="flex items-center gap-4">
                      <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center animate-pulse">
                         <Play className="w-4 h-4 text-white fill-current" />

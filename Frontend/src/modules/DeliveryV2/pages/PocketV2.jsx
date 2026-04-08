@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { formatCurrency } from '@food/utils/currency';
 import { initRazorpayPayment } from "@food/utils/razorpay";
 import { getCompanyNameAsync } from "@food/utils/businessSettings";
+import BRAND_THEME from "@/config/brandTheme";
 
 /**
  * PocketV2 - 1:1 Match with Old PocketPage UI.
@@ -190,28 +191,29 @@ export const PocketV2 = () => {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-[#f6e9dc] flex flex-col items-center justify-center font-poppins">
-       <div className="w-10 h-10 border-4 border-[#ff8100] border-t-transparent rounded-full animate-spin mb-4" />
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center font-poppins">
+       <div className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin mb-4" style={{ borderColor: BRAND_THEME.colors.brand.primary }} />
        <p className="text-xs font-semibold text-gray-500">Loading Pocket...</p>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#f6e9dc] pb-32 font-poppins">
+    <div className="min-h-screen bg-white pb-32 font-poppins">
        
        {/* 1. BANK DETAILS BANNER */}
        {!walletState.bankDetailsFilled && (
-         <div className="bg-yellow-400 px-4 py-3 flex items-center gap-3 border-b border-yellow-500/20">
-            <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center text-white shrink-0 shadow-lg">
+         <div className="px-4 py-3 flex items-center gap-3 border-b" style={{ background: BRAND_THEME.colors.brand.primary, borderColor: `${BRAND_THEME.colors.brand.primary}33` }}>
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white shrink-0 shadow-lg" style={{ background: BRAND_THEME.colors.brand.primary }}>
                <FileText className="w-7 h-7" />
             </div>
             <div className="flex-1">
-               <h3 className="text-sm font-bold text-black mb-0.5">Submit bank details</h3>
-               <p className="text-xs text-black/80 font-medium">PAN & bank details required for payouts</p>
+               <h3 className="text-sm font-bold text-white mb-0.5">Submit bank details</h3>
+               <p className="text-xs text-white/80 font-medium">PAN & bank details required for payouts</p>
             </div>
             <button 
               onClick={() => navigate('/food/delivery/profile/details')}
-              className="bg-yellow-300 text-black px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm"
+              className="px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm text-white"
+              style={{ background: BRAND_THEME.colors.brand.primaryDark }}
             >
                Submit
             </button>
@@ -226,7 +228,7 @@ export const PocketV2 = () => {
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center mb-5 transition-all active:scale-[0.98]"
           >
              <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest mb-2">Earnings: {getCurrentWeekRange()}</p>
-             <h2 className="text-4xl font-black text-black tracking-tighter">
+             <h2 className="text-4xl font-black text-gray-900 tracking-tighter">
                 ₹{walletState.weeklyEarnings.toFixed(0)}
              </h2>
           </div>
@@ -234,7 +236,7 @@ export const PocketV2 = () => {
           {/* 3. EARNINGS GUARANTEE - API DRIVEN (NO STATIC VALUES) */}
           {hasActiveOffer && (
           <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 mb-6">
-             <div className="bg-black p-4 flex items-center justify-between">
+            <div className="p-4 flex items-center justify-between" style={{ background: BRAND_THEME.colors.brand.primary }}>
                 <div>
                   <h3 className="text-lg font-black text-white leading-none mb-1">Earnings Guarantee</h3>
                   <div className="flex items-center gap-2">
@@ -260,12 +262,12 @@ export const PocketV2 = () => {
                       <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
                          <circle cx="50" cy="50" r="45" fill="none" stroke="#f3f4f6" strokeWidth="8" />
                          <motion.circle 
-                            cx="50" cy="50" r="45" fill="none" stroke="#000" strokeWidth="8" strokeLinecap="round"
+                            cx="50" cy="50" r="45" fill="none" stroke={BRAND_THEME.colors.brand.primary} strokeWidth="8" strokeLinecap="round"
                             initial={{ pathLength: 0 }} animate={{ pathLength: ordersProgress }} transition={{ duration: 1.5, ease: "easeOut" }}
                          />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                         <span className="text-xl font-black text-black leading-none">{activeOffer.currentOrders}</span>
+                         <span className="text-xl font-black text-gray-900 leading-none">{activeOffer.currentOrders}</span>
                          <span className="text-[9px] font-bold text-gray-400 uppercase mt-0.5">of {activeOffer.targetOrders}</span>
                       </div>
                    </div>
@@ -278,12 +280,12 @@ export const PocketV2 = () => {
                       <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
                          <circle cx="50" cy="50" r="45" fill="none" stroke="#f3f4f6" strokeWidth="8" />
                          <motion.circle 
-                            cx="50" cy="50" r="45" fill="none" stroke="#ff8100" strokeWidth="8" strokeLinecap="round"
+                            cx="50" cy="50" r="45" fill="none" stroke={BRAND_THEME.colors.brand.primary} strokeWidth="8" strokeLinecap="round"
                             initial={{ pathLength: 0 }} animate={{ pathLength: earningsProgress }} transition={{ duration: 1.5, ease: "easeOut" }}
                          />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
-                         <span className="text-base font-black text-black leading-none truncate">₹{activeOffer.currentEarnings}</span>
+                         <span className="text-base font-black text-gray-900 leading-none truncate">₹{activeOffer.currentEarnings}</span>
                         <HelpCircle className="w-2.5 h-2.5 text-gray-300 mt-1 cursor-help" />
                       </div>
                    </div>
@@ -300,7 +302,7 @@ export const PocketV2 = () => {
                 className="w-full p-5 border-b border-gray-50 flex items-center justify-between active:bg-gray-50"
              >
                 <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-black border border-gray-100">
+                   <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-900 border border-gray-100">
                       <Wallet className="w-6 h-6" />
                    </div>
                    <div>
@@ -309,7 +311,7 @@ export const PocketV2 = () => {
                    </div>
                 </div>
                 <div className="flex items-center gap-2">
-                   <span className="text-base font-black text-black">₹{walletState.totalBalance.toFixed(2)}</span>
+                   <span className="text-base font-black text-gray-900">₹{walletState.totalBalance.toFixed(2)}</span>
                    <ChevronRight className="w-4 h-4 text-gray-300" />
                 </div>
              </button>
@@ -319,7 +321,7 @@ export const PocketV2 = () => {
                 className="w-full p-5 border-b border-gray-50 flex items-center justify-between active:bg-gray-50"
              >
                 <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-black border border-gray-100">
+                   <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-900 border border-gray-100">
                       <ShieldCheck className="w-6 h-6" />
                    </div>
                    <div>
@@ -328,7 +330,7 @@ export const PocketV2 = () => {
                    </div>
                 </div>
                 <div className="flex items-center gap-2">
-                   <span className="text-base font-black text-black">₹{walletState.availableCashLimit.toFixed(2)}</span>
+                   <span className="text-base font-black text-gray-900">₹{walletState.availableCashLimit.toFixed(2)}</span>
                    <ChevronRight className="w-4 h-4 text-gray-300" />
                 </div>
              </button>
@@ -336,7 +338,8 @@ export const PocketV2 = () => {
              <div className="p-5">
                 <button 
                    onClick={() => setShowDepositPopup(true)}
-                   className="w-full py-4 bg-[#ff8100] hover:bg-orange-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
+                   className="w-full py-4 text-white rounded-xl font-bold text-sm active:scale-95 transition-all"
+                   style={{ background: BRAND_THEME.colors.brand.primary, boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}` }}
                 >
                    Deposit Cash
                 </button>
@@ -351,12 +354,12 @@ export const PocketV2 = () => {
                       <IndianRupee className="w-5 h-5" />
                    </div>
                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Last Payout</p>
-                   <p className="text-xl font-black text-black leading-none mb-1">₹{walletState.payoutAmount}</p>
+                   <p className="text-xl font-black text-gray-900 leading-none mb-1">₹{walletState.payoutAmount}</p>
                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight">Prev Week Info</p>
                 </div>
 
                 <div onClick={() => navigate('/food/delivery/pocket/limit-settlement')} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 active:bg-gray-50 flex flex-col justify-between">
-                   <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-[#ff8100] mb-4 border border-orange-100">
+                   <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#2979FB] mb-4 border border-blue-100">
                       <Receipt className="w-5 h-5" />
                    </div>
                    <p className="text-sm font-bold text-gray-800 leading-tight">Limit Settlement</p>
@@ -385,29 +388,30 @@ export const PocketV2 = () => {
        <AnimatePresence>
           {showDepositPopup && (
              <div className="fixed inset-0 z-[1000] flex items-end">
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDepositPopup(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDepositPopup(false)} className="absolute inset-0 bg-[#2979FB]/70 backdrop-blur-sm" />
                 <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="relative w-full bg-white rounded-t-[2.5rem] p-8 pb-12 shadow-2xl">
                    <div className="w-16 h-1.5 bg-gray-100 rounded-full mx-auto mb-8" />
                    
                    <div className="text-center mb-8">
-                      <div className="w-20 h-20 bg-orange-50 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-orange-100 text-[#ff8100]">
+                      <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-blue-100 text-[#2979FB]">
                          <IndianRupee className="w-10 h-10" />
                       </div>
-                      <h3 className="text-2xl font-black text-black mb-1">Deposit Cash</h3>
+                      <h3 className="text-2xl font-black text-gray-900 mb-1">Deposit Cash</h3>
                       <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">Settle Hand Dues</p>
                    </div>
                    
                    <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100">
                       <div className="flex justify-between items-center mb-4">
                          <span className="text-xs font-bold text-gray-400 uppercase">Cash in your hand</span>
-                         <span className="text-base font-black text-black">₹{walletState.cashInHand}</span>
+                         <span className="text-base font-black text-gray-900">₹{walletState.cashInHand}</span>
                       </div>
                       <div className="relative">
                          <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                          <input 
                             type="number" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)}
                             placeholder="Enter amount to deposit"
-                            className="w-full bg-white border border-gray-200 rounded-xl py-4 pl-12 pr-4 text-xl font-bold focus:border-[#ff8100] focus:ring-4 focus:ring-orange-500/10 outline-none transition-all"
+                            className="w-full bg-white border border-gray-200 rounded-xl py-4 pl-12 pr-4 text-xl font-bold outline-none transition-all"
+                            style={{ borderColor: BRAND_THEME.colors.brand.primary, boxShadow: `0 0 0 3px ${BRAND_THEME.colors.brand.primary}1A` }}
                          />
                       </div>
                       <p className="text-[10px] font-bold text-gray-400 mt-3 text-center uppercase tracking-tight">Minimum deposit ₹1 • Instant limit update</p>
@@ -417,7 +421,8 @@ export const PocketV2 = () => {
                       <button 
                          onClick={handleDeposit}
                          disabled={depositing}
-                         className="w-full py-5 bg-[#ff8100] text-white rounded-2xl font-black text-sm shadow-xl shadow-orange-500/20 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:bg-gray-300 disabled:shadow-none"
+                         className="w-full py-5 text-white rounded-2xl font-black text-sm active:scale-95 transition-all flex items-center justify-center gap-3 disabled:bg-gray-300 disabled:shadow-none"
+                         style={{ background: BRAND_THEME.colors.brand.primary, boxShadow: `0 16px 38px -22px ${BRAND_THEME.colors.brand.primaryDark}` }}
                       >
                          {depositing ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
                          {depositing ? 'Securely Processing...' : 'Proceed to Pay'}
