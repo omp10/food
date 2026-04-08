@@ -27,12 +27,13 @@ import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
 import { restaurantAPI } from "@food/api"
 import { toast } from "sonner"
+import BRAND_THEME from "@/config/brandTheme"
 import { ImageSourcePicker } from "@food/components/ImageSourcePicker"
 import { isFlutterBridgeAvailable, convertBase64ToFile } from "@food/utils/imageUploadUtils"
 
-const debugLog = (...args) => {}
-const debugWarn = (...args) => {}
-const debugError = (...args) => {}
+
+
+
 
 
 const CUISINES_STORAGE_KEY = "restaurant_cuisines"

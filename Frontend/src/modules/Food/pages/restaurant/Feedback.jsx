@@ -5,6 +5,7 @@ import { Bell, HelpCircle, Menu, Search, SlidersHorizontal, Calendar, ChevronLef
 import { DateRangeCalendar } from "@food/components/ui/date-range-calendar"
 import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import { restaurantAPI } from "@food/api"
+import BRAND_THEME from "@/config/brandTheme"
 
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
