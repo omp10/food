@@ -16,6 +16,14 @@ const foodOfferSchema = new mongoose.Schema(
         startDate: { type: Date },
         isFirstOrderOnly: { type: Boolean, default: false },
         endDate: { type: Date },
+        approvalStatus: {
+            type: String,
+            enum: ['pending', 'approved', 'rejected'],
+            default: 'approved',
+            index: true
+        },
+        createdByRestaurantId: { type: mongoose.Schema.Types.ObjectId, ref: 'FoodRestaurant', default: null },
+        rejectionReason: { type: String, default: '' },
         status: { type: String, enum: ['active', 'paused', 'inactive'], default: 'active', index: true },
         showInCart: { type: Boolean, default: true }
     },
@@ -23,5 +31,6 @@ const foodOfferSchema = new mongoose.Schema(
 );
 
 foodOfferSchema.index({ restaurantId: 1, createdAt: -1 });
+foodOfferSchema.index({ approvalStatus: 1, createdAt: -1 });
 
 export const FoodOffer = mongoose.model('FoodOffer', foodOfferSchema);

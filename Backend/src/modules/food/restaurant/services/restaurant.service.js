@@ -1280,10 +1280,12 @@ export const listPublicOffers = async () => {
     const now = new Date();
     const filter = {
         status: 'active',
+        approvalStatus: 'approved',
         $and: [
             { $or: [{ startDate: { $exists: false } }, { startDate: null }, { startDate: { $lte: now } }] },
             { $or: [{ endDate: { $exists: false } }, { endDate: null }, { endDate: { $gt: now } }] }
-        ]
+        ],
+        showInCart: { $ne: false }
     };
 
     const list = await FoodOffer.find(filter)

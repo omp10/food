@@ -578,6 +578,48 @@ export async function deleteAdminOffer(req, res, next) {
     }
 }
 
+export async function getPendingRestaurantOffers(req, res, next) {
+    try {
+        const data = await adminService.getPendingRestaurantOffers(req.query || {});
+        res.status(200).json({ success: true, message: 'Pending restaurant coupons fetched successfully', data });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function approveRestaurantOffer(req, res, next) {
+    try {
+        const { id } = req.params;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid offer id' });
+        }
+        const updated = await adminService.approveRestaurantOffer(id);
+        if (!updated) {
+            return res.status(404).json({ success: false, message: 'Offer not found' });
+        }
+        res.status(200).json({ success: true, message: 'Offer approved successfully', data: { offer: updated } });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function rejectRestaurantOffer(req, res, next) {
+    try {
+        const { id } = req.params;
+        const reason = req.body?.reason || '';
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid offer id' });
+        }
+        const updated = await adminService.rejectRestaurantOffer(id, reason);
+        if (!updated) {
+            return res.status(404).json({ success: false, message: 'Offer not found' });
+        }
+        res.status(200).json({ success: true, message: 'Offer rejected successfully', data: { offer: updated } });
+    } catch (error) {
+        next(error);
+    }
+}
+
 export async function getSupportTicketsController(req, res, next) {
     try {
         const data = await adminService.getSupportTickets(req.query || {});

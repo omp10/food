@@ -1,137 +1,185 @@
-import { useState, useEffect, useRef } from "react"
-import { motion } from "framer-motion"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation"
-import Lenis from "lenis"
-import { 
-  ArrowLeft,
-  Calendar,
-  ChevronDown,
-  Wand2,
-  ChevronUp,
-  ChevronDown as ChevronDownIcon
-} from "lucide-react"
+import { ArrowLeft, Calendar, Loader2, Wand2, Info, CheckCircle2, XCircle } from "lucide-react"
 import { Card, CardContent } from "@food/components/ui/card"
 import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
 import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-const debugLog = (...args) => {}
-const debugWarn = (...args) => {}
-const debugError = (...args) => {}
+import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation"
+import { restaurantAPI } from "@food/api"
+import BRAND_THEME from "@/config/brandTheme"
 
+const discountTypes = [
+  { value: "percentage", label: "Percentage (%)" },
+  { value: "flat-price", label: "Flat Amount" },
+]
+
+const defaultForm = {
+  couponCode: "",
+  discountType: "percentage",
+  discountValue: "",
+  maxDiscount: "",
+  minOrderValue: "",
+  usageLimit: "",
+  perUserLimit: "",
+  startDate: "",
+  endDate: "",
+  customerScope: "all",
+  isFirstOrderOnly: false,
+}
 
 export default function AddCouponPage(props) {
   const { mode = "create", couponId } = props || {}
-  const isEditMode = mode === "edit"
+  const isEditMode = mode === "edit" && couponId
 
   const navigate = useNavigate()
   const goBack = useRestaurantBackNavigation()
-  const [showDiscountDropdown, setShowDiscountDropdown] = useState(false)
-  const [showDiscountDropdown2, setShowDiscountDropdown2] = useState(false)
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false)
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false)
-  const [formData, setFormData] = useState({
-    title: "",
-    couponCode: "",
-    limitForSameUser: "",
-    minPurchase: "",
-    discount: "",
-    discountType: "%",
-    maxDiscount: "",
-    limitForSameUser2: "1",
-    minPurchase2: "",
-    discount2: "",
-    discountType2: "%",
-    maxDiscount2: "",
-    startDate: "",
-    endDate: ""
-  })
-  const discountRef = useRef(null)
-  const discountRef2 = useRef(null)
-  const startDateRef = useRef(null)
-  const endDateRef = useRef(null)
+  const [form, setForm] = useState(defaultForm)
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const [approvalStatus, setApprovalStatus] = useState("")
 
-  // Lenis smooth scrolling
+  const brand = useMemo(() => ({
+    primary: BRAND_THEME.colors.brand.primary,
+    primaryDark: BRAND_THEME.colors.brand.primaryDark,
+    primarySoft: BRAND_THEME.colors.brand.primarySoft,
+    border: BRAND_THEME.colors.neutral.border
+  }), [])
+
+  // Prefill when editing (loads from list API and matches id)
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-    })
-
-    function raf(time) {
-      lenis.raf(time)
-      requestAnimationFrame(raf)
+    let mounted = true
+    const load = async () => {
+      if (!isEditMode) return
+      try {
+        setLoading(true)
+        const res = await restaurantAPI.getCoupons()
+        const list = res?.data?.data?.offers || res?.data?.offers || []
+        const match = list.find((o) => String(o.id || o._id) === String(couponId))
+        if (match && mounted) {
+          setForm({
+            couponCode: match.couponCode || "",
+            discountType: match.discountType || "percentage",
+            discountValue: match.discountValue != null ? String(match.discountValue) : "",
+            maxDiscount: match.maxDiscount != null ? String(match.maxDiscount) : "",
+            minOrderValue: match.minOrderValue != null ? String(match.minOrderValue) : "",
+            usageLimit: match.usageLimit != null ? String(match.usageLimit) : "",
+            perUserLimit: match.perUserLimit != null ? String(match.perUserLimit) : "",
+            startDate: match.startDate ? new Date(match.startDate).toISOString().slice(0, 10) : "",
+            endDate: match.endDate ? new Date(match.endDate).toISOString().slice(0, 10) : "",
+            customerScope: match.customerScope || "all",
+            isFirstOrderOnly: !!match.isFirstOrderOnly,
+          })
+          setApprovalStatus(match.approvalStatus || "")
+        }
+      } catch (err) {
+        setError(err?.response?.data?.message || "Failed to load coupon")
+      } finally {
+        setLoading(false)
+      }
     }
-
-    requestAnimationFrame(raf)
-
+    load()
     return () => {
-      lenis.destroy()
+      mounted = false
     }
+  }, [isEditMode, couponId])
+
+  const today = useMemo(() => {
+    const d = new Date()
+    const m = String(d.getMonth() + 1).padStart(2, "0")
+    const day = String(d.getDate()).padStart(2, "0")
+    return `${d.getFullYear()}-${m}-${day}`
   }, [])
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (discountRef.current && !discountRef.current.contains(event.target)) {
-        setShowDiscountDropdown(false)
-      }
-      if (discountRef2.current && !discountRef2.current.contains(event.target)) {
-        setShowDiscountDropdown2(false)
-      }
-      if (startDateRef.current && !startDateRef.current.contains(event.target)) {
-        setShowStartDatePicker(false)
-      }
-      if (endDateRef.current && !endDateRef.current.contains(event.target)) {
-        setShowEndDatePicker(false)
-      }
+  const updateField = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }))
+    setError("")
+    setSuccess("")
+  }
+
+  const validate = () => {
+    if (!form.couponCode.trim()) return "Coupon code is required"
+    const value = Number(form.discountValue)
+    if (!Number.isFinite(value) || value <= 0) return "Discount must be greater than 0"
+    if (form.discountType === "percentage") {
+      const max = form.maxDiscount === "" ? value : Number(form.maxDiscount)
+      if (!Number.isFinite(max) || max <= 0) return "Max discount is required for percentage coupons"
+    }
+    if (form.minOrderValue && Number(form.minOrderValue) < 0) return "Min order cannot be negative"
+    if (form.usageLimit && Number(form.usageLimit) < 0) return "Usage limit must be 0 or more"
+    if (form.perUserLimit && Number(form.perUserLimit) < 0) return "Per user limit must be 0 or more"
+    if (form.startDate && form.endDate && new Date(form.endDate) <= new Date(form.startDate)) {
+      return "End date must be after start date"
+    }
+    return ""
+  }
+
+  const buildPayload = () => {
+    const discountValueNum = Number(form.discountValue)
+    const maxDiscountNum =
+      form.discountType === "percentage"
+        ? (form.maxDiscount === "" ? discountValueNum : Number(form.maxDiscount))
+        : undefined
+    const base = {
+      couponCode: form.couponCode.trim().toUpperCase(),
+      discountType: form.discountType,
+      discountValue: discountValueNum,
+      customerScope: form.customerScope,
+      restaurantScope: "selected",
+      minOrderValue: form.minOrderValue === "" ? undefined : Number(form.minOrderValue),
+      maxDiscount: form.discountType === "percentage" ? maxDiscountNum : undefined,
+      usageLimit: form.usageLimit === "" ? undefined : Number(form.usageLimit),
+      perUserLimit: form.perUserLimit === "" ? undefined : Number(form.perUserLimit),
+      startDate: form.startDate || undefined,
+      endDate: form.endDate || undefined,
+      isFirstOrderOnly: !!form.isFirstOrderOnly,
+    }
+    return base
+  }
+
+  const handleSubmit = async () => {
+    const validationError = validate()
+    if (validationError) {
+      setError(validationError)
+      return
     }
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
+    try {
+      setSaving(true)
+      const payload = buildPayload()
+      if (isEditMode) {
+        await restaurantAPI.updateCoupon(couponId, payload)
+        setSuccess("Coupon updated and resubmitted for approval")
+      } else {
+        await restaurantAPI.createCoupon(payload)
+        setSuccess("Coupon submitted for approval")
+      }
+      navigate("/restaurant/coupon")
+    } catch (err) {
+      setError(err?.response?.data?.message || "Unable to save coupon")
+    } finally {
+      setSaving(false)
     }
-  }, [])
-
-  const discountTypes = ["%", "$"]
+  }
 
   const generateCouponCode = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     let code = ""
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 8; i += 1) {
       code += chars.charAt(Math.floor(Math.random() * chars.length))
     }
-    setFormData(prev => ({ ...prev, couponCode: code }))
-  }
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
-
-  const incrementLimit = () => {
-    const current = parseInt(formData.limitForSameUser2) || 1
-    setFormData(prev => ({ ...prev, limitForSameUser2: (current + 1).toString() }))
-  }
-
-  const decrementLimit = () => {
-    const current = parseInt(formData.limitForSameUser2) || 1
-    if (current > 1) {
-      setFormData(prev => ({ ...prev, limitForSameUser2: (current - 1).toString() }))
-    }
+    updateField("couponCode", code)
   }
 
   return (
-    <div className="min-h-screen bg-[#f6e9dc] overflow-x-hidden pb-24 md:pb-6">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-50 flex items-center gap-3">
-        <button 
-          onClick={goBack}
-          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-        >
+    <div
+      className="min-h-screen pb-24 md:pb-10"
+      style={{ backgroundColor: BRAND_THEME.tokens.app.sectionAltBackground || "#F8FAFC" }}
+    >
+      <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-40 flex items-center gap-3">
+        <button onClick={goBack} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
         <h1 className="text-lg font-bold text-gray-900 flex-1">
@@ -139,369 +187,206 @@ export default function AddCouponPage(props) {
         </h1>
       </div>
 
-      {/* Main Content */}
       <div className="px-4 py-4 space-y-4">
-        {/* Coupon Details Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Card className="bg-white shadow-sm border border-gray-100">
-            <CardContent className="p-4 space-y-4">
-              {/* Title */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Title <span className="text-red-500">*</span>
-                </label>
+        {approvalStatus && (
+          <div className="flex items-center gap-2 text-sm px-4 py-3 rounded-lg bg-white border border-gray-200">
+            {approvalStatus === "approved" && <CheckCircle2 className="w-4 h-4 text-green-600" />}
+            {approvalStatus === "pending" && <Info className="w-4 h-4 text-amber-500" />}
+            {approvalStatus === "rejected" && <XCircle className="w-4 h-4 text-red-600" />}
+            <span className="text-gray-700">Status: {approvalStatus}</span>
+          </div>
+        )}
+
+        {error && (
+          <div className="flex items-center gap-2 text-sm px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
+            <XCircle className="w-4 h-4" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {success && (
+          <div className="flex items-center gap-2 text-sm px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{success}</span>
+          </div>
+        )}
+
+        <Card className="bg-white shadow-sm border border-gray-100">
+          <CardContent className="p-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Coupon Code *</label>
+              <div className="flex gap-2">
                 <Input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => handleInputChange("title", e.target.value)}
-                  placeholder="Title *"
-                  className="w-full"
+                  value={form.couponCode}
+                  onChange={(e) => updateField("couponCode", e.target.value.toUpperCase())}
+                  placeholder="e.g. SAVE50"
+                  className="flex-1"
+                  disabled={loading || saving}
                 />
+                <button
+                  onClick={generateCouponCode}
+                  type="button"
+                  className="p-2.5 rounded-lg transition-colors flex items-center justify-center text-white shadow-md"
+                  style={{ backgroundColor: brand.primary }}
+                >
+                  <Wand2 className="w-5 h-5 text-white" />
+                </button>
               </div>
+            </div>
 
-              {/* Coupon Code */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Coupon Code <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    value={formData.couponCode}
-                    onChange={(e) => handleInputChange("couponCode", e.target.value)}
-                    placeholder="Coupon Code *"
-                    className="flex-1"
-                  />
-                  <button
-                    onClick={generateCouponCode}
-                    className="p-2.5 bg-[#ff8100] hover:bg-[#e67300] rounded-lg transition-colors flex items-center justify-center"
-                  >
-                    <Wand2 className="w-5 h-5 text-white" />
-                  </button>
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Discount Type</label>
+                <select
+                  value={form.discountType}
+                  onChange={(e) => updateField("discountType", e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
+                  disabled={loading || saving}
+                >
+                  {discountTypes.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
               </div>
-
-              {/* Limit for same user */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Limit for same user
-                </label>
-                <Input
-                  type="number"
-                  value={formData.limitForSameUser}
-                  onChange={(e) => handleInputChange("limitForSameUser", e.target.value)}
-                  placeholder="Limit for same user"
-                  className="w-full"
-                />
-              </div>
-
-              {/* Min purchase */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Min purchase
-                </label>
-                <Input
-                  type="number"
-                  value={formData.minPurchase}
-                  onChange={(e) => handleInputChange("minPurchase", e.target.value)}
-                  placeholder="Min purchase"
-                  className="w-full"
-                />
-              </div>
-
-              {/* Discount */}
-              <div className="relative" ref={discountRef}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Discount <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    value={formData.discount}
-                    onChange={(e) => handleInputChange("discount", e.target.value)}
-                    placeholder="Discount *"
-                    className="flex-1"
-                  />
-                  <button
-                    onClick={() => setShowDiscountDropdown(!showDiscountDropdown)}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1"
-                  >
-                    <span className="text-sm font-medium text-gray-700">{formData.discountType}</span>
-                    <ChevronDown className="w-4 h-4 text-gray-600" />
-                  </button>
-                </div>
-                {showDiscountDropdown && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[100px]"
-                  >
-                    {discountTypes.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => {
-                          handleInputChange("discountType", type)
-                          setShowDiscountDropdown(false)
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors first:rounded-t-lg last:rounded-b-lg"
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </div>
-
-              {/* Max Discount */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Discount
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Discount Value *</label>
                 <Input
                   type="number"
-                  value={formData.maxDiscount}
-                  onChange={(e) => handleInputChange("maxDiscount", e.target.value)}
-                  placeholder="Max Discount"
-                  className="w-full"
+                  min="1"
+                  step="0.01"
+                  value={form.discountValue}
+                  onChange={(e) => updateField("discountValue", e.target.value)}
+                  placeholder={form.discountType === "percentage" ? "e.g. 20" : "e.g. 100"}
+                  disabled={loading || saving}
                 />
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+            </div>
 
-        {/* Additional Discount Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-        >
-          <Card className="bg-white shadow-sm border border-gray-100">
-            <CardContent className="p-4 space-y-4">
-              {/* Limit for same user 2 */}
+            {form.discountType === "percentage" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Limit for same user
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    value={formData.limitForSameUser2}
-                    onChange={(e) => handleInputChange("limitForSameUser2", e.target.value)}
-                    placeholder="Limit for same user"
-                    className="flex-1"
-                  />
-                  <div className="flex flex-col">
-                    <button
-                      onClick={incrementLimit}
-                      className="p-1 bg-[#ff8100] hover:bg-[#e67300] rounded-t transition-colors"
-                    >
-                      <ChevronUp className="w-3 h-3 text-white" />
-                    </button>
-                    <button
-                      onClick={decrementLimit}
-                      className="p-1 bg-[#ff8100] hover:bg-[#e67300] rounded-b transition-colors"
-                    >
-                      <ChevronDownIcon className="w-3 h-3 text-white" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Min purchase 2 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Min purchase
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Max Discount *</label>
                 <Input
                   type="number"
-                  value={formData.minPurchase2}
-                  onChange={(e) => handleInputChange("minPurchase2", e.target.value)}
-                  placeholder="Min purchase"
-                  className="w-full"
+                  min="1"
+                  value={form.maxDiscount}
+                  onChange={(e) => updateField("maxDiscount", e.target.value)}
+                  placeholder="e.g. 150"
+                  disabled={loading || saving}
                 />
               </div>
+            )}
 
-              {/* Discount 2 */}
-              <div className="relative" ref={discountRef2}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Discount <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    value={formData.discount2}
-                    onChange={(e) => handleInputChange("discount2", e.target.value)}
-                    placeholder="Discount *"
-                    className="flex-1"
-                  />
-                  <button
-                    onClick={() => setShowDiscountDropdown2(!showDiscountDropdown2)}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-1"
-                  >
-                    <span className="text-sm font-medium text-gray-700">{formData.discountType2}</span>
-                    <ChevronDown className="w-4 h-4 text-gray-600" />
-                  </button>
-                </div>
-                {showDiscountDropdown2 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[100px]"
-                  >
-                    {discountTypes.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => {
-                          handleInputChange("discountType2", type)
-                          setShowDiscountDropdown2(false)
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors first:rounded-t-lg last:rounded-b-lg"
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </div>
-
-              {/* Max Discount 2 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Discount
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Min Order (optional)</label>
                 <Input
                   type="number"
-                  value={formData.maxDiscount2}
-                  onChange={(e) => handleInputChange("maxDiscount2", e.target.value)}
-                  placeholder="Max Discount"
-                  className="w-full"
+                  min="0"
+                  value={form.minOrderValue}
+                  onChange={(e) => updateField("minOrderValue", e.target.value)}
+                  placeholder="e.g. 299"
+                  disabled={loading || saving}
                 />
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Usage Limit (optional)</label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={form.usageLimit}
+                  onChange={(e) => updateField("usageLimit", e.target.value)}
+                  placeholder="e.g. 100"
+                  disabled={loading || saving}
+                />
+              </div>
+            </div>
 
-        {/* Date Range Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-        >
-          <Card className="bg-white shadow-sm border border-gray-100">
-            <CardContent className="p-4 space-y-4">
-              {/* Start Date */}
-              <div className="relative" ref={startDateRef}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Date <span className="text-red-500">*</span>
-                </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Per User Limit (optional)</label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={form.perUserLimit}
+                  onChange={(e) => updateField("perUserLimit", e.target.value)}
+                  placeholder="e.g. 1"
+                  disabled={loading || saving}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Customer Scope</label>
+                <select
+                  value={form.customerScope}
+                  onChange={(e) => updateField("customerScope", e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
+                  disabled={loading || saving}
+                >
+                  <option value="all">All customers</option>
+                  <option value="first-time">First-time users</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date (optional)</label>
                 <div className="relative">
                   <Input
-                    type="text"
-                    value={formData.startDate}
-                    onChange={(e) => handleInputChange("startDate", e.target.value)}
-                    placeholder="Start Date *"
-                    className="w-full pr-10"
-                    readOnly
-                    onClick={() => setShowStartDatePicker(!showStartDatePicker)}
+                    type="date"
+                    min={today}
+                    value={form.startDate}
+                    onChange={(e) => updateField("startDate", e.target.value)}
+                    className="pr-3"
+                    disabled={loading || saving}
                   />
-                  <button
-                    onClick={() => setShowStartDatePicker(!showStartDatePicker)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5"
-                  >
-                    <Calendar className="w-5 h-5 text-[#ff8100]" />
-                  </button>
                 </div>
-                {showStartDatePicker && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4"
-                  >
-                    <input
-                      type="date"
-                      value={formData.startDate}
-                      onChange={(e) => {
-                        handleInputChange("startDate", e.target.value)
-                        setShowStartDatePicker(false)
-                      }}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff8100]"
-                    />
-                  </motion.div>
-                )}
               </div>
-
-              {/* End Date */}
-              <div className="relative" ref={endDateRef}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  End Date <span className="text-red-500">*</span>
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Date (optional)</label>
                 <div className="relative">
                   <Input
-                    type="text"
-                    value={formData.endDate}
-                    onChange={(e) => handleInputChange("endDate", e.target.value)}
-                    placeholder="End Date *"
-                    className="w-full pr-10"
-                    readOnly
-                    onClick={() => setShowEndDatePicker(!showEndDatePicker)}
+                    type="date"
+                    min={form.startDate || today}
+                    value={form.endDate}
+                    onChange={(e) => updateField("endDate", e.target.value)}
+                    className="pr-3"
+                    disabled={loading || saving}
                   />
-                  <button
-                    onClick={() => setShowEndDatePicker(!showEndDatePicker)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5"
-                  >
-                    <Calendar className="w-5 h-5 text-[#ff8100]" />
-                  </button>
                 </div>
-                {showEndDatePicker && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4"
-                  >
-                    <input
-                      type="date"
-                      value={formData.endDate}
-                      onChange={(e) => {
-                        handleInputChange("endDate", e.target.value)
-                        setShowEndDatePicker(false)
-                      }}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff8100]"
-                    />
-                  </motion.div>
-                )}
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                id="isFirstOrderOnly"
+                type="checkbox"
+                checked={form.isFirstOrderOnly}
+                onChange={(e) => updateField("isFirstOrderOnly", e.target.checked)}
+                className="h-4 w-4"
+                disabled={loading || saving}
+              />
+              <label htmlFor="isFirstOrderOnly" className="text-sm text-gray-700">Only for first order</label>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Add Button */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 z-50 md:relative md:border-t-0 md:px-4 md:py-4 md:mt-6">
         <Button
-          onClick={() => {
-            if (isEditMode) {
-              debugLog("Update coupon:", { id: couponId, ...formData })
-            } else {
-              debugLog("Add coupon:", formData)
-            }
-            // Navigate to coupon list after save
-            navigate("/restaurant/coupon")
-          }}
-          className="w-full bg-[#ff8100] hover:bg-[#e67300] text-white font-semibold py-3 rounded-lg"
+          onClick={handleSubmit}
+          disabled={saving || loading}
+          className="w-full text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+          style={{ backgroundColor: brand.primary, boxShadow: BRAND_THEME.tokens.motion?.shadow?.glow }}
         >
-          {isEditMode ? "Update" : "Add"}
+          {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+          {isEditMode ? "Update & Resubmit" : "Submit for Approval"}
         </Button>
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          Admin approval is required before this coupon becomes active.
+        </p>
       </div>
 
-      {/* Bottom Navigation Bar */}
       <BottomNavbar />
     </div>
   )
 }
-
-
-

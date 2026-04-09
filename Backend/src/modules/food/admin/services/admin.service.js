@@ -3335,7 +3335,10 @@ export async function getAllOffers(_query = {}) {
             restaurantId: o.restaurantId?._id ? String(o.restaurantId._id) : (o.restaurantId ? String(o.restaurantId) : ""),
             isFirstOrderOnly: !!o.isFirstOrderOnly,
             startDate: o.startDate || null,
-            perUserLimit: o.perUserLimit ?? null
+            perUserLimit: o.perUserLimit ?? null,
+            approvalStatus: o.approvalStatus || 'approved',
+            createdByRestaurantId: o.createdByRestaurantId ? String(o.createdByRestaurantId) : null,
+            rejectionReason: o.rejectionReason || ''
         };
     });
 
@@ -3362,6 +3365,9 @@ export async function createAdminOffer(body) {
         startDate: body.startDate,
         isFirstOrderOnly: body.isFirstOrderOnly ?? false,
         endDate: body.endDate,
+        approvalStatus: 'approved',
+        createdByRestaurantId: null,
+        rejectionReason: '',
         status: body.endDate && new Date(body.endDate).getTime() <= Date.now() ? 'inactive' : 'active',
         showInCart: true
     });
@@ -3419,6 +3425,8 @@ export async function updateAdminOffer(id, body) {
         isFirstOrderOnly: body.isFirstOrderOnly ?? false,
         endDate: body.endDate,
         status: body.endDate && new Date(body.endDate).getTime() <= Date.now() ? 'inactive' : 'active',
+        approvalStatus: 'approved',
+        rejectionReason: ''
     };
 
     const updated = await FoodOffer.findByIdAndUpdate(
@@ -3436,6 +3444,82 @@ export async function deleteAdminOffer(id) {
     if (!deleted) return null;
     await FoodOfferUsage.deleteMany({ offerId: new mongoose.Types.ObjectId(id) });
     return { id };
+}
+
+export async function getPendingRestaurantOffers(query = {}) {
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.min(200, Math.max(1, Number(query.limit) || 50));
+    const skip = (page - 1) * limit;
+
+    const filter = { approvalStatus: 'pending' };
+    const [list, total] = await Promise.all([
+        FoodOffer.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate({ path: 'restaurantId', select: 'restaurantName' })
+            .lean(),
+        FoodOffer.countDocuments(filter)
+    ]);
+
+    const offers = list.map((o, idx) => ({
+        _id: o._id,
+        sl: skip + idx + 1,
+        couponCode: o.couponCode,
+        discountType: o.discountType,
+        discountValue: o.discountValue,
+        customerScope: o.customerScope,
+        minOrderValue: o.minOrderValue ?? 0,
+        maxDiscount: o.maxDiscount ?? null,
+        usageLimit: o.usageLimit ?? null,
+        perUserLimit: o.perUserLimit ?? null,
+        startDate: o.startDate || null,
+        endDate: o.endDate || null,
+        restaurantId: o.restaurantId?._id ? String(o.restaurantId._id) : (o.restaurantId ? String(o.restaurantId) : null),
+        restaurantName: o.restaurantId?.restaurantName || 'Selected Restaurant',
+        createdByRestaurantId: o.createdByRestaurantId ? String(o.createdByRestaurantId) : null,
+        createdAt: o.createdAt || null
+    }));
+
+    const pages = Math.ceil(total / limit) || 1;
+    return {
+        offers,
+        pagination: { page, limit, total, pages }
+    };
+}
+
+export async function approveRestaurantOffer(id) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
+    const updated = await FoodOffer.findByIdAndUpdate(
+        id,
+        {
+            $set: {
+                approvalStatus: 'approved',
+                status: 'active',
+                showInCart: true,
+                restaurantScope: 'selected',
+                rejectionReason: ''
+            }
+        },
+        { new: true }
+    ).lean();
+    return updated;
+}
+
+export async function rejectRestaurantOffer(id, reason) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
+    const updated = await FoodOffer.findByIdAndUpdate(
+        id,
+        {
+            $set: {
+                approvalStatus: 'rejected',
+                status: 'inactive',
+                rejectionReason: String(reason || '').trim()
+            }
+        },
+        { new: true }
+    ).lean();
+    return updated;
 }
 
 export async function expireExpiredOffers() {

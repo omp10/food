@@ -90,20 +90,21 @@ export async function calculateOrderPricing(userId, dto) {
     ? String(dto.couponCode).trim().toUpperCase()
     : "";
 
-  if (codeRaw) {
-    const now = new Date();
-    const offer = await FoodOffer.findOne({ couponCode: codeRaw }).lean();
-    if (offer) {
-      const statusOk = offer.status === "active";
-      const startOk = !offer.startDate || now >= new Date(offer.startDate);
-      const endOk = !offer.endDate || now < new Date(offer.endDate);
-      const scopeOk =
-        offer.restaurantScope !== "selected" ||
-        String(offer.restaurantId || "") === String(dto.restaurantId || "");
-      const minOk = subtotal >= (Number(offer.minOrderValue) || 0);
-      let usageOk = true;
-      if (
-        Number(offer.usageLimit) > 0 &&
+    if (codeRaw) {
+        const now = new Date();
+        const offer = await FoodOffer.findOne({ couponCode: codeRaw }).lean();
+        if (offer) {
+            const approvalOk = (offer.approvalStatus || 'approved') === 'approved';
+            const statusOk = offer.status === "active";
+            const startOk = !offer.startDate || now >= new Date(offer.startDate);
+            const endOk = !offer.endDate || now < new Date(offer.endDate);
+            const scopeOk =
+                offer.restaurantScope !== "selected" ||
+                String(offer.restaurantId || "") === String(dto.restaurantId || "");
+            const minOk = subtotal >= (Number(offer.minOrderValue) || 0);
+            let usageOk = true;
+            if (
+                Number(offer.usageLimit) > 0 &&
         Number(offer.usedCount || 0) >= Number(offer.usageLimit)
       ) {
         usageOk = false;
@@ -127,21 +128,22 @@ export async function calculateOrderPricing(userId, dto) {
         });
         firstOrderOk = c === 0;
       }
-      if (userId && offer.isFirstOrderOnly === true) {
-        const c2 = await FoodOrder.countDocuments({
-          userId: new mongoose.Types.ObjectId(userId),
-        });
-        if (c2 > 0) firstOrderOk = false;
-      }
+            if (userId && offer.isFirstOrderOnly === true) {
+                const c2 = await FoodOrder.countDocuments({
+                    userId: new mongoose.Types.ObjectId(userId),
+                });
+                if (c2 > 0) firstOrderOk = false;
+            }
 
-      const allowed =
-        statusOk &&
-        startOk &&
-        endOk &&
-        scopeOk &&
-        minOk &&
-        usageOk &&
-        perUserOk &&
+            const allowed =
+                approvalOk &&
+                statusOk &&
+                startOk &&
+                endOk &&
+                scopeOk &&
+                minOk &&
+                usageOk &&
+                perUserOk &&
         firstOrderOk;
 
       if (allowed) {

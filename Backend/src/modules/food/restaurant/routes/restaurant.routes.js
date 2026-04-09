@@ -41,6 +41,12 @@ import {
     updateRestaurantFoodController
 } from '../controllers/restaurantFood.controller.js';
 import {
+    createRestaurantOfferController,
+    deleteRestaurantOfferController,
+    updateRestaurantOfferController,
+    listRestaurantOffersController
+} from '../controllers/restaurantOffer.controller.js';
+import {
     listAddonsController,
     createAddonController,
     updateAddonController,
@@ -180,6 +186,12 @@ router.get('/addons', authMiddleware, requireRestaurant, listAddonsController);
 router.post('/addons', authMiddleware, requireRestaurant, createAddonController);
 router.patch('/addons/:id', authMiddleware, requireRestaurant, updateAddonController);
 router.delete('/addons/:id', authMiddleware, requireRestaurant, deleteAddonController);
+
+// Coupons (restaurant-created, pending admin approval)
+router.post('/coupons', authMiddleware, requireRestaurant, createRestaurantOfferController);
+router.get('/coupons', authMiddleware, requireRestaurant, listRestaurantOffersController);
+router.patch('/coupons/:id', authMiddleware, requireRestaurant, updateRestaurantOfferController);
+router.delete('/coupons/:id', authMiddleware, requireRestaurant, deleteRestaurantOfferController);
 
 // Orders (restaurant dashboard)
 router.get('/orders', authMiddleware, requireRestaurant, orderController.listOrdersRestaurantController);

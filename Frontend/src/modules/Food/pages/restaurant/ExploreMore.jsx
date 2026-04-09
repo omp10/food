@@ -29,6 +29,7 @@ import {
   Calendar,
   MapPin,
   LogOut,
+  TicketPercent,
 } from "lucide-react"
 import { Card, CardContent } from "@food/components/ui/card"
 import { DateRangeCalendar } from "@food/components/ui/date-range-calendar"
@@ -737,6 +738,7 @@ export default function ExploreMore() {
     { id: 1, label: "Outlet info", icon: Info, route: "/restaurant/outlet-info" },
     { id: 2, label: "Outlet timings", icon: Clock, route: "/restaurant/outlet-timings" },
     { id: 3, label: "Menu categories", icon: Settings, route: "/restaurant/menu-categories" },
+    { id: 4, label: "Coupons", icon: TicketPercent, route: "/restaurant/coupon" },
   ]
 
   const settingsItems = [

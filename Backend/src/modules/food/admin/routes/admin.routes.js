@@ -105,10 +105,13 @@ router.patch('/foods/:id/reject', foodApprovalController.rejectFoodItemControlle
 
 // ----- Offers & Coupons -----
 router.get('/offers', adminController.getAllOffers);
+router.get('/offers/pending', adminController.getPendingRestaurantOffers);
 router.post('/offers', adminController.createAdminOffer);
 router.patch('/offers/:id/cart-visibility', adminController.updateAdminOfferCartVisibility);
 router.patch('/offers/:id', adminController.updateAdminOffer);
 router.delete('/offers/:id', adminController.deleteAdminOffer);
+router.patch('/offers/:id/approve', adminController.approveRestaurantOffer);
+router.patch('/offers/:id/reject', adminController.rejectRestaurantOffer);
 
 // ----- Feedback Experience (Admin) -----
 router.get('/feedback-experiences', feedbackExperienceController.getFeedbackExperiences);

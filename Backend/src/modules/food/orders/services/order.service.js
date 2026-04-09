@@ -564,6 +564,7 @@ export async function calculateOrder(userId, dto) {
     if (!offer) {
       discount = 0;
     } else {
+      const approvalOk = (offer.approvalStatus || "approved") === "approved";
       const statusOk = offer.status === "active";
       const startOk = !offer.startDate || now >= new Date(offer.startDate);
       const endOk = !offer.endDate || now < new Date(offer.endDate);
@@ -600,6 +601,7 @@ export async function calculateOrder(userId, dto) {
         if (c2 > 0) firstOrderOk = false;
       }
       const allowed =
+        approvalOk &&
         statusOk &&
         startOk &&
         endOk &&

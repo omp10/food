@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from "react"
-import { Search, Pencil, Trash2, X } from "lucide-react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
+import { Search, Pencil, Trash2, X, Loader2 } from "lucide-react"
 import { adminAPI } from "@food/api"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
@@ -16,10 +16,16 @@ export default function Coupons() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const [submitSuccess, setSubmitSuccess] = useState("")
+  const [viewOnly, setViewOnly] = useState(false)
   const [updatingCartVisibility, setUpdatingCartVisibility] = useState({})
   const [deletingOffer, setDeletingOffer] = useState({})
   const [editingOfferId, setEditingOfferId] = useState(null)
   const [errors, setErrors] = useState({})
+  const [pendingOffers, setPendingOffers] = useState([])
+  const [loadingPending, setLoadingPending] = useState(false)
+  const [pendingError, setPendingError] = useState("")
+  const [processingPending, setProcessingPending] = useState({})
+  const formTopRef = useRef(null)
   const [formData, setFormData] = useState({
     couponCode: "",
     discountType: "percentage",
@@ -43,7 +49,11 @@ export default function Coupons() {
       const response = await adminAPI.getAllOffers({})
 
       if (response?.data?.success) {
-        setOffers(response.data.data.offers || [])
+        const list = response.data.data.offers || []
+        const nonPending = Array.isArray(list)
+          ? list.filter((o) => (o.approvalStatus || "approved") !== "pending")
+          : []
+        setOffers(nonPending)
       } else {
         setError("Failed to fetch offers")
       }
@@ -55,9 +65,24 @@ export default function Coupons() {
     }
   }, [])
 
+  const fetchPendingOffers = useCallback(async () => {
+    try {
+      setLoadingPending(true)
+      setPendingError("")
+      const res = await adminAPI.getPendingRestaurantOffers({ limit: 100 })
+      const list = res?.data?.data?.offers || res?.data?.offers || []
+      setPendingOffers(list)
+    } catch (err) {
+      setPendingError(err?.response?.data?.message || "Failed to load pending coupons")
+    } finally {
+      setLoadingPending(false)
+    }
+  }, [])
+
   useEffect(() => {
     fetchOffers()
-  }, [fetchOffers])
+    fetchPendingOffers()
+  }, [fetchOffers, fetchPendingOffers])
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -183,32 +208,56 @@ export default function Coupons() {
   }
 
   const handleEditClick = (offer) => {
-    setFormData({
-      couponCode: offer.couponCode || "",
-      discountType: offer.discountType || "percentage",
-      discountValue: offer.discountType === 'flat-price' 
-        ? (Number(offer.originalPrice || 0) - Number(offer.discountedPrice || 0))
-        : (offer.discountPercentage || ""),
-      customerScope: offer.customerGroup === 'new' ? 'first-time' : 'all',
-      restaurantScope: offer.restaurantScope || "all",
-      restaurantId: offer.restaurantId || "",
-      endDate: offer.endDate ? new Date(offer.endDate).toISOString().split('T')[0] : "",
-      startDate: offer.startDate ? new Date(offer.startDate).toISOString().split('T')[0] : "",
-      minOrderValue: offer.minOrderValue ?? "",
-      maxDiscount: offer.maxDiscount ?? "",
-      usageLimit: offer.usageLimit ?? "",
-      perUserLimit: offer.perUserLimit ?? "",
-      isFirstOrderOnly: !!offer.isFirstOrderOnly,
-    })
-    setEditingOfferId(offer.offerId)
     setIsAddOpen(true)
+    setViewOnly(false)
     setSubmitError("")
     setSubmitSuccess("")
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    try {
+      const isFlat = offer.discountType === "flat-price"
+      const discountValueRaw = isFlat
+        ? (offer.discountValue ?? (Number(offer.originalPrice || 0) - Number(offer.discountedPrice || 0)))
+        : (offer.discountPercentage ?? offer.discountValue ?? 0)
+      const discountValue = Number(discountValueRaw)
+
+      const startIso = offer.startDate ? new Date(offer.startDate) : null
+      const endIso = offer.endDate ? new Date(offer.endDate) : null
+      const safeStart = startIso && !Number.isNaN(startIso.getTime()) ? startIso.toISOString().split("T")[0] : ""
+      const safeEnd = endIso && !Number.isNaN(endIso.getTime()) ? endIso.toISOString().split("T")[0] : ""
+
+      setFormData({
+        couponCode: offer.couponCode || "",
+        discountType: offer.discountType || "percentage",
+        discountValue: Number.isFinite(discountValue) ? discountValue : "",
+        customerScope: offer.customerGroup === "new" ? "first-time" : (offer.customerScope || "all"),
+        restaurantScope: offer.restaurantScope || "all",
+        restaurantId: offer.restaurantId || "",
+        endDate: safeEnd,
+        startDate: safeStart,
+        minOrderValue: offer.minOrderValue ?? "",
+        maxDiscount: offer.maxDiscount ?? "",
+        usageLimit: offer.usageLimit ?? "",
+        perUserLimit: offer.perUserLimit ?? "",
+        isFirstOrderOnly: !!offer.isFirstOrderOnly,
+      })
+      setEditingOfferId(offer.offerId || offer._id)
+    } catch (err) {
+      debugError("Edit failed:", err)
+      setSubmitError(err?.message || "Unable to open edit form")
+    } finally {
+      if (formTopRef.current) {
+        formTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" })
+      }
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (viewOnly) {
+      setSubmitError("View mode only. Close the form to continue.")
+      return
+    }
     setSubmitError("")
     setSubmitSuccess("")
     const { valid } = validateForm()
@@ -304,6 +353,66 @@ export default function Coupons() {
     }
   }
 
+  const handleApprovePending = async (offerId) => {
+    if (!offerId || processingPending[offerId]) return
+    try {
+      setProcessingPending((prev) => ({ ...prev, [offerId]: true }))
+      await adminAPI.approveRestaurantOffer(offerId)
+      setPendingOffers((prev) => prev.filter((p) => String(p._id) !== String(offerId)))
+      await fetchOffers()
+    } catch (err) {
+      setPendingError(err?.response?.data?.message || "Failed to approve coupon")
+    } finally {
+      setProcessingPending((prev) => ({ ...prev, [offerId]: false }))
+    }
+  }
+
+  const handleViewPending = (offer) => {
+    try {
+      setFormData({
+        couponCode: offer.couponCode || "",
+        discountType: offer.discountType || "percentage",
+        discountValue: offer.discountValue != null ? Number(offer.discountValue) : "",
+        customerScope: offer.customerScope || "all",
+        restaurantScope: offer.restaurantScope || "selected",
+        restaurantId: offer.restaurantId || "",
+        endDate: offer.endDate ? new Date(offer.endDate).toISOString().split("T")[0] : "",
+        startDate: offer.startDate ? new Date(offer.startDate).toISOString().split("T")[0] : "",
+        minOrderValue: offer.minOrderValue ?? "",
+        maxDiscount: offer.maxDiscount ?? "",
+        usageLimit: offer.usageLimit ?? "",
+        perUserLimit: offer.perUserLimit ?? "",
+        isFirstOrderOnly: !!offer.isFirstOrderOnly,
+      })
+      setEditingOfferId(null)
+      setViewOnly(true)
+      setIsAddOpen(true)
+      setSubmitError("")
+      setSubmitSuccess("")
+      if (formTopRef.current) {
+        formTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" })
+      }
+    } catch (err) {
+      setSubmitError(err?.message || "Unable to open view")
+    }
+  }
+
+  const handleRejectPending = async (offerId) => {
+    if (!offerId || processingPending[offerId]) return
+    const reason = window.prompt("Enter rejection reason (optional):") || ""
+    try {
+      setProcessingPending((prev) => ({ ...prev, [offerId]: true }))
+      await adminAPI.rejectRestaurantOffer(offerId, reason)
+      setPendingOffers((prev) => prev.filter((p) => String(p._id) !== String(offerId)))
+    } catch (err) {
+      setPendingError(err?.response?.data?.message || "Failed to reject coupon")
+    } finally {
+      setProcessingPending((prev) => ({ ...prev, [offerId]: false }))
+    }
+  }
+
   // Filter offers based on search query
   const filteredOffers = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -352,11 +461,12 @@ export default function Coupons() {
             </button>
           </div>
 
-          {isAddOpen && (
-            <form
-              onSubmit={handleSubmit}
-              className="border border-slate-200 rounded-xl p-4 mb-5 bg-slate-50 relative"
-            >
+      {isAddOpen && (
+        <form
+          ref={formTopRef}
+          onSubmit={handleSubmit}
+          className="border border-slate-200 rounded-xl p-4 mb-5 bg-slate-50 relative"
+        >
               <h3 className="text-base font-semibold text-slate-900 mb-3">
                 {editingOfferId ? "Edit Coupon" : "Create Coupon"}
               </h3>
@@ -543,24 +653,32 @@ export default function Coupons() {
                 </div>
               )}
 
-              {submitSuccess && (
-                <div className="mt-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-emerald-700 text-sm">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                  {submitSuccess}
-                </div>
-              )}
-
-              <div className="mt-4">
-                <button
-                  type="submit"
-                  disabled={isSubmitting || Object.keys(errors).length > 0}
-                  className="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isSubmitting ? (editingOfferId ? "Updating..." : "Creating...") : (editingOfferId ? "Update Coupon" : "Create Coupon")}
-                </button>
-              </div>
-            </form>
+          {submitSuccess && (
+            <div className="mt-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-emerald-700 text-sm">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+              {submitSuccess}
+            </div>
           )}
+
+          <div className="mt-4">
+            <button
+              type="submit"
+              disabled={viewOnly || isSubmitting || Object.keys(errors).length > 0}
+              className="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            >
+              {viewOnly
+                ? "Close view mode to edit"
+                : isSubmitting
+                ? editingOfferId
+                  ? "Updating..."
+                  : "Creating..."
+                : editingOfferId
+                ? "Update Coupon"
+                : "Create Coupon"}
+            </button>
+          </div>
+        </form>
+      )}
 
           {/* Search Bar */}
           <div className="relative">
@@ -573,6 +691,85 @@ export default function Coupons() {
               className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
+        </div>
+
+        {/* Pending approvals */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+          <div className="flex items-center justify-between mb-4 gap-2">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Pending Restaurant Coupons</h2>
+              <p className="text-xs text-slate-500">Approve or reject coupons submitted by restaurants.</p>
+            </div>
+            <button
+              type="button"
+              onClick={fetchPendingOffers}
+              className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50"
+              disabled={loadingPending}
+            >
+              Refresh
+            </button>
+          </div>
+
+          {loadingPending ? (
+            <div className="flex items-center gap-2 text-slate-600 text-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading pending coupons...
+            </div>
+          ) : pendingError ? (
+            <div className="text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">{pendingError}</div>
+          ) : pendingOffers.length === 0 ? (
+            <p className="text-sm text-slate-500">No pending coupons right now.</p>
+          ) : (
+            <div className="space-y-3">
+              {pendingOffers.map((offer) => (
+                <div
+                  key={offer._id}
+                  className="border border-slate-200 rounded-lg p-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-semibold text-slate-900">{offer.couponCode}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">pending</span>
+                    </div>
+                    <div className="text-xs text-slate-600">
+                      {offer.restaurantName || "Selected restaurant"} • {offer.discountType === "flat-price"
+                        ? `₹${offer.discountValue} OFF`
+                        : `${offer.discountValue}% OFF${offer.maxDiscount ? ` (up to ₹${offer.maxDiscount})` : ""}`}
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      Created: {offer.createdAt ? new Date(offer.createdAt).toLocaleString() : "—"}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleViewPending(offer)}
+                      className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 disabled:opacity-60"
+                      disabled={processingPending[offer._id]}
+                    >
+                      View
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApprovePending(offer._id)}
+                      disabled={processingPending[offer._id]}
+                      className="px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 disabled:opacity-60"
+                    >
+                      {processingPending[offer._id] ? "Approving..." : "Approve"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRejectPending(offer._id)}
+                      disabled={processingPending[offer._id]}
+                      className="px-3 py-2 rounded-lg bg-red-50 text-red-700 text-sm font-semibold hover:bg-red-100 disabled:opacity-60"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Offers List */}
