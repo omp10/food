@@ -11,8 +11,8 @@ const createOfferSchema = z.object({
     restaurantId: z.string().optional(),
     endDate: z.string().optional().or(z.literal('')).or(z.undefined()),
     startDate: z.string().optional().or(z.literal('')).or(z.undefined()),
-    minOrderValue: z.number().min(0).optional(),
-    maxDiscount: z.number().min(0).optional(),
+    minOrderValue: z.number().positive('Minimum order value must be greater than 0').optional(),
+    maxDiscount: z.number().positive('Max discount must be greater than 0').optional(),
     usageLimit: z.number().min(0).optional(),
     perUserLimit: z.number().min(0).optional(),
     isFirstOrderOnly: z.boolean().optional()

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { Search } from "lucide-react"
+import { Search, Pencil, Trash2, X } from "lucide-react"
 import { adminAPI } from "@food/api"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
@@ -18,6 +18,7 @@ export default function Coupons() {
   const [submitSuccess, setSubmitSuccess] = useState("")
   const [updatingCartVisibility, setUpdatingCartVisibility] = useState({})
   const [deletingOffer, setDeletingOffer] = useState({})
+  const [editingOfferId, setEditingOfferId] = useState(null)
   const [errors, setErrors] = useState({})
   const [formData, setFormData] = useState({
     couponCode: "",
@@ -98,7 +99,8 @@ export default function Coupons() {
     if (pct && (f.maxDiscount === "" || f.maxDiscount === null || f.maxDiscount === undefined)) {
       e.maxDiscount = "Max discount is required for percentage coupons"
     }
-    if (f.minOrderValue !== "" && Number(f.minOrderValue) < 0) e.minOrderValue = "Min order cannot be negative"
+    if (f.minOrderValue !== "" && Number(f.minOrderValue) <= 0) e.minOrderValue = "Min order must be greater than 0"
+    if (pct && f.maxDiscount !== "" && Number(f.maxDiscount) <= 0) e.maxDiscount = "Max discount must be greater than 0"
     if (f.usageLimit !== "" && Number(f.usageLimit) < 1) e.usageLimit = "Usage limit must be at least 1"
     if (f.perUserLimit !== "" && Number(f.perUserLimit) < 1) e.perUserLimit = "Per user limit must be at least 1"
     const start = f.startDate ? new Date(`${f.startDate}T00:00:00`) : null
@@ -176,9 +178,36 @@ export default function Coupons() {
       perUserLimit: "",
       isFirstOrderOnly: false,
     })
+    setEditingOfferId(null)
+    setErrors({})
   }
 
-  const handleCreateCoupon = async (e) => {
+  const handleEditClick = (offer) => {
+    setFormData({
+      couponCode: offer.couponCode || "",
+      discountType: offer.discountType || "percentage",
+      discountValue: offer.discountType === 'flat-price' 
+        ? (Number(offer.originalPrice || 0) - Number(offer.discountedPrice || 0))
+        : (offer.discountPercentage || ""),
+      customerScope: offer.customerGroup === 'new' ? 'first-time' : 'all',
+      restaurantScope: offer.restaurantScope || "all",
+      restaurantId: offer.restaurantId || "",
+      endDate: offer.endDate ? new Date(offer.endDate).toISOString().split('T')[0] : "",
+      startDate: offer.startDate ? new Date(offer.startDate).toISOString().split('T')[0] : "",
+      minOrderValue: offer.minOrderValue ?? "",
+      maxDiscount: offer.maxDiscount ?? "",
+      usageLimit: offer.usageLimit ?? "",
+      perUserLimit: offer.perUserLimit ?? "",
+      isFirstOrderOnly: !!offer.isFirstOrderOnly,
+    })
+    setEditingOfferId(offer.offerId)
+    setIsAddOpen(true)
+    setSubmitError("")
+    setSubmitSuccess("")
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setSubmitError("")
     setSubmitSuccess("")
@@ -221,14 +250,21 @@ export default function Coupons() {
         perUserLimit: formData.perUserLimit !== "" ? Number(formData.perUserLimit) : undefined,
         isFirstOrderOnly: Boolean(formData.isFirstOrderOnly),
       }
-      await adminAPI.createAdminOffer(payload)
 
-      setSubmitSuccess("Coupon created successfully")
+      if (editingOfferId) {
+        await adminAPI.updateAdminOffer(editingOfferId, payload)
+        setSubmitSuccess("Coupon updated successfully")
+      } else {
+        await adminAPI.createAdminOffer(payload)
+        setSubmitSuccess("Coupon created successfully")
+      }
+
       resetForm()
+      setIsAddOpen(false)
       await fetchOffers()
     } catch (err) {
-      debugError("Error creating coupon:", err)
-      setSubmitError(err?.response?.data?.message || "Failed to create coupon")
+      debugError("Error saving coupon:", err)
+      setSubmitError(err?.response?.data?.message || "Failed to save coupon")
     } finally {
       setIsSubmitting(false)
     }
@@ -292,22 +328,38 @@ export default function Coupons() {
             <button
               type="button"
               onClick={() => {
+                if (isAddOpen) {
+                  resetForm()
+                }
                 setIsAddOpen((prev) => !prev)
                 setSubmitError("")
                 setSubmitSuccess("")
               }}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
+                isAddOpen 
+                  ? "bg-slate-100 text-slate-700 hover:bg-slate-200" 
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
             >
-              {isAddOpen ? "Close" : "Add Coupon"}
+              {isAddOpen ? (
+                <>
+                  <X className="w-4 h-4" />
+                  Cancel
+                </>
+              ) : (
+                "Add Coupon"
+              )}
             </button>
           </div>
 
           {isAddOpen && (
             <form
-              onSubmit={handleCreateCoupon}
-              className="border border-slate-200 rounded-xl p-4 mb-5 bg-slate-50"
+              onSubmit={handleSubmit}
+              className="border border-slate-200 rounded-xl p-4 mb-5 bg-slate-50 relative"
             >
-              <h3 className="text-base font-semibold text-slate-900 mb-3">Create Coupon</h3>
+              <h3 className="text-base font-semibold text-slate-900 mb-3">
+                {editingOfferId ? "Edit Coupon" : "Create Coupon"}
+              </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div>
@@ -484,9 +536,17 @@ export default function Coupons() {
                 )}
               </div>
 
-              {(submitError || submitSuccess) && (
-                <div className={`mt-3 text-sm font-medium ${submitError ? "text-red-600" : "text-green-600"}`}>
-                  {submitError || submitSuccess}
+              {submitError && (
+                <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2 text-red-700 text-sm animate-shake">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                  {submitError}
+                </div>
+              )}
+
+              {submitSuccess && (
+                <div className="mt-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-emerald-700 text-sm">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                  {submitSuccess}
                 </div>
               )}
 
@@ -496,7 +556,7 @@ export default function Coupons() {
                   disabled={isSubmitting || Object.keys(errors).length > 0}
                   className="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isSubmitting ? "Creating..." : "Create Coupon"}
+                  {isSubmitting ? (editingOfferId ? "Updating..." : "Creating...") : (editingOfferId ? "Update Coupon" : "Create Coupon")}
                 </button>
               </div>
             </form>
@@ -671,14 +731,25 @@ export default function Coupons() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteOffer(offer.offerId)}
-                          disabled={!!deletingOffer[offer.offerId]}
-                          className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 disabled:opacity-60"
-                        >
-                          {deletingOffer[offer.offerId] ? "Deleting..." : "Delete"}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleEditClick(offer)}
+                            className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                            title="Edit"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteOffer(offer.offerId)}
+                            disabled={!!deletingOffer[offer.offerId]}
+                            className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-60"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -3331,7 +3331,11 @@ export async function getAllOffers(_query = {}) {
             maxDiscount: o.maxDiscount ?? null,
             usageLimit: o.usageLimit ?? null,
             usedCount: o.usedCount ?? 0,
-            restaurantScope: o.restaurantScope
+            restaurantScope: o.restaurantScope,
+            restaurantId: o.restaurantId?._id ? String(o.restaurantId._id) : (o.restaurantId ? String(o.restaurantId) : ""),
+            isFirstOrderOnly: !!o.isFirstOrderOnly,
+            startDate: o.startDate || null,
+            perUserLimit: o.perUserLimit ?? null
         };
     });
 
@@ -3394,6 +3398,35 @@ export async function updateAdminOfferCartVisibility(offerId, itemId, showInCart
         { $set: { showInCart: Boolean(showInCart) } },
         { new: true }
     ).lean();
+    return updated;
+}
+
+export async function updateAdminOffer(id, body) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
+
+    const updateData = {
+        couponCode: body.couponCode,
+        discountType: body.discountType,
+        discountValue: body.discountValue,
+        customerScope: body.customerScope,
+        restaurantScope: body.restaurantScope,
+        restaurantId: body.restaurantScope === 'selected' ? body.restaurantId : undefined,
+        minOrderValue: body.minOrderValue ?? 0,
+        maxDiscount: body.maxDiscount ?? null,
+        usageLimit: body.usageLimit ?? null,
+        perUserLimit: body.perUserLimit ?? null,
+        startDate: body.startDate,
+        isFirstOrderOnly: body.isFirstOrderOnly ?? false,
+        endDate: body.endDate,
+        status: body.endDate && new Date(body.endDate).getTime() <= Date.now() ? 'inactive' : 'active',
+    };
+
+    const updated = await FoodOffer.findByIdAndUpdate(
+        id,
+        { $set: updateData },
+        { new: true }
+    ).lean();
+
     return updated;
 }
 
