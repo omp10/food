@@ -997,7 +997,11 @@ export const adminAPI = {
     });
   },
   /** Public Offers for users (global/selected restaurant) */
-  getPublicOffers: () => apiClient.get("/food/restaurant/offers"),
+  // Public restaurant offers; if restaurantId provided, hits public route
+  getPublicOffers: (restaurantId) =>
+    restaurantId
+      ? apiClient.get(`/food/restaurant/public/restaurants/${restaurantId}/offers`)
+      : apiClient.get("/food/restaurant/offers"),
   /** Restaurant-created coupons (pending admin approval) */
   createCoupon: (body = {}) =>
     apiClient.post("/food/restaurant/coupons", body ?? {}, { contextModule: "restaurant" }),
@@ -1333,8 +1337,18 @@ export const adminAPI = {
     apiClient.get(`/food/restaurant/restaurants/${String(id)}/addons`, {
       ...config,
     }),
-  getPublicOffers: (params = {}, config = {}) =>
-    apiClient.get("/food/restaurant/offers", { params, ...config }),
+  getPublicOffers: (restaurantIdOrParams = {}, config = {}) => {
+    if (typeof restaurantIdOrParams === "string" && restaurantIdOrParams.trim()) {
+      return apiClient.get(
+        `/food/restaurant/public/restaurants/${String(restaurantIdOrParams).trim()}/offers`,
+        { ...config },
+      )
+    }
+    return apiClient.get("/food/restaurant/offers", {
+      params: restaurantIdOrParams || {},
+      ...config,
+    })
+  },
   /** Resend delivery notification (restaurant dashboard) */
   resendDeliveryNotification: (orderId) =>
     apiClient.post(`/food/restaurant/orders/${String(orderId)}/resend-notification`, {}, {

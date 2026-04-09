@@ -29,7 +29,9 @@ export default function FoodHeroHeaderShell({
     <>
       <div
         ref={stickyHeaderRef}
-        className="md:hidden fixed top-0 left-0 right-0 overflow-x-clip z-[80] transition-colors duration-300"
+        className={`md:hidden fixed top-0 left-0 right-0 overflow-x-clip z-[80] transition-all duration-300 ${
+          hasScrolledPastBanner ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
         style={{
           backgroundColor: scrolledHeaderColor,
         }}
@@ -57,7 +59,20 @@ export default function FoodHeroHeaderShell({
         {...restBannerShellProps}
         style={style}
       >
-        {bannerContent}
+        <HomeHeader
+          activeTab="food"
+          setActiveTab={() => {}}
+          location={location}
+          savedAddressText={savedAddressText}
+          handleLocationClick={handleLocationClick}
+          handleSearchFocus={handleSearchFocus}
+          placeholderIndex={placeholderIndex}
+          placeholders={placeholders}
+          vegMode={showVegMode ? vegMode : false}
+          onVegModeChange={showVegMode ? onVegModeChange : undefined}
+          showVegMode={showVegMode}
+          bannerContent={bannerContent}
+        />
       </section>
     </>
   );

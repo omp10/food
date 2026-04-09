@@ -218,7 +218,9 @@ export default function HomeHeader({
           className={`rounded-none border-none px-3 pt-2 pb-3 backdrop-blur-[4px] ${
             compact
               ? "bg-transparent shadow-none"
-              : BRAND_THEME.tokens.homepage.header.heroOverlay
+              : isFood
+                ? "bg-transparent shadow-none"
+                : BRAND_THEME.tokens.homepage.header.heroOverlay
           }`}
         >
           <div className="flex items-center justify-between mb-3">

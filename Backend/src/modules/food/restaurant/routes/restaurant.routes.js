@@ -50,7 +50,8 @@ import {
     createRestaurantProductOfferController,
     listRestaurantProductOffersController,
     deleteRestaurantProductOfferController,
-    updateRestaurantProductOfferController
+    updateRestaurantProductOfferController,
+    listPublicRestaurantProductOffersController
 } from '../controllers/restaurantProductOffer.controller.js';
 import {
     listAddonsController,
@@ -204,6 +205,8 @@ router.post('/offers/restaurant', authMiddleware, requireRestaurant, createResta
 router.get('/offers/restaurant', authMiddleware, requireRestaurant, listRestaurantProductOffersController);
 router.delete('/offers/restaurant/:id', authMiddleware, requireRestaurant, deleteRestaurantProductOfferController);
 router.patch('/offers/restaurant/:id', authMiddleware, requireRestaurant, updateRestaurantProductOfferController);
+// Public: list offers for a restaurant for user-facing pages
+router.get('/public/restaurants/:id/offers', listPublicRestaurantProductOffersController);
 
 // Orders (restaurant dashboard)
 router.get('/orders', authMiddleware, requireRestaurant, orderController.listOrdersRestaurantController);

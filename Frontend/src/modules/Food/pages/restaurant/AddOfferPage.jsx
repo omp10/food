@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { ArrowLeft, Check, Loader2, X } from "lucide-react"
 import { useNavigate, useParams } from "react-router-dom"
 import { restaurantAPI } from "@food/api"
 import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation"
@@ -14,7 +14,7 @@ export default function AddOfferPage() {
   const goBack = useRestaurantBackNavigation()
   const [form, setForm] = useState({
     title: "",
-    productId: "",
+    productIds: [],
     discountType: "percentage",
     discountValue: "",
     maxDiscount: "",
@@ -26,6 +26,12 @@ export default function AddOfferPage() {
   const [products, setProducts] = useState([])
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [loadingExisting, setLoadingExisting] = useState(false)
+  const [showProductsModal, setShowProductsModal] = useState(false)
+
+  const selectedProducts = useMemo(
+    () => products.filter((product) => form.productIds.includes(String(product.id))),
+    [products, form.productIds]
+  )
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -86,9 +92,20 @@ export default function AddOfferPage() {
     setError("")
   }
 
+  const toggleProduct = (productId) => {
+    setForm((prev) => {
+      const exists = prev.productIds.includes(productId)
+      return {
+        ...prev,
+        productIds: exists ? prev.productIds.filter((id) => id !== productId) : [...prev.productIds, productId]
+      }
+    })
+    setError("")
+  }
+
   const handleSubmit = async () => {
     if (!form.title.trim()) return setError("Title is required")
-    if (!form.productId.trim()) return setError("Select a product")
+    if (!Array.isArray(form.productIds) || form.productIds.length === 0) return setError("Select at least one product")
     const dv = Number(form.discountValue)
     if (!Number.isFinite(dv) || dv <= 0) return setError("Discount must be > 0")
     if (form.discountType === "percentage") {
@@ -100,12 +117,14 @@ export default function AddOfferPage() {
       if (isEditMode) {
         await restaurantAPI.updateRestaurantOffer(offerId, {
           ...form,
+          productId: form.productIds[0],
           discountValue: dv,
           maxDiscount: form.discountType === "percentage" ? Number(form.maxDiscount) : undefined
         })
       } else {
         await restaurantAPI.createRestaurantOffer({
           ...form,
+          productId: form.productIds[0],
           discountValue: dv,
           maxDiscount: form.discountType === "percentage" ? Number(form.maxDiscount) : undefined
         })
@@ -129,7 +148,11 @@ export default function AddOfferPage() {
         if (found) {
           setForm({
             title: found.title || "",
-            productId: found.productId || "",
+            productIds: Array.isArray(found.productIds) && found.productIds.length > 0
+              ? found.productIds.map((id) => String(id))
+              : found.productId
+                ? [String(found.productId)]
+                : [],
             discountType: found.discountType || "percentage",
             discountValue: found.discountValue != null ? String(found.discountValue) : "",
             maxDiscount: found.maxDiscount != null ? String(found.maxDiscount) : "",
@@ -165,24 +188,40 @@ export default function AddOfferPage() {
               <Input value={form.title} onChange={(e) => updateField("title", e.target.value)} placeholder="e.g. Combo Saver" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Product</label>
-              <select
-                value={form.productId}
-                onChange={(e) => updateField("productId", e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
-                disabled={loadingProducts}
-              >
-                <option value="">{loadingProducts ? "Loading products..." : "Select a product"}</option>
-                {(!loadingProducts && products.length === 0) ? (
-                  <option value="" disabled>No products found</option>
-                ) : (
-                  products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))
+              <label className="block text-sm font-medium text-gray-700 mb-2">Products</label>
+              <div className="rounded-xl border border-gray-200 bg-white p-3">
+                <button
+                  type="button"
+                  onClick={() => setShowProductsModal(true)}
+                  className="w-full rounded-xl border border-gray-200 bg-slate-50 px-3 py-3 text-left text-sm text-gray-700 transition hover:border-blue-300 hover:bg-blue-50"
+                >
+                  {selectedProducts.length > 0
+                    ? `${selectedProducts.length} product${selectedProducts.length > 1 ? "s" : ""} selected`
+                    : loadingProducts
+                      ? "Loading products..."
+                      : "Select products"}
+                </button>
+
+                {selectedProducts.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {selectedProducts.map((product) => (
+                      <span
+                        key={product.id}
+                        className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
+                      >
+                        {product.name}
+                        <button
+                          type="button"
+                          onClick={() => toggleProduct(String(product.id))}
+                          className="text-blue-600"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
                 )}
-              </select>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
@@ -251,6 +290,74 @@ export default function AddOfferPage() {
           {isEditMode ? "Update Offer" : "Create Offer"}
         </Button>
       </div>
+
+      {showProductsModal && (
+        <div
+          className="fixed inset-0 z-[70] bg-black/40 px-4 py-6"
+          onClick={() => setShowProductsModal(false)}
+        >
+          <div
+            className="mx-auto flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4">
+              <div>
+                <h2 className="text-base font-bold text-gray-900">Select products</h2>
+                <p className="text-xs text-gray-500">Choose one or more food items for this offer.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowProductsModal(false)}
+                className="rounded-full p-2 text-gray-500 hover:bg-gray-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+              {loadingProducts ? (
+                <div className="py-8 text-center text-sm text-gray-500">Loading products...</div>
+              ) : products.length === 0 ? (
+                <div className="py-8 text-center text-sm text-gray-500">No products found</div>
+              ) : (
+                <div className="space-y-2">
+                  {products.map((product) => {
+                    const checked = form.productIds.includes(String(product.id))
+                    return (
+                      <label
+                        key={product.id}
+                        className={`flex cursor-pointer items-center justify-between rounded-2xl border px-3 py-3 transition ${
+                          checked ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"
+                        }`}
+                      >
+                        <div className="min-w-0 pr-3">
+                          <p className="truncate text-sm font-medium text-gray-900">{product.name}</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleProduct(String(product.id))}
+                          className="h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-gray-100 px-4 py-4">
+              <Button
+                type="button"
+                onClick={() => setShowProductsModal(false)}
+                className="w-full bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -74,9 +74,7 @@ export default function OffersPage() {
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="text-base font-semibold text-gray-900">{offer.title}</div>
-                  <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-700">
-                    {offer.approvalStatus || "pending"}
-                  </span>
+                  {/* Approval badge intentionally hidden */}
                 </div>
                 <div className="text-sm text-gray-700">
                   {offer.discountType === "flat-price"
@@ -89,7 +87,6 @@ export default function OffersPage() {
                   to {offer.endDate ? new Date(offer.endDate).toLocaleDateString() : "No expiry"}
                 </div>
                 <div className="flex items-center justify-between pt-2">
-                  <div className="text-xs text-gray-600">Min order: ₹{Number(offer.minOrderValue || 0)}</div>
                   <button
                     onClick={() => handleDelete(offer._id || offer.id)}
                     disabled={!!deleting[offer._id || offer.id]}
@@ -98,15 +95,13 @@ export default function OffersPage() {
                     <Trash2 className="w-4 h-4" />
                     {deleting[offer._id || offer.id] ? "Deleting..." : "Delete"}
                   </button>
-                  {(offer.approvalStatus || "pending") === "pending" && (
-                    <button
-                      onClick={() => navigate(`/restaurant/offers/${offer._id || offer.id}/edit`)}
-                      className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
-                    >
-                      <Pencil className="w-4 h-4" />
-                      Edit
-                    </button>
-                  )}
+                  <button
+                    onClick={() => navigate(`/restaurant/offers/${offer._id || offer.id}/edit`)}
+                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Edit
+                  </button>
                 </div>
               </CardContent>
             </Card>

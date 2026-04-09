@@ -3,7 +3,8 @@ import {
     createRestaurantProductOffer,
     listRestaurantProductOffers,
     deleteRestaurantProductOffer,
-    updateRestaurantProductOffer
+    updateRestaurantProductOffer,
+    listPublicRestaurantProductOffers
 } from '../services/restaurantProductOffer.service.js';
 
 export const createRestaurantProductOfferController = async (req, res, next) => {
@@ -43,6 +44,15 @@ export const updateRestaurantProductOfferController = async (req, res, next) => 
         const offer = await updateRestaurantProductOffer(restaurantId, req.params.id, req.body || {});
         if (!offer) return sendError(res, 404, 'Offer not found');
         return sendResponse(res, 200, 'Offer updated successfully', { offer });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const listPublicRestaurantProductOffersController = async (req, res, next) => {
+    try {
+        const offers = await listPublicRestaurantProductOffers(req.params.id);
+        return sendResponse(res, 200, 'Offers fetched successfully', { offers });
     } catch (error) {
         next(error);
     }

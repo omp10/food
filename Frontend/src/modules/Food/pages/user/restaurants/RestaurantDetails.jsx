@@ -60,6 +60,7 @@ import {
 } from "@food/utils/foodVariants"
 import fssaiLogo from "@food/assets/fssai.png"
 import { RestaurantDetailSkeleton } from "@food/components/ui/loading-skeletons"
+import RestaurantFoodCard from "@food/components/user/restaurants/RestaurantFoodCard"
 
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
@@ -109,6 +110,18 @@ function RestaurantDetailsContent() {
   const [loadingMenuItems, setLoadingMenuItems] = useState(true)
   const [selectedMenuCategory, setSelectedMenuCategory] = useState("all")
   const dishCardRefs = useRef({})
+  const [publicRestaurantOffers, setPublicRestaurantOffers] = useState([])
+  const restaurantItemOffers = useMemo(
+    () => (Array.isArray(publicRestaurantOffers) ? publicRestaurantOffers : []),
+    [publicRestaurantOffers]
+  )
+  const offerHighlightTexts = useMemo(() => {
+    const titles =
+      Array.isArray(restaurantItemOffers) && restaurantItemOffers.length > 0
+        ? restaurantItemOffers.map((o) => o.title || o.offerTitle || "Special offer")
+        : []
+    return titles.length > 0 ? titles : ["Special offers available"]
+  }, [restaurantItemOffers])
 
   const getLineItemIdForDish = (item, variant = null) =>
     buildCartLineId(item?.id || item?._id || "", variant?.id || variant?._id || "")
@@ -118,6 +131,7 @@ function RestaurantDetailsContent() {
     if (variants.length === 0) return null
     return variants.find((variant) => String(variant.id) === String(preferredVariantId || "")) || variants[0]
   }
+
 
   const getDishQuantity = (item, preferredVariantId = "") => {
     const variant = getVariantForDish(item, preferredVariantId)
@@ -542,6 +556,37 @@ function RestaurantDetailsContent() {
           setRestaurant(transformedRestaurant)
           fetchedRestaurantRef.current = true // Mark as fetched
           fetchedSlugRef.current = slug
+
+          // Load public restaurant offers alongside the main restaurant payload so
+          // the top-of-page offer banner is always hydrated on first paint.
+          try {
+            const publicOfferRestaurantId =
+              transformedRestaurant.mongoId ||
+              actualRestaurant?._id ||
+              apiRestaurant?._id ||
+              transformedRestaurant.id
+
+            if (publicOfferRestaurantId) {
+              const publicOffersResponse = await restaurantAPI.getPublicOffers(publicOfferRestaurantId)
+              const publicOffers =
+                publicOffersResponse?.data?.data?.offers ||
+                publicOffersResponse?.data?.offers ||
+                []
+
+              if (Array.isArray(publicOffers) && publicOffers.length > 0) {
+                setPublicRestaurantOffers(publicOffers)
+              } else if (Array.isArray(transformedRestaurant?.offers) && transformedRestaurant.offers.length > 0) {
+                setPublicRestaurantOffers(transformedRestaurant.offers)
+              } else {
+                setPublicRestaurantOffers([])
+              }
+            }
+          } catch (publicOffersError) {
+            debugWarn("Failed to fetch public restaurant offers during restaurant load:", publicOffersError?.message)
+            if (Array.isArray(transformedRestaurant?.offers) && transformedRestaurant.offers.length > 0) {
+              setPublicRestaurantOffers(transformedRestaurant.offers)
+            }
+          }
 
           // Load outlet timings from public endpoint (source of truth for daily opening slots)
           try {
@@ -978,6 +1023,39 @@ function RestaurantDetailsContent() {
 
     fetchRestaurant()
   }, [slug, zoneId, restaurant])
+
+  // Fetch public offers for this restaurant so they show on the page
+  useEffect(() => {
+    // The public offers endpoint expects the restaurant Mongo _id, not a business-facing restaurantId string.
+    const restaurantId = restaurant?.mongoId || restaurant?._id || restaurant?.id || restaurant?.restaurantId
+    if (!restaurantId) return
+
+    const fetchOffers = async () => {
+      try {
+        // 1) Try scoped public endpoint (already filtered server-side)
+        const res = await restaurantAPI.getPublicOffers(restaurantId)
+        const list = res?.data?.data?.offers || res?.data?.offers || []
+        console.debug("Restaurant public offers (scoped)", { restaurantId, count: list?.length, list })
+
+        const fallback = Array.isArray(restaurant?.offers) ? restaurant.offers : []
+        setPublicRestaurantOffers(Array.isArray(list) && list.length > 0 ? list : fallback)
+      } catch (err) {
+        debugWarn("Failed to fetch restaurant offers for user page", err?.message)
+        if (Array.isArray(restaurant?.offers)) {
+          setPublicRestaurantOffers(restaurant.offers)
+        }
+      }
+    }
+
+    fetchOffers()
+  }, [restaurant?.restaurantId, restaurant?.id, restaurant?._id, restaurant?.mongoId, restaurant?.offers])
+
+  // Keep UI in sync if offers are attached directly on restaurant object
+  useEffect(() => {
+    if (Array.isArray(restaurant?.offers) && restaurant.offers.length > 0) {
+      setPublicRestaurantOffers(restaurant.offers)
+    }
+  }, [restaurant?.offers])
 
   // Track previous values to prevent unnecessary recalculations
   const prevCoordsRef = useRef({ userLat: null, userLng: null, restaurantLat: null, restaurantLng: null })
@@ -1884,8 +1962,9 @@ function RestaurantDetailsContent() {
   const highlightOffers = [
     "Upto 50% OFF",
     restaurant?.offerText || "",
+    ...(Array.isArray(restaurantItemOffers) ? restaurantItemOffers.map((offer) => offer?.title || "") : []),
     ...(Array.isArray(restaurant?.offers) ? restaurant.offers.map((offer) => offer?.title || "") : []),
-  ]
+  ].filter(Boolean)
 
   // Auto-rotate images every 3 seconds
   useEffect(() => {
@@ -2172,6 +2251,95 @@ function RestaurantDetailsContent() {
                 </Button>
               </div>
 
+              {/* Inline restaurant offers just below filters */}
+              {restaurantItemOffers.length > 0 && (
+                <div className="w-full flex flex-col gap-3">
+                  {restaurantItemOffers.map((offer, idx) => (
+                    <div
+                      key={`rest-offer-banner-${idx}-${offer?._id || offer?.id || offer?.title || "offer"}`}
+                      className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                    >
+                      {(() => {
+                        const offerProducts =
+                          Array.isArray(offer?.products) && offer.products.length > 0
+                            ? offer.products
+                            : [
+                                {
+                                  id: offer?.productId?._id || offer?.productId || `${idx}-product`,
+                                  name: offer?.productName || offer?.productId?.name || "Offer item",
+                                  image: offer?.productImage || offer?.productId?.image || FOOD_IMAGE_FALLBACK,
+                                  foodType: offer?.productId?.foodType || "Veg",
+                                  preparationTime: offer?.productId?.preparationTime || "",
+                                  description: offer?.productId?.description || "",
+                                  price: offer?.productId?.price ?? null,
+                                  discountedPrice: offer?.productId?.discountedPrice ?? null,
+                                },
+                              ]
+
+                        return (
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-lg font-bold text-slate-900">
+                                {offer?.title || "Special offer"}
+                              </p>
+                              <p className="mt-1 text-sm text-slate-600">
+                                {offer?.discountType === "flat-price"
+                                  ? `Flat \u20B9${offer?.discountValue || 0} OFF`
+                                  : `${offer?.discountValue || 0}% OFF${offer?.maxDiscount ? ` up to \u20B9${offer.maxDiscount}` : ""}`}
+                                {(offer?.startDate || offer?.endDate) && (
+                                  <>
+                                    {" "}·{" "}
+                                    {offer?.startDate ? new Date(offer.startDate).toLocaleDateString() : "Starts now"} to{" "}
+                                    {offer?.endDate ? new Date(offer.endDate).toLocaleDateString() : "No expiry"}
+                                  </>
+                                )}
+                              </p>
+                            </div>
+
+                            <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
+                              {offerProducts.map((product, productIndex) => (
+                                <RestaurantFoodCard
+                                  key={`${product?.id || product?.name || "offer-product"}-${productIndex}`}
+                                  item={product}
+                                  cardRef={(node) => {
+                                    const productId = product?.id || product?._id
+                                    if (!productId) return
+                                    if (node) {
+                                      dishCardRefs.current[productId] = node
+                                    } else {
+                                      delete dishCardRefs.current[productId]
+                                    }
+                                  }}
+                                  onClick={() => handleItemClick(product)}
+                                  highlighted={highlightedDishId === (product?.id || product?._id)}
+                                  highlightStyle={
+                                    highlightedDishId === (product?.id || product?._id)
+                                      ? {
+                                          boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}`,
+                                          borderColor: BRAND_THEME.colors.brand.primary,
+                                        }
+                                      : undefined
+                                  }
+                                  quantity={getDishQuantity(product)}
+                                  formattedPrice={product?.price != null ? getFoodPriceLabel(product) : ""}
+                                  onBookmark={handleBookmarkClick}
+                                  isFavorite={isDishFavorite(product?.id || product?._id, restaurant?.restaurantId || restaurant?._id || restaurant?.id)}
+                                  onShare={handleShareClick}
+                                  onUpdateQuantity={updateItemQuantity}
+                                  disabled={shouldShowGrayscale}
+                                  showRecommended={isRecommendedItem(product)}
+                                  foodImageFallback={FOOD_IMAGE_FALLBACK}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {menuCategories.length > 0 && (
                 <div className="flex items-center gap-2 w-max">
                   <button
@@ -2221,6 +2389,7 @@ function RestaurantDetailsContent() {
                   ))}
                 </div>
               )}
+
             </div>
           </div>
         </div>
@@ -2340,8 +2509,6 @@ function RestaurantDetailsContent() {
                     <div className="space-y-0">
                       {sectionItems.map((item) => {
                         const quantity = getDishQuantity(item)
-                        // Determine veg/non-veg based on foodType
-                        const isVeg = item.foodType === "Veg"
 
                         // Debug: Log preparationTime for troubleshooting
                         if (item.preparationTime) {
@@ -2349,184 +2516,36 @@ function RestaurantDetailsContent() {
                         }
 
                         return (
-                          <div
+                          <RestaurantFoodCard
                             key={item.id}
-                            ref={(node) => {
+                            item={item}
+                            cardRef={(node) => {
                               if (node) {
                                 dishCardRefs.current[item.id] = node
                               } else {
                                 delete dishCardRefs.current[item.id]
                               }
                             }}
-                            className={`flex gap-4 p-4 border-b border-gray-100 last:border-none relative cursor-pointer transition-all duration-300 ${highlightedDishId === item.id ? "bg-blue-50 ring-2 ring-inset dark:bg-blue-950/20" : ""}`}
-                            style={highlightedDishId === item.id ? { boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}`, borderColor: BRAND_THEME.colors.brand.primary } : undefined}
                             onClick={() => handleItemClick(item)}
-                          >
-                            {/* Left Side - Details */}
-                            <div className="flex-1 min-w-0">
-                              {/* Veg Icon & Spicy Indicator */}
-                              <div className="flex items-center gap-2 mb-1">
-                                {isVeg ? (
-                                  <div className="w-4 h-4 border-2 border-green-600 flex items-center justify-center rounded-sm flex-shrink-0">
-                                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                                  </div>
-                                ) : (
-                                  <div className="w-4 h-4 border-2 border-red-600 flex items-center justify-center rounded-sm flex-shrink-0">
-                                    <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-                                  </div>
-                                )}
-                                {item.isSpicy && <span className="text-xs font-semibold text-red-500">Spicy</span>}
-                              </div>
-
-                              <h3 className="font-bold text-gray-800 dark:text-white text-lg leading-tight">{item.name}</h3>
-
-                              {/* Highly Reordered Progress Bar - Show if recommended */}
-                              {isRecommendedItem(item) && (
-                                <div className="flex items-center gap-2 mt-1">
-                                  <div className="h-1.5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div className="h-full w-3/4" style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}></div>
-                                  </div>
-                                  <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Highly reordered</span>
-                                </div>
-                              )}
-
-                              <div className="flex items-center gap-3 mt-1">
-                                <p className="font-semibold text-gray-900 dark:text-white">{getFoodPriceLabel(item)}</p>
-                                {/* Preparation Time - Show if available */}
-                                {item.preparationTime && String(item.preparationTime).trim() && (
-                                  <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
-                                    <Clock size={12} className="text-gray-500" />
-                                    <span>{String(item.preparationTime).trim()}</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Description - Show if available */}
-                              {item.description && (
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{item.description}</p>
-                              )}
-
-                              {/* Mobile-only action buttons */}
-                              <div className="flex gap-4 mt-3 md:hidden">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    handleBookmarkClick(item)
-                                  }}
-                                  className={`p-1.5 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${isDishFavorite(item.id, restaurant?.restaurantId || restaurant?._id || restaurant?.id)
-                                    ? "border-red-500 text-red-500 bg-red-50 dark:bg-red-900/20"
-                                    : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400"
-                                    }`}
-                                >
-                                  <Bookmark
-                                    size={18}
-                                    className={isDishFavorite(item.id, restaurant?.restaurantId || restaurant?._id || restaurant?.id) ? "fill-red-500" : ""}
-                                  />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    handleShareClick(item)
-                                  }}
-                                  className="p-1.5 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                                >
-                                  <Share2 size={18} />
-                                </button>
-                              </div>
-
-                            </div>
-
-                            {/* Right Side - Image and Add Button */}
-                            <div className="relative w-32 h-32 flex-shrink-0">
-                              {item.image ? (
-                                <img
-                                  src={item.image}
-                                  alt={item.name}
-                                  className="w-full h-full object-cover rounded-2xl shadow-sm"
-                                  onError={(e) => {
-                                    if (e.currentTarget.src !== FOOD_IMAGE_FALLBACK) {
-                                      e.currentTarget.src = FOOD_IMAGE_FALLBACK
-                                    }
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gray-200 dark:bg-gray-700 rounded-2xl flex items-center justify-center">
-                                  <span className="text-xs text-gray-400">No image</span>
-                                </div>
-                              )}
-                              {quantity > 0 ? (
-                                <motion.div
-                                  initial={{ opacity: 0, scale: 0.8 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white border font-bold px-4 py-1.5 rounded-lg shadow-md flex items-center gap-1 ${shouldShowGrayscale
-                                    ? 'border-gray-300 text-gray-400 cursor-not-allowed opacity-50'
-                                    : 'text-white'
-                                    }`}
-                                  style={
-                                    shouldShowGrayscale
-                                      ? undefined
-                                      : { borderColor: BRAND_THEME.colors.brand.primary, background: BRAND_THEME.gradients.primary }
+                            highlighted={highlightedDishId === item.id}
+                            highlightStyle={
+                              highlightedDishId === item.id
+                                ? {
+                                    boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}`,
+                                    borderColor: BRAND_THEME.colors.brand.primary,
                                   }
-                                >
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                    if (!shouldShowGrayscale) {
-                                      updateItemQuantity(item, Math.max(0, quantity - 1), e)
-                                    }
-                                  }}
-                                  disabled={shouldShowGrayscale}
-                                  className={shouldShowGrayscale ? 'text-gray-400 cursor-not-allowed' : ''}
-                                  style={shouldShowGrayscale ? undefined : { color: BRAND_THEME.colors.brand.primary }}
-                                >
-                                    <Minus size={14} />
-                                  </button>
-                                  <span className={`mx-2 text-sm ${shouldShowGrayscale ? 'text-gray-400' : ''}`}>{quantity}</span>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                    if (!shouldShowGrayscale) {
-                                      updateItemQuantity(item, quantity + 1, e)
-                                    }
-                                  }}
-                                  disabled={shouldShowGrayscale}
-                                  className={shouldShowGrayscale ? 'text-gray-400 cursor-not-allowed' : ''}
-                                  style={shouldShowGrayscale ? undefined : { color: BRAND_THEME.colors.brand.primary }}
-                                >
-                                  <Plus size={14} className="stroke-[3px]" />
-                                </button>
-                                </motion.div>
-                              ) : (
-                                <motion.button
-                                  layoutId={`add-button-${item.id}`}
-                                  initial={{ opacity: 0, scale: 0.9 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  transition={{ duration: 0.3, type: "spring", damping: 20, stiffness: 300 }}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    if (!shouldShowGrayscale) {
-                                      updateItemQuantity(item, 1, e)
-                                    }
-                                  }}
-                                  disabled={shouldShowGrayscale}
-                                  className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white border font-bold px-6 py-1.5 rounded-lg shadow-md flex items-center gap-1 transition-colors ${shouldShowGrayscale
-                                    ? 'border-gray-300 text-gray-400 cursor-not-allowed opacity-50'
-                                    : 'text-white'
-                                    }`}
-                                  style={
-                                    shouldShowGrayscale
-                                      ? undefined
-                                      : { borderColor: BRAND_THEME.colors.brand.primary, background: BRAND_THEME.gradients.primary }
-                                  }
-                                >
-                                  ADD <Plus size={14} className="stroke-[3px]" />
-                                </motion.button>
-                              )}
-                            </div>
-                          </div>
+                                : undefined
+                            }
+                            quantity={quantity}
+                            formattedPrice={getFoodPriceLabel(item)}
+                            onBookmark={handleBookmarkClick}
+                            isFavorite={isDishFavorite(item.id, restaurant?.restaurantId || restaurant?._id || restaurant?.id)}
+                            onShare={handleShareClick}
+                            onUpdateQuantity={updateItemQuantity}
+                            disabled={shouldShowGrayscale}
+                            showRecommended={isRecommendedItem(item)}
+                            foodImageFallback={FOOD_IMAGE_FALLBACK}
+                          />
                         )
                       })}
                     </div>
@@ -2574,8 +2593,6 @@ function RestaurantDetailsContent() {
                               <div className="space-y-0">
                                 {subsectionItems.map((item) => {
                                   const quantity = getDishQuantity(item)
-                                  // Determine veg/non-veg based on foodType
-                                  const isVeg = item.foodType === "Veg"
 
                                   // Debug: Log preparationTime for troubleshooting
                                   if (item.preparationTime) {
@@ -2583,184 +2600,36 @@ function RestaurantDetailsContent() {
                                   }
 
                                   return (
-                                    <div
+                                    <RestaurantFoodCard
                                       key={item.id}
-                                      ref={(node) => {
+                                      item={item}
+                                      cardRef={(node) => {
                                         if (node) {
                                           dishCardRefs.current[item.id] = node
                                         } else {
                                           delete dishCardRefs.current[item.id]
                                         }
                                       }}
-                                      className={`flex gap-4 p-4 border-b border-gray-100 last:border-none relative cursor-pointer transition-all duration-300 ${highlightedDishId === item.id ? "bg-blue-50 ring-2 ring-inset dark:bg-blue-950/20" : ""}`}
-                                      style={highlightedDishId === item.id ? { boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}`, borderColor: BRAND_THEME.colors.brand.primary } : undefined}
                                       onClick={() => handleItemClick(item)}
-                                    >
-                                      {/* Left Side - Details */}
-                                      <div className="flex-1 min-w-0">
-                                        {/* Veg Icon & Spicy Indicator */}
-                                        <div className="flex items-center gap-2 mb-1">
-                                          {isVeg ? (
-                                            <div className="w-4 h-4 border-2 border-green-600 flex items-center justify-center rounded-sm flex-shrink-0">
-                                              <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                                            </div>
-                                          ) : (
-                                            <div className="w-4 h-4 border-2 border-red-600 flex items-center justify-center rounded-sm flex-shrink-0">
-                                              <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-                                            </div>
-                                          )}
-                                          {item.isSpicy && <span className="text-xs font-semibold text-red-500">Spicy</span>}
-                                        </div>
-
-                                        <h3 className="font-bold text-gray-800 dark:text-white text-lg leading-tight">{item.name}</h3>
-
-                                        {/* Highly Reordered Progress Bar - Show if recommended */}
-                                        {isRecommendedItem(item) && (
-                                        <div className="flex items-center gap-2 mt-1">
-                                          <div className="h-1.5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                            <div className="h-full w-3/4" style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}></div>
-                                          </div>
-                                          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Highly reordered</span>
-                                        </div>
-                                      )}
-
-                                        <div className="flex items-center gap-3 mt-1">
-                                          <p className="font-semibold text-gray-900 dark:text-white">{getFoodPriceLabel(item)}</p>
-                                          {/* Preparation Time - Show if available */}
-                                          {item.preparationTime && String(item.preparationTime).trim() && (
-                                            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
-                                              <Clock size={12} className="text-gray-500" />
-                                              <span>{String(item.preparationTime).trim()}</span>
-                                            </div>
-                                          )}
-                                        </div>
-
-                                        {/* Description - Show if available */}
-                                        {item.description && (
-                                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{item.description}</p>
-                                        )}
-
-                                        {/* Mobile-only action buttons */}
-                                        <div className="flex gap-4 mt-3 md:hidden">
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              e.preventDefault()
-                                              e.stopPropagation()
-                                              handleBookmarkClick(item)
-                                            }}
-                                            className={`p-1.5 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${isDishFavorite(item.id, restaurant?.restaurantId || restaurant?._id || restaurant?.id)
-                                              ? "border-red-500 text-red-500 bg-red-50 dark:bg-red-900/20"
-                                              : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400"
-                                              }`}
-                                          >
-                                            <Bookmark
-                                              size={18}
-                                              className={isDishFavorite(item.id, restaurant?.restaurantId || restaurant?._id || restaurant?.id) ? "fill-red-500" : ""}
-                                            />
-                                          </button>
-                                          <button
-                                            onClick={(e) => {
-                                              e.preventDefault()
-                                              e.stopPropagation()
-                                              handleShareClick(item)
-                                            }}
-                                            className="p-1.5 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                                          >
-                                            <Share2 size={18} />
-                                          </button>
-                                        </div>
-
-                                      </div>
-
-                                      {/* Right Side - Image and Add Button */}
-                                      <div className="relative w-32 h-32 flex-shrink-0">
-                                        {item.image ? (
-                                          <img
-                                            src={item.image}
-                                            alt={item.name}
-                                            className="w-full h-full object-cover rounded-2xl shadow-sm"
-                                            onError={(e) => {
-                                              if (e.currentTarget.src !== FOOD_IMAGE_FALLBACK) {
-                                                e.currentTarget.src = FOOD_IMAGE_FALLBACK
-                                              }
-                                            }}
-                                          />
-                                        ) : (
-                                          <div className="w-full h-full bg-gray-200 dark:bg-gray-700 rounded-2xl flex items-center justify-center">
-                                            <span className="text-xs text-gray-400">No image</span>
-                                          </div>
-                                        )}
-                                        {quantity > 0 ? (
-                                          <motion.div
-                                            initial={{ opacity: 0, scale: 0.8 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white border font-bold px-4 py-1.5 rounded-lg shadow-md flex items-center gap-1 ${shouldShowGrayscale
-                                              ? 'border-gray-300 text-gray-400 cursor-not-allowed opacity-50'
-                                              : 'text-white'
-                                              }`}
-                                            style={
-                                              shouldShowGrayscale
-                                                ? undefined
-                                                : { borderColor: BRAND_THEME.colors.brand.primary, background: BRAND_THEME.gradients.primary }
+                                      highlighted={highlightedDishId === item.id}
+                                      highlightStyle={
+                                        highlightedDishId === item.id
+                                          ? {
+                                              boxShadow: `0 0 0 2px ${BRAND_THEME.colors.brand.primary}`,
+                                              borderColor: BRAND_THEME.colors.brand.primary,
                                             }
-                                          >
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation()
-                                                if (!shouldShowGrayscale) {
-                                                  updateItemQuantity(item, Math.max(0, quantity - 1), e)
-                                                }
-                                              }}
-                                              disabled={shouldShowGrayscale}
-                                              className={shouldShowGrayscale ? 'text-gray-400 cursor-not-allowed' : ''}
-                                              style={shouldShowGrayscale ? undefined : { color: BRAND_THEME.colors.brand.primary }}
-                                            >
-                                              <Minus size={14} />
-                                            </button>
-                                            <span className={`mx-2 text-sm ${shouldShowGrayscale ? 'text-gray-400' : ''}`}>{quantity}</span>
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation()
-                                                if (!shouldShowGrayscale) {
-                                                  updateItemQuantity(item, quantity + 1, e)
-                                                }
-                                              }}
-                                              disabled={shouldShowGrayscale}
-                                              className={shouldShowGrayscale ? 'text-gray-400 cursor-not-allowed' : ''}
-                                              style={shouldShowGrayscale ? undefined : { color: BRAND_THEME.colors.brand.primary }}
-                                            >
-                                              <Plus size={14} className="stroke-[3px]" />
-                                            </button>
-                                          </motion.div>
-                                        ) : (
-                                          <motion.button
-                                            layoutId={`add-button-sub-${item.id}`}
-                                            initial={{ opacity: 0, scale: 0.9 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            transition={{ duration: 0.3, type: "spring", damping: 20, stiffness: 300 }}
-                                            onClick={(e) => {
-                                              e.stopPropagation()
-                                              if (!shouldShowGrayscale) {
-                                                updateItemQuantity(item, 1, e)
-                                              }
-                                            }}
-                                            disabled={shouldShowGrayscale}
-                                            className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white border font-bold px-6 py-1.5 rounded-lg shadow-md flex items-center gap-1 transition-colors ${shouldShowGrayscale
-                                              ? 'border-gray-300 text-gray-400 cursor-not-allowed opacity-50'
-                                              : 'text-white'
-                                              }`}
-                                            style={
-                                              shouldShowGrayscale
-                                                ? undefined
-                                                : { borderColor: BRAND_THEME.colors.brand.primary, background: BRAND_THEME.gradients.primary }
-                                            }
-                                          >
-                                            ADD <Plus size={14} className="stroke-[3px]" />
-                                          </motion.button>
-                                        )}
-                                      </div>
-                                    </div>
+                                          : undefined
+                                      }
+                                      quantity={quantity}
+                                      formattedPrice={getFoodPriceLabel(item)}
+                                      onBookmark={handleBookmarkClick}
+                                      isFavorite={isDishFavorite(item.id, restaurant?.restaurantId || restaurant?._id || restaurant?.id)}
+                                      onShare={handleShareClick}
+                                      onUpdateQuantity={updateItemQuantity}
+                                      disabled={shouldShowGrayscale}
+                                      showRecommended={isRecommendedItem(item)}
+                                      foodImageFallback={FOOD_IMAGE_FALLBACK}
+                                    />
                                   )
                                 })}
                               </div>
@@ -2779,7 +2648,7 @@ function RestaurantDetailsContent() {
 
       {/* FSSAI License Information - Bottom of page */}
       {restaurant?.onboarding?.step3?.fssai?.registrationNumber && (
-        <div className="px-4 py-4 mt-2 mb-24 border-t border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-white/5 mx-4 rounded-xl">
+        <div className="px-4 py-4 mt-2 mb-40 border-t border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-white/5 mx-4 rounded-xl">
           <div className="flex items-center gap-4">
             <div className="h-12 w-20 flex items-center justify-center bg-white rounded-lg p-1.5 shadow-sm border border-gray-100">
               <img
@@ -4006,7 +3875,7 @@ function RestaurantDetailsContent() {
       {typeof window !== "undefined" &&
         createPortal(
           <AddToCartAnimation
-            bottomOffset={80}
+            bottomOffset={40}
             linkTo="/food/user/cart"
             hideOnPages={true}
           />,

@@ -4,7 +4,91 @@ import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
 import { FoodFeeSettings } from '../../admin/models/feeSettings.model.js';
 import { FoodOffer } from '../../admin/models/offer.model.js';
 import { FoodOfferUsage } from '../../admin/models/offerUsage.model.js';
+import { RestaurantOffer } from '../../restaurant/models/restaurantOffer.model.js';
 import { ValidationError } from '../../../../core/auth/errors.js';
+
+const getCartItemProductId = (item = {}) =>
+  String(item?.itemId || item?.productId || item?.id || '').trim();
+
+const calculateRestaurantOfferDiscount = (offer, eligibleSubtotal) => {
+  if (!Number.isFinite(eligibleSubtotal) || eligibleSubtotal <= 0) return 0;
+
+  if (offer?.discountType === 'flat-price') {
+    return Math.max(
+      0,
+      Math.min(eligibleSubtotal, Math.floor(Number(offer?.discountValue) || 0)),
+    );
+  }
+
+  const raw = eligibleSubtotal * ((Number(offer?.discountValue) || 0) / 100);
+  const capped = Number(offer?.maxDiscount)
+    ? Math.min(raw, Number(offer.maxDiscount))
+    : raw;
+
+  return Math.max(0, Math.min(eligibleSubtotal, Math.floor(capped)));
+};
+
+const findApplicableRestaurantAutoOffer = async (restaurantId, items = []) => {
+  const normalizedRestaurantId = String(restaurantId || '').trim();
+  if (
+    !normalizedRestaurantId ||
+    !mongoose.Types.ObjectId.isValid(normalizedRestaurantId) ||
+    !Array.isArray(items) ||
+    items.length === 0
+  ) {
+    return null;
+  }
+
+  const cartProductIds = items
+    .map((item) => getCartItemProductId(item))
+    .filter(Boolean);
+
+  if (cartProductIds.length === 0 || cartProductIds.length !== items.length) {
+    return null;
+  }
+
+  const uniqueCartProductIds = [...new Set(cartProductIds)];
+  const now = new Date();
+  const offers = await RestaurantOffer.find({
+    restaurantId: new mongoose.Types.ObjectId(normalizedRestaurantId),
+  }).lean();
+
+  let bestMatch = null;
+
+  for (const offer of offers) {
+    const productIds = Array.isArray(offer?.productIds) && offer.productIds.length > 0
+      ? offer.productIds.map((id) => String(id))
+      : offer?.productId
+        ? [String(offer.productId)]
+        : [];
+
+    if (productIds.length === 0) continue;
+    if (offer?.status === 'paused') continue;
+    if (offer?.startDate && now < new Date(offer.startDate)) continue;
+    if (offer?.endDate && now >= new Date(offer.endDate)) continue;
+
+    const allowedProducts = new Set(productIds);
+    const allCartItemsBelongToOffer = uniqueCartProductIds.every((id) => allowedProducts.has(id));
+    if (!allCartItemsBelongToOffer) continue;
+
+    const eligibleSubtotal = items.reduce((sum, item) => {
+      const itemId = getCartItemProductId(item);
+      if (!allowedProducts.has(itemId)) return sum;
+      return sum + (Number(item?.price) || 0) * (Number(item?.quantity) || 1);
+    }, 0);
+
+    if (eligibleSubtotal <= 0) continue;
+
+    const discount = calculateRestaurantOfferDiscount(offer, eligibleSubtotal);
+    if (discount <= 0) continue;
+
+    if (!bestMatch || discount > bestMatch.discount) {
+      bestMatch = { offer, eligibleSubtotal, discount };
+    }
+  }
+
+  return bestMatch;
+};
 
 export async function calculateOrderPricing(userId, dto) {
   const restaurant = await FoodRestaurant.findById(dto.restaurantId)
@@ -85,7 +169,10 @@ export async function calculateOrderPricing(userId, dto) {
       : 0;
 
   let discount = 0;
+  let couponDiscount = 0;
+  let autoOfferDiscount = 0;
   let appliedCoupon = null;
+  let autoAppliedOffer = null;
   const codeRaw = dto.couponCode
     ? String(dto.couponCode).trim().toUpperCase()
     : "";
@@ -152,17 +239,33 @@ export async function calculateOrderPricing(userId, dto) {
           const capped = Number(offer.maxDiscount)
             ? Math.min(raw, Number(offer.maxDiscount))
             : raw;
-          discount = Math.max(0, Math.min(subtotal, Math.floor(capped)));
+          couponDiscount = Math.max(0, Math.min(subtotal, Math.floor(capped)));
         } else {
-          discount = Math.max(
+          couponDiscount = Math.max(
             0,
             Math.min(subtotal, Math.floor(Number(offer.discountValue) || 0)),
           );
         }
-        appliedCoupon = { code: codeRaw, discount };
+        appliedCoupon = { code: codeRaw, discount: couponDiscount };
       }
     }
   }
+
+  const autoOfferMatch = await findApplicableRestaurantAutoOffer(dto.restaurantId, items);
+  if (autoOfferMatch) {
+    autoOfferDiscount = autoOfferMatch.discount;
+    autoAppliedOffer = {
+      code: null,
+      title: autoOfferMatch.offer.title || 'Restaurant offer',
+      discount: autoOfferDiscount,
+      type: 'restaurant-auto-offer',
+      autoApplied: true,
+      offerId: String(autoOfferMatch.offer._id),
+      eligibleSubtotal: autoOfferMatch.eligibleSubtotal,
+    };
+  }
+
+  discount = Math.max(0, Math.min(subtotal, couponDiscount + autoOfferDiscount));
 
   const total = Math.max(
     0,
@@ -176,11 +279,14 @@ export async function calculateOrderPricing(userId, dto) {
       packagingFee,
       deliveryFee,
       platformFee,
+      couponDiscount,
+      autoOfferDiscount,
       discount,
       total,
       currency: "INR",
       couponCode: appliedCoupon?.code || codeRaw || null,
       appliedCoupon,
+      autoAppliedOffer,
     },
   };
 }

@@ -9,9 +9,24 @@ const ensureObjectId = (id, label) => {
     return new mongoose.Types.ObjectId(String(id));
 };
 
+const ensureObjectIdList = (ids = [], fallbackId = null) => {
+    const source = Array.isArray(ids) && ids.length > 0 ? ids : fallbackId ? [fallbackId] : [];
+    const normalized = source
+        .map((id) => String(id || '').trim())
+        .filter(Boolean)
+        .filter((id, index, arr) => arr.indexOf(id) === index);
+
+    if (!normalized.length) {
+        throw new ValidationError('At least one product is required');
+    }
+
+    return normalized.map((id) => ensureObjectId(id, 'productId'));
+};
+
 export async function createRestaurantProductOffer(restaurantId, body = {}) {
     const rid = ensureObjectId(restaurantId, 'restaurant id');
-    const productId = ensureObjectId(body.productId, 'productId');
+    const productIds = ensureObjectIdList(body.productIds, body.productId);
+    const productId = productIds[0];
 
     const title = typeof body.title === 'string' ? body.title.trim() : '';
     if (!title) throw new ValidationError('Title is required');
@@ -29,7 +44,6 @@ export async function createRestaurantProductOffer(restaurantId, body = {}) {
         }
     }
 
-    const minOrderValue = body.minOrderValue !== undefined ? Number(body.minOrderValue) : 0;
     const usageLimit = body.usageLimit !== undefined ? Number(body.usageLimit) : null;
     const perUserLimit = body.perUserLimit !== undefined ? Number(body.perUserLimit) : null;
 
@@ -43,17 +57,17 @@ export async function createRestaurantProductOffer(restaurantId, body = {}) {
         restaurantId: rid,
         createdByRestaurantId: rid,
         productId,
+        productIds,
         title,
         discountType,
         discountValue,
         maxDiscount,
-        minOrderValue: Number.isFinite(minOrderValue) ? minOrderValue : 0,
         usageLimit: Number.isFinite(usageLimit) && usageLimit >= 0 ? usageLimit : null,
         perUserLimit: Number.isFinite(perUserLimit) && perUserLimit >= 0 ? perUserLimit : null,
         startDate: startDate || null,
         endDate: endDate || null,
-        status: 'inactive',
-        approvalStatus: 'pending',
+        status: 'active',
+        approvalStatus: 'approved',
         showInCart: true
     });
 
@@ -65,7 +79,46 @@ export async function listRestaurantProductOffers(restaurantId) {
     const list = await RestaurantOffer.find({ restaurantId: rid }).sort({ createdAt: -1 }).lean();
     return list.map((o) => ({
         ...o,
+        productIds: Array.isArray(o.productIds) && o.productIds.length > 0 ? o.productIds.map((id) => String(id)) : o.productId ? [String(o.productId)] : [],
         id: String(o._id)
+    }));
+}
+
+export async function listPublicRestaurantProductOffers(restaurantId) {
+    const rid = ensureObjectId(restaurantId, 'restaurant id');
+    const list = await RestaurantOffer.find({ restaurantId: rid })
+        .populate({ path: 'productId', select: 'name image coverImage photos price discountedPrice foodType preparationTime description' })
+        .populate({ path: 'productIds', select: 'name image coverImage photos price discountedPrice foodType preparationTime description' })
+        .sort({ createdAt: -1 })
+        .lean();
+    return list.map((o) => ({
+        ...o,
+        id: String(o._id),
+        productName: o.productId?.name || '',
+        productImage: o.productId?.image || o.productId?.coverImage || (Array.isArray(o.productId?.photos) ? o.productId.photos[0] : null),
+        products: Array.isArray(o.productIds) && o.productIds.length > 0
+            ? o.productIds.map((product) => ({
+                id: String(product?._id || ''),
+                name: product?.name || '',
+                image: product?.image || product?.coverImage || (Array.isArray(product?.photos) ? product.photos[0] : null),
+                price: product?.price ?? null,
+                discountedPrice: product?.discountedPrice ?? null,
+                foodType: product?.foodType || '',
+                preparationTime: product?.preparationTime || '',
+                description: product?.description || '',
+            })).filter((product) => product.id)
+            : o.productId
+                ? [{
+                    id: String(o.productId?._id || ''),
+                    name: o.productId?.name || '',
+                    image: o.productId?.image || o.productId?.coverImage || (Array.isArray(o.productId?.photos) ? o.productId.photos[0] : null),
+                    price: o.productId?.price ?? null,
+                    discountedPrice: o.productId?.discountedPrice ?? null,
+                    foodType: o.productId?.foodType || '',
+                    preparationTime: o.productId?.preparationTime || '',
+                    description: o.productId?.description || '',
+                }].filter((product) => product.id)
+                : [],
     }));
 }
 
@@ -86,6 +139,12 @@ export async function updateRestaurantProductOffer(restaurantId, offerId, body =
 
     const title = typeof body.title === 'string' ? body.title.trim() : existing.title;
     if (!title) throw new ValidationError('Title is required');
+    const productIds = body.productIds !== undefined || body.productId !== undefined
+        ? ensureObjectIdList(body.productIds, body.productId)
+        : Array.isArray(existing.productIds) && existing.productIds.length > 0
+            ? existing.productIds.map((id) => ensureObjectId(id, 'productId'))
+            : [ensureObjectId(existing.productId, 'productId')];
+    const productId = productIds[0];
 
     const discountType = body.discountType === 'flat-price' ? 'flat-price' : 'percentage';
     const discountValue = body.discountValue !== undefined ? Number(body.discountValue) : existing.discountValue;
@@ -102,7 +161,6 @@ export async function updateRestaurantProductOffer(restaurantId, offerId, body =
         maxDiscount = null;
     }
 
-    const minOrderValue = body.minOrderValue !== undefined ? Number(body.minOrderValue) : existing.minOrderValue;
     const usageLimit = body.usageLimit !== undefined ? Number(body.usageLimit) : existing.usageLimit;
     const perUserLimit = body.perUserLimit !== undefined ? Number(body.perUserLimit) : existing.perUserLimit;
 
@@ -117,16 +175,17 @@ export async function updateRestaurantProductOffer(restaurantId, offerId, body =
         {
             $set: {
                 title,
+                productId,
+                productIds,
                 discountType,
                 discountValue,
                 maxDiscount,
-                minOrderValue: Number.isFinite(minOrderValue) ? minOrderValue : 0,
                 usageLimit: Number.isFinite(usageLimit) && usageLimit >= 0 ? usageLimit : null,
                 perUserLimit: Number.isFinite(perUserLimit) && perUserLimit >= 0 ? perUserLimit : null,
                 startDate: startDate || null,
                 endDate: endDate || null,
-                approvalStatus: 'pending',
-                status: 'inactive',
+                approvalStatus: 'approved',
+                status: 'active',
                 rejectionReason: ''
             }
         },

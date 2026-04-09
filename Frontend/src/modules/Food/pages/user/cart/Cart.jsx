@@ -118,6 +118,10 @@ export default function Cart() {
   const { cart, updateQuantity, addToCart, getCartCount, clearCart, cleanCartForRestaurant } = cartContext;
   const hasQuickItems = cart.some((item) => (item?.orderType || "food") === "quick")
   const hasFoodItems = cart.some((item) => (item?.orderType || "food") === "food")
+
+  const resolveRestaurantMongoId = (data = null, fallback = null) =>
+    data?._id || data?.restaurantId || fallback || null
+  const isMongoObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || "").trim())
   if (hasQuickItems && hasFoodItems) {
     return <MixedSharedCart />
   }
@@ -883,8 +887,15 @@ export default function Cart() {
           isVeg: item.isVeg !== false
         }))
 
-        const resolvedRestaurantId = restaurantData?.restaurantId || restaurantData?._id || restaurantId || undefined
-        const resolvedCouponCode = appliedCoupon?.code || couponCode || undefined
+        const resolvedRestaurantId = resolveRestaurantMongoId(restaurantData, restaurantId) || undefined
+        if (hasFoodItems && !isMongoObjectId(resolvedRestaurantId)) {
+          setPricing(null)
+          return
+        }
+        const resolvedCouponCode =
+          appliedCoupon?.type === "restaurant-auto-offer"
+            ? undefined
+            : appliedCoupon?.code || couponCode || undefined
 
         const response = await orderAPI.calculateOrder({
           items,
@@ -894,14 +905,22 @@ export default function Cart() {
         })
 
         if (response?.data?.success && response?.data?.data?.pricing) {
-          setPricing(response.data.data.pricing)
+          const backendPricing = response.data.data.pricing
+          setPricing(backendPricing)
 
           // Update applied coupon if backend returns one
-          if (response.data.data.pricing.appliedCoupon && !appliedCoupon) {
-            const coupon = availableCoupons.find(c => c.code === response.data.data.pricing.appliedCoupon.code)
-            if (coupon) {
-              setAppliedCoupon(coupon)
+          if (backendPricing.appliedCoupon && !appliedCoupon) {
+            const backendAppliedCoupon = backendPricing.appliedCoupon
+            if (backendAppliedCoupon?.type === "restaurant-auto-offer") {
+              setAppliedCoupon(backendAppliedCoupon)
+            } else {
+              const coupon = availableCoupons.find(c => c.code === backendAppliedCoupon.code)
+              if (coupon) {
+                setAppliedCoupon(coupon)
+              }
             }
+          } else if (!backendPricing.appliedCoupon && appliedCoupon?.type === "restaurant-auto-offer") {
+            setAppliedCoupon(null)
           }
         }
       } catch (error) {
@@ -917,7 +936,7 @@ export default function Cart() {
     }
 
     calculatePricing()
-  }, [cart, defaultAddress, appliedCoupon, couponCode, restaurantId])
+  }, [cart, defaultAddress, appliedCoupon, couponCode, restaurantId, restaurantData, hasFoodItems])
 
   // Fetch wallet balance
   useEffect(() => {
@@ -1033,6 +1052,25 @@ export default function Cart() {
   const platformFee = pricing?.platformFee || feeSettings.platformFee
   const gstCharges = pricing?.tax || Math.round(subtotal * (feeSettings.gstRate / 100))
   const discount = pricing?.discount || (appliedCoupon ? Math.min(appliedCoupon.discount, subtotal * 0.5) : 0)
+  const couponDiscount = pricing?.couponDiscount || (appliedCoupon?.type !== "restaurant-auto-offer" ? (appliedCoupon?.discount || 0) : 0)
+  const autoOfferDiscount = pricing?.autoOfferDiscount || (
+    pricing?.autoAppliedOffer?.type === "restaurant-auto-offer"
+      ? pricing.autoAppliedOffer.discount || 0
+      : pricing?.appliedCoupon?.type === "restaurant-auto-offer"
+        ? pricing.appliedCoupon.discount || 0
+        : appliedCoupon?.type === "restaurant-auto-offer"
+          ? appliedCoupon.discount || 0
+          : 0
+  )
+  const autoAppliedRestaurantOffer =
+    pricing?.autoAppliedOffer?.type === "restaurant-auto-offer"
+      ? pricing.autoAppliedOffer
+      : pricing?.appliedCoupon?.type === "restaurant-auto-offer"
+        ? pricing.appliedCoupon
+        : appliedCoupon?.type === "restaurant-auto-offer"
+          ? appliedCoupon
+          : null
+  const displayedAppliedCoupon = appliedCoupon?.type !== "restaurant-auto-offer" ? appliedCoupon : null
   const totalBeforeDiscount = subtotal + deliveryFee + platformFee + gstCharges
   const total = pricing?.total || (totalBeforeDiscount - discount)
   const savings = pricing?.savings ?? Math.max(0, totalBeforeDiscount - total)
@@ -1271,7 +1309,7 @@ export default function Cart() {
 
         const response = await orderAPI.calculateOrder({
           items,
-          restaurantId: restaurantData?.restaurantId || restaurantData?._id || restaurantId || null,
+          restaurantId: resolveRestaurantMongoId(restaurantData, restaurantId),
           deliveryAddress: defaultAddress,
           couponCode: coupon.code
         })
@@ -1332,7 +1370,7 @@ export default function Cart() {
 
       const response = await orderAPI.calculateOrder({
         items,
-        restaurantId: restaurantData?.restaurantId || restaurantData?._id || restaurantId || null,
+        restaurantId: resolveRestaurantMongoId(restaurantData, restaurantId),
         deliveryAddress: defaultAddress,
         couponCode: inputCode
       })
@@ -1391,7 +1429,7 @@ export default function Cart() {
 
         const response = await orderAPI.calculateOrder({
           items,
-          restaurantId: restaurantData?.restaurantId || restaurantData?._id || restaurantId || null,
+          restaurantId: resolveRestaurantMongoId(restaurantData, restaurantId),
           deliveryAddress: defaultAddress,
           couponCode: null
         })
@@ -1438,7 +1476,7 @@ export default function Cart() {
     try {
       debugLog("?? Starting order placement process...")
       debugLog("?? Cart items:", cart.map(item => ({ id: item.id, name: item.name, quantity: item.quantity, price: item.price })))
-      debugLog("?? Applied coupon:", appliedCoupon?.code || "None")
+      debugLog("?? Applied coupon:", displayedAppliedCoupon?.code || displayedAppliedCoupon?.title || "None")
       debugLog("?? Delivery address:", defaultAddress?.label || defaultAddress?.city)
 
       // Ensure couponCode is included in pricing
@@ -1449,11 +1487,11 @@ export default function Cart() {
         platformFee,
         discount,
         total,
-        couponCode: appliedCoupon?.code || null
+        couponCode: displayedAppliedCoupon?.type === "restaurant-auto-offer" ? null : appliedCoupon?.code || null
       };
 
       // Add couponCode if not present but coupon is applied
-      if (!orderPricing.couponCode && appliedCoupon?.code) {
+      if (!orderPricing.couponCode && appliedCoupon?.code && appliedCoupon?.type !== "restaurant-auto-offer") {
         orderPricing.couponCode = appliedCoupon.code;
       }
 
@@ -1483,7 +1521,7 @@ export default function Cart() {
 
       // CRITICAL: Validate restaurant ID before placing order
       // Ensure we're using the correct restaurant from restaurantData (most reliable)
-      const finalRestaurantId = restaurantData?.restaurantId || restaurantData?._id || null;
+      const finalRestaurantId = resolveRestaurantMongoId(restaurantData);
       const finalRestaurantName = restaurantData?.name || null;
 
       if (!finalRestaurantId) {
@@ -2194,14 +2232,33 @@ export default function Cart() {
                   </div>
                 )}
 
-                {/* Applied Coupon View */}
-                {appliedCoupon ? (
+                {autoAppliedRestaurantOffer ? (
+                  <div className="px-4 py-3 md:px-6 md:py-4 flex items-center justify-between border-b border-dashed border-gray-200 dark:border-gray-800">
+                    <div className="flex items-start gap-3">
+                      <Percent className="h-5 w-5 mt-0.5" style={{ color: BRAND_THEME.colors.brand.primary }} />
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          '{autoAppliedRestaurantOffer.title || "Offer"}' auto-applied
+                        </p>
+                        <p className="text-xs font-medium mt-0.5" style={{ color: BRAND_THEME.colors.brand.primary }}>
+                          You saved {RUPEE_SYMBOL}{autoOfferDiscount}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {displayedAppliedCoupon ? (
                   <div className="px-4 py-3 md:px-6 md:py-4 flex items-center justify-between">
                     <div className="flex items-start gap-3">
                       <Percent className="h-5 w-5 mt-0.5" style={{ color: BRAND_THEME.colors.brand.primary }} />
                       <div>
-                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">'{appliedCoupon.code}' applied</p>
-                        <p className="text-xs font-medium mt-0.5" style={{ color: BRAND_THEME.colors.brand.primary }}>You saved {RUPEE_SYMBOL}{discount}</p>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          '{displayedAppliedCoupon.code}' applied
+                        </p>
+                        <p className="text-xs font-medium mt-0.5" style={{ color: BRAND_THEME.colors.brand.primary }}>
+                          You saved {RUPEE_SYMBOL}{couponDiscount}
+                        </p>
                       </div>
                     </div>
                     <button
@@ -2212,8 +2269,10 @@ export default function Cart() {
                       REMOVE
                     </button>
                   </div>
-                ) : (
-                  /* Available / Input View */
+                ) : null}
+
+                {/* Available / Input View */}
+                {!displayedAppliedCoupon && (
                   <div className="px-4 py-3 md:px-6 md:py-4 flex flex-col gap-3">
                     {loadingCoupons ? (
                       <p className="text-sm text-gray-500">Loading offers...</p>
@@ -2259,7 +2318,7 @@ export default function Cart() {
                     )}
 
                     {/* Show All Coupons List */}
-                    {showCoupons && !appliedCoupon && availableCoupons.length > 0 && (
+                    {showCoupons && !displayedAppliedCoupon && availableCoupons.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-dashed border-gray-200 dark:border-gray-800 space-y-4">
                         {/* Input for manual code */}
                         <div className="flex flex-col sm:flex-row gap-2 mb-4">
@@ -2628,10 +2687,16 @@ export default function Cart() {
                       <span className="text-gray-600 dark:text-gray-400">GST and Restaurant Charges</span>
                       <span className="text-gray-800 dark:text-gray-200 font-medium">{RUPEE_SYMBOL}{gstCharges.toFixed(2)}</span>
                     </div>
-                    {discount > 0 && (
+                    {autoOfferDiscount > 0 && (
+                      <div className="flex justify-between text-sm font-medium" style={{ color: BRAND_THEME.colors.brand.primary }}>
+                        <span>Offer Discount</span>
+                        <span>-{RUPEE_SYMBOL}{autoOfferDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {couponDiscount > 0 && (
                       <div className="flex justify-between text-sm font-medium" style={{ color: BRAND_THEME.colors.brand.primary }}>
                         <span>Coupon Discount</span>
-                        <span>-{RUPEE_SYMBOL}{discount.toFixed(2)}</span>
+                        <span>-{RUPEE_SYMBOL}{couponDiscount.toFixed(2)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-base font-bold pt-3 mt-1 border-t border-gray-100 dark:border-gray-800 text-gray-900 dark:text-white">
@@ -3246,3 +3311,4 @@ export default function Cart() {
     </div>
   )
 }      
+
