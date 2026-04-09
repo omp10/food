@@ -1,13 +1,16 @@
-﻿import { useState } from "react"
+import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { Input } from "@food/components/ui/input"
 import { Button } from "@food/components/ui/button"
 import BRAND_THEME from "@/config/brandTheme"
 
+import { restaurantAPI } from "@food/api"
+
 export default function RestaurantLogin() {
   const navigate = useNavigate()
   const [phone, setPhone] = useState("")
   const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const isValid = phone.replace(/\D/g, "").length === 10
 
   const handleSendOTP = async () => {
@@ -16,8 +19,26 @@ export default function RestaurantLogin() {
       return
     }
     setError("")
-    // TODO: integrate restaurant login OTP API
-    navigate("/food/restaurant/otp")
+    setIsLoading(true)
+    
+    try {
+      const formattedPhone = `+91${phone}`
+      await restaurantAPI.sendOTP(formattedPhone, "login")
+      
+      sessionStorage.setItem("restaurantAuthData", JSON.stringify({
+        method: "phone",
+        phone: formattedPhone,
+        isSignUp: false
+      }))
+      sessionStorage.setItem("restaurantLoginPhone", formattedPhone)
+      
+      navigate("/food/restaurant/otp")
+    } catch (err) {
+      const message = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Failed to send verification code. Please try again."
+      setError(message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -52,12 +73,16 @@ export default function RestaurantLogin() {
         </div>
 
         <Button
-          disabled={!isValid}
+          disabled={!isValid || isLoading}
           onClick={handleSendOTP}
-          className="w-full h-12 text-white font-semibold"
+          className="w-full h-12 text-white font-semibold flex items-center justify-center"
           style={{ background: BRAND_THEME.gradients.primary, boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}` }}
         >
-          Get Verification Code
+          {isLoading ? (
+            <div className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+          ) : (
+            "Get Verification Code"
+          )}
         </Button>
 
         <p className="text-[11px] text-center text-gray-500">

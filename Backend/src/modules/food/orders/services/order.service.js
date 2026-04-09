@@ -1708,30 +1708,78 @@ export async function resendDeliveryNotificationRestaurant(orderId, restaurantId
 
     if (!order) throw new NotFoundError('Order not found');
 
-    // Only allow if order is still active and not already terminal
-    const activeStatuses = ['preparing', 'ready_for_pickup', 'ready'];
+    const activeStatuses = ['preparing', 'ready_for_pickup', 'ready', 'confirmed'];
     if (!activeStatuses.includes(order.orderStatus)) {
         throw new ValidationError(`Cannot resend notification for order in status: ${order.orderStatus}`);
     }
 
-    // Guard: don't disrupt an active assignment that was already accepted
     if (order.dispatch?.status === 'accepted') {
         throw new ValidationError('A delivery partner has already accepted this order.');
     }
 
-    // Reset dispatch state to unassigned to allow tryAutoAssign to start fresh
     order.dispatch.status = 'unassigned';
-    order.dispatch.deliveryPartnerId = null;
-    // Clear previously offered partners to give everyone a fresh chance when resending manually.
+    order.dispatch.deliveryPartnerId = undefined;
     order.dispatch.offeredTo = [];
-    
+    order.dispatch.assignedAt = undefined;
     await order.save();
 
-    // Trigger smart dispatch logic immediately
-    const { tryAutoAssign } = await import('./order.service.js');
-    await tryAutoAssign(order._id);
+    let notifiedCount = 0;
 
-    return { success: true };
+    const { tryAutoAssign } = await import('./order.service.js');
+    if (order.dispatch?.modeAtCreation === 'auto') {
+        const assignedOrder = await tryAutoAssign(order._id);
+        if (assignedOrder && assignedOrder.dispatch?.status === 'assigned') {
+            notifiedCount = 1;
+            return { notifiedCount }; // One specific partner notified via auto-assign
+        }
+    }
+
+    // Fallback or Pool Mode Broadcast
+    try {
+        const { getIO, rooms } = await import('../../../../core/sockets/socket.js');
+        const io = getIO();
+        if (io) {
+            const FoodRestaurant = (await import('../../restaurant/models/restaurant.model.js')).default;
+            const restaurant = await FoodRestaurant.findById(order.restaurantId).select('restaurantName location addressLine1 area city state').lean();
+            
+            const payload = {
+                orderMongoId: order._id?.toString?.(),
+                orderId: order.orderId,
+                status: order.orderStatus,
+                pickupAddress: restaurant?.addressLine1 || restaurant?.area || "Restaurant Address",
+                dropAddress: order.deliveryAddress?.addressLine1 || "Customer Address",
+                distanceKm: order.dispatch?.distanceKm || 0,
+                estimatedEarnings: order.dispatch?.deliveryFee || 0,
+                restaurantName: restaurant?.restaurantName
+            };
+
+            const { listNearbyOnlineDeliveryPartners } = await import('./order-dispatch.service.js');
+            const { partners } = await listNearbyOnlineDeliveryPartners(order.restaurantId, { maxKm: 30, limit: 30 });
+            notifiedCount = partners.length;
+            
+            for (const p of partners) {
+                const targetRoom = rooms.delivery(p.partnerId);
+                io.to(targetRoom).emit("new_order_available", { ...payload, pickupDistanceKm: p.distanceKm });
+                io.to(targetRoom).emit("play_notification_sound", { orderId: payload.orderId, orderMongoId: payload.orderMongoId });
+            }
+
+            if (partners.length > 0) {
+                 const { notifyOwnersSafely } = await import('../../../../core/notifications/firebase.service.js');
+                 await notifyOwnersSafely(
+                    partners.slice(0, 10).map((p) => ({ ownerType: "DELIVERY_PARTNER", ownerId: p.partnerId })),
+                    {
+                        title: "New delivery order available",
+                        body: `Order ${payload.orderId} is available near ${restaurant?.restaurantName || "your area"}.`,
+                        data: { type: "new_order_available", orderId: payload.orderId, orderMongoId: payload.orderMongoId, link: "/delivery" }
+                    }
+                );
+            }
+        }
+    } catch (err) {
+        console.error('[DEBUG] Resend notification broadcast error:', err);
+    }
+
+    return { notifiedCount };
 }
 
 export async function getCurrentTripDelivery(deliveryPartnerId) {

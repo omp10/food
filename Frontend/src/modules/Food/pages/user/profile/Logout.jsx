@@ -5,6 +5,7 @@ import { Button } from "@food/components/ui/button"
 import { Card, CardContent } from "@food/components/ui/card"
 import { useState } from "react"
 import { authAPI } from "@food/api"
+import { clearUserSession } from "@food/utils/auth"
 import { firebaseAuth, ensureFirebaseInitialized } from "@food/firebase"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
@@ -70,7 +71,7 @@ export default function Logout() {
       // Clear all authentication data from localStorage
       localStorage.removeItem("accessToken")
       localStorage.removeItem("user_authenticated")
-      localStorage.removeItem("user_user")
+      clearUserSession()
       localStorage.removeItem("cart")
       USER_SESSION_PREFERENCE_KEYS.forEach((key) => localStorage.removeItem(key))
 
@@ -91,7 +92,7 @@ export default function Logout() {
       // Clear local data anyway
       localStorage.removeItem("accessToken")
       localStorage.removeItem("user_authenticated")
-      localStorage.removeItem("user_user")
+      clearUserSession()
       localStorage.removeItem("cart")
       USER_SESSION_PREFERENCE_KEYS.forEach((key) => localStorage.removeItem(key))
       sessionStorage.removeItem("userAuthData")

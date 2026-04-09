@@ -7,6 +7,7 @@ import { useDeliveryNotifications } from '@food/hooks/useDeliveryNotifications';
 import { writeOrderTracking } from '@food/realtimeTracking';
 import { deliveryAPI } from '@food/api';
 import { toast } from 'sonner';
+import { BRAND_THEME } from '@/config/brandTheme';
 
 // Components
 import LiveMap from '@/modules/DeliveryV2/components/map/LiveMap';
@@ -587,7 +588,8 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                     deliveryAPI.updateOnlineStatus(false).catch(() => {});
                  }
                }}
-               className={`relative w-[92px] h-8 rounded-full p-1 transition-all duration-500 flex items-center ${isOnline ? 'bg-green-500 shadow-lg shadow-green-500/20' : 'bg-gray-300'}`}
+               className={`relative w-[92px] h-8 rounded-full p-1 transition-all duration-500 flex items-center shadow-lg`}
+               style={{ backgroundColor: isOnline ? BRAND_THEME.colors.semantic.success : '#D1D5DB' }}
              >
                <div className={`flex items-center justify-between w-full px-2 text-[8.5px] font-black uppercase tracking-widest ${isOnline ? 'text-white' : 'text-gray-700'}`}>
                  <span>{isOnline ? 'Online' : ''}</span>
@@ -598,8 +600,8 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
           </div>
           <div className="flex items-center gap-3">
              <button onClick={() => setShowEmergencyPopup(true)} className="w-9 h-9 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20 active:scale-95 transition-all shadow-lg"><AlertTriangle className="w-4 h-4" /></button>
-             <button onClick={() => navigate('/food/delivery/help/id-card')} className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#2979FB] border border-blue-100 active:scale-95 transition-all shadow-lg"><Contact className="w-4 h-4" /></button>
-             <button onClick={() => navigate('/food/delivery/notifications')} className="relative w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#2979FB] border border-blue-100 active:scale-95 transition-all shadow-lg"><Bell className="w-4 h-4" />{notificationUnreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-400 border border-white" />}</button>
+             <button onClick={() => navigate('/food/delivery/help/id-card')} className="w-9 h-9 rounded-full flex items-center justify-center border active:scale-95 transition-all shadow-lg" style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft, color: BRAND_THEME.colors.brand.primary, borderColor: BRAND_THEME.colors.brand.primary + '22' }}><Contact className="w-4 h-4" /></button>
+             <button onClick={() => navigate('/food/delivery/notifications')} className="relative w-9 h-9 rounded-full flex items-center justify-center border active:scale-95 transition-all shadow-lg" style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft, color: BRAND_THEME.colors.brand.primary, borderColor: BRAND_THEME.colors.brand.primary + '22' }}><Bell className="w-4 h-4" />{notificationUnreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-400 border border-white" />}</button>
           </div>
         </div>
 
@@ -615,34 +617,40 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
               {activeOrder ? (
                 <div className="grid grid-cols-2 gap-3 w-full">
                   {/* LEFT: DISTANCE (Vibrant Orange Card) */}
-                  <div className="bg-[#ff8100] rounded-2xl p-3.5 shadow-xl shadow-orange-500/20 border border-orange-400/50 flex items-center justify-between overflow-hidden relative">
+                  <div 
+                    className="rounded-xl p-2.5 shadow-lg flex items-center justify-between overflow-hidden relative border border-white/10"
+                    style={{ background: BRAND_THEME.gradients.primary }}
+                  >
                     <div className="flex flex-col z-10">
-                      <span className="text-[9px] text-white/70 font-black uppercase tracking-[0.15em] mb-1">Distance</span>
+                      <span className="text-[8px] text-white/70 font-bold uppercase tracking-widest mb-0.5">Distance</span>
                       <div className="flex items-end gap-1">
-                        <span className="text-2xl font-black text-white leading-none tracking-tighter">
+                        <span className="text-xl font-bold text-white leading-none tracking-tight">
                           {distanceToTarget && distanceToTarget !== Infinity ? (distanceToTarget / 1000).toFixed(1) : '--'}
                         </span>
-                        <span className="text-[11px] text-white/80 font-bold mb-0.5">KM</span>
+                        <span className="text-[10px] text-white/80 font-medium mb-0.5">KM</span>
                       </div>
                     </div>
-                    <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center z-10 shadow-lg">
-                      <Navigation2 className="w-4 h-4 text-[#ff8100] rotate-45" />
+                    <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
+                      <Navigation2 className="w-3.5 h-3.5 rotate-45 text-white" />
                     </div>
                   </div>
 
                   {/* RIGHT: TIME (Emerald PRO Content) */}
-                  <div className="bg-[#10B981] rounded-2xl p-3.5 shadow-xl shadow-green-500/20 border border-green-400/50 flex items-center justify-between relative overflow-hidden group">
+                  <div 
+                    className="rounded-xl p-2.5 shadow-lg flex items-center justify-between relative overflow-hidden group border border-white/10"
+                    style={{ backgroundColor: BRAND_THEME.colors.semantic.success }}
+                  >
                     <div className="flex flex-col z-10">
-                      <span className="text-[9px] text-white/70 font-black uppercase tracking-[0.15em] mb-1">Arrival</span>
+                      <span className="text-[8px] text-white/70 font-bold uppercase tracking-widest mb-0.5">Arrival</span>
                       <div className="flex items-end gap-1">
-                        <span className="text-2xl font-black text-white leading-none tracking-tighter">
+                        <span className="text-xl font-bold text-white leading-none tracking-tight">
                           {eta ? String(eta) : '--'}
                         </span>
-                        <span className="text-[11px] text-white/80 font-bold mb-0.5">MIN</span>
+                        <span className="text-[10px] text-white/80 font-medium mb-0.5">MIN</span>
                       </div>
                     </div>
-                    <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center z-10 shadow-lg">
-                       <Clock className="w-4 h-4 text-[#10B981]" />
+                    <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
+                       <Clock className="w-3.5 h-3.5 text-white" />
                     </div>
                   </div>
                 </div>
@@ -666,7 +674,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       )}
 
       {/* ─── 2. MAIN CONTENT ─── */}
-      <div className={`flex-1 relative overflow-y-auto ${currentTab === 'history' ? 'pt-0' : 'pt-[120px]'} no-scrollbar`}>
+      <div className={`flex-1 relative overflow-y-auto ${currentTab === 'history' ? 'pt-0' : 'pt-[120px]'}`}>
          {currentTab === 'feed' ? (
            <div className="absolute inset-0 top-[-120px]">
              <LiveMap 
@@ -799,7 +807,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                              <ChevronDown className="w-6 h-6 text-gray-400 stroke-[3]" />
                           </button>
                         </div>
-                        <div className="flex justify-between w-full items-center mb-10 px-2 text-left">
+                        <div className="flex justify-between w-full items-center mb-6 px-1 text-left">
                           <div className="flex items-center gap-4">
                             <div className="w-16 h-16 rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
                                <img 
@@ -809,9 +817,9 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                                />
                             </div>
                             <div>
-                               <h3 className="text-gray-950 text-2xl font-bold uppercase">Handover Drop</h3>
-                               <p className={`text-[10px] font-bold uppercase tracking-[0.2em] mt-1.5 ${isWithinRange ? 'text-green-600' : 'text-orange-500'}`}>
-                                 {isWithinRange ? 'Ready - Swipe to Arrive √' : `${(distanceToTarget / 1000).toFixed(1)} km • ${eta || '--'} min Arrival`}
+                               <h3 className="text-gray-950 text-xl font-bold">Handover Drop</h3>
+                               <p className={`text-[10px] font-bold uppercase tracking-widest mt-0.5 ${isWithinRange ? 'text-green-600' : 'text-orange-500'}`}>
+                                 {isWithinRange ? 'Ready - Swipe to Arrive' : `${(distanceToTarget / 1000).toFixed(1)} km • ${eta || '--'} min Arrival`}
                                </p>
                             </div>
                           </div>
@@ -829,7 +837,14 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                              </div>
                           </div>
                         )}
-                        <ActionSlider label="Slide to Arrive" successLabel="Arrived ✓" disabled={!isWithinRange} onConfirm={reachDrop} color="bg-blue-600" />
+                        <ActionSlider 
+                          label="Slide to Arrive" 
+                          successLabel="Arrived ✓" 
+                          disabled={!isWithinRange} 
+                          onConfirm={reachDrop}
+                          containerStyle={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+                          style={{ background: BRAND_THEME.gradients.primary }}
+                        />
                       </div>
                     ) : (
                       <button 

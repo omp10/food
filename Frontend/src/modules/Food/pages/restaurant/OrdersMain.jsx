@@ -1973,7 +1973,7 @@ export default function OrdersMain() {
       {/* New Order Popup */}
       <AnimatePresence>
         {showNewOrderPopup && (
-          <>
+
             <motion.div
               className="fixed inset-0 z-[60] bg-blue-900/50 flex items-center justify-center p-4"
               initial={{ opacity: 0 }}
@@ -2261,7 +2261,7 @@ export default function OrdersMain() {
                       <motion.button
                         type="button"
                         className="absolute left-2 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-white text-gray-900 shadow-md disabled:cursor-not-allowed"
-                        style={{
+                        animate={{
                           x: (() => {
                             const sliderWidth =
                               acceptSliderRef.current?.offsetWidth || 320;
@@ -2272,6 +2272,11 @@ export default function OrdersMain() {
                             );
                             return acceptSwipeProgress * maxTravel;
                           })(),
+                        }}
+                        transition={{
+                          type: "tween",
+                          duration: acceptSwipeActiveRef.current ? 0 : 0.3,
+                          ease: "easeOut"
                         }}
                         onMouseDown={(e) => handleAcceptSwipeStart(e.clientX)}
                         onTouchStart={(e) =>
@@ -2302,14 +2307,14 @@ export default function OrdersMain() {
                 </div>
               </motion.div>
             </motion.div>
-          </>
+
         )}
       </AnimatePresence>
 
       {/* Reject Order Popup */}
       <AnimatePresence>
         {showRejectPopup && (
-          <>
+
             <motion.div
               className="fixed inset-0 z-[70] bg-blue-900/50 flex items-center justify-center p-4"
               initial={{ opacity: 0 }}
@@ -2399,14 +2404,14 @@ export default function OrdersMain() {
                 </div>
               </motion.div>
             </motion.div>
-          </>
+
         )}
       </AnimatePresence>
 
       {/* Cancel Order Popup */}
       <AnimatePresence>
         {showCancelPopup && orderToCancel && (
-          <>
+
             <motion.div
               className="fixed inset-0 z-[70] bg-blue-900/50 flex items-center justify-center p-4"
               initial={{ opacity: 0 }}
@@ -2499,7 +2504,7 @@ export default function OrdersMain() {
                 </div>
               </motion.div>
             </motion.div>
-          </>
+
         )}
       </AnimatePresence>
 

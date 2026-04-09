@@ -48,7 +48,7 @@ import {
 } from "@food/components/ui/dialog";
 import { authAPI, userAPI } from "@food/api";
 import { firebaseAuth } from "@food/firebase";
-import { clearModuleAuth } from "@food/utils/auth";
+import { clearModuleAuth, clearUserSession } from "@food/utils/auth";
 import { toast } from "sonner";
 const debugLog = (...args) => { };
 const debugWarn = (...args) => { };
@@ -412,7 +412,7 @@ export default function Profile() {
       // Clear legacy token data for backward compatibility
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user_authenticated");
-      localStorage.removeItem("user_user");
+      clearUserSession();
       localStorage.removeItem("user");
       localStorage.removeItem("cart");
       USER_SESSION_PREFERENCE_KEYS.forEach((key) => localStorage.removeItem(key));
@@ -432,7 +432,7 @@ export default function Profile() {
       // Clear legacy token data for backward compatibility
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user_authenticated");
-      localStorage.removeItem("user_user");
+      clearUserSession();
       localStorage.removeItem("user");
       localStorage.removeItem("cart");
       USER_SESSION_PREFERENCE_KEYS.forEach((key) => localStorage.removeItem(key));

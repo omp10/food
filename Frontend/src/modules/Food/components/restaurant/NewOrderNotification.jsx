@@ -9,20 +9,19 @@ import { useNavigate } from 'react-router-dom';
 export default function NewOrderNotification({ order, onClose, onViewOrder }) {
   const navigate = useNavigate();
 
-  if (!order) return null;
-
   const handleViewOrder = () => {
-    if (onViewOrder) {
+    if (onViewOrder && order) {
       onViewOrder(order);
-    } else {
+    } else if (order) {
       navigate(`/restaurant/orders/${order.orderMongoId || order.orderId}`);
     }
-    onClose();
+    if (onClose) onClose();
   };
 
   return (
     <AnimatePresence>
-      <motion.div
+      {order && (
+        <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -50 }}
@@ -135,6 +134,7 @@ export default function NewOrderNotification({ order, onClose, onViewOrder }) {
           </div>
         </div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 }

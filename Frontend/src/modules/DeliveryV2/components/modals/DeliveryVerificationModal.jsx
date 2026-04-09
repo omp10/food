@@ -7,13 +7,15 @@ import {
 import { deliveryAPI } from '@food/api';
 import { toast } from 'sonner';
 import { ActionSlider } from '@/modules/DeliveryV2/components/ui/ActionSlider';
+import { BRAND_THEME } from '@/config/brandTheme';
 
 const Backdrop = ({ onClose }) => (
   <motion.div 
     initial={{ opacity: 0 }} 
     animate={{ opacity: 1 }} 
     exit={{ opacity: 0 }}
-    className="absolute inset-0 bg-[#2979FB]/30 -z-10 pointer-events-auto" 
+    className="absolute inset-0 -z-10 pointer-events-auto backdrop-blur-sm" 
+    style={{ backgroundColor: BRAND_THEME.colors.brand.primary + '33' }}
     onClick={onClose}
   />
 );
@@ -23,8 +25,8 @@ const DeliveryInstructionsPanel = ({ note }) => {
   if (!text) return null
 
   return (
-    <div className="w-full rounded-3xl mb-6 overflow-hidden border border-orange-100 shadow-sm">
-      <div className="bg-linear-to-r from-orange-500 to-amber-500 px-5 py-3 flex items-center justify-between">
+    <div className="w-full rounded-3xl mb-4 overflow-hidden border shadow-sm" style={{ borderColor: BRAND_THEME.colors.brand.primarySoft }}>
+      <div className="px-5 py-3 flex items-center justify-between" style={{ background: BRAND_THEME.gradients.primary }}>
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 bg-white/20 rounded-2xl flex items-center justify-center text-white">
             <Package className="w-5 h-5" />
@@ -39,8 +41,8 @@ const DeliveryInstructionsPanel = ({ note }) => {
           </div>
         </div>
       </div>
-      <div className="bg-orange-50 px-5 py-4">
-        <p className="text-sm font-bold text-gray-950 leading-relaxed wrap-break-word">
+      <div className="px-5 py-3" style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}>
+        <p className="text-[13px] font-bold text-gray-950 leading-relaxed wrap-break-word">
           “{text}”
         </p>
       </div>
@@ -102,20 +104,22 @@ const OtpModal = ({ order, onVerified, onClose }) => {
 
   return (
     <div className="absolute inset-x-0 bottom-0 z-120 p-0 sm:p-4 h-full flex items-end justify-center pointer-events-none">
-      <Backdrop onClose={onClose} />
       <motion.div 
         initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-        className="w-full bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] p-6 pb-12 pointer-events-auto max-w-lg"
+        className="w-full bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] p-5 pb-8 pointer-events-auto max-w-lg max-h-[90vh] overflow-y-auto"
       >
-        <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
-        <div className="flex justify-between items-center mb-6">
+        <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-4" />
+        <div className="flex justify-between items-center mb-4">
            <div className="flex items-center gap-3">
-             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isOtpVerified ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
-               <ShieldCheck className="w-7 h-7" />
-             </div>
+            <div 
+              className={`w-10 h-10 rounded-xl flex items-center justify-center`}
+              style={isOtpVerified ? { backgroundColor: BRAND_THEME.colors.semantic.successSoft, color: BRAND_THEME.colors.semantic.success } : { backgroundColor: '#F3F4F6', color: '#9CA3AF' }}
+            >
+              <ShieldCheck className="w-6 h-6" />
+            </div>
              <div>
-               <h2 className="text-xl font-bold text-gray-900">Handover Code</h2>
-               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Step 1 of Verification</p>
+               <h2 className="text-lg font-black text-gray-900 leading-none">Handover Code</h2>
+               <p className="text-[10px] font-bold uppercase tracking-tight text-gray-400 mt-1">Enter OTP to verify</p>
              </div>
            </div>
            <button onClick={onClose} className="p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600"><X className="w-5 h-5"/></button>
@@ -123,7 +127,7 @@ const OtpModal = ({ order, onVerified, onClose }) => {
 
         <DeliveryInstructionsPanel note={order?.note} />
 
-        <div className="flex justify-center gap-3 mb-8">
+        <div className="flex justify-center gap-2 mb-6">
           {otp.map((digit, i) => (
             <input
               key={i}
@@ -133,7 +137,7 @@ const OtpModal = ({ order, onVerified, onClose }) => {
               value={digit}
               onChange={(e) => handleOtpChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
-              className={`w-14 h-18 bg-gray-50 border-2 rounded-2xl text-center text-3xl font-bold transition-all ${
+              className={`w-12 h-16 bg-gray-50 border-2 rounded-2xl text-center text-3xl font-medium transition-all ${
                 isOtpVerified ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 focus:border-green-600 text-gray-700'
               }`}
             />
@@ -146,7 +150,8 @@ const OtpModal = ({ order, onVerified, onClose }) => {
           successLabel="Verified!"
           disabled={otp.some(d => !d) || isVerifyingOtp || isOtpVerified || isAlreadyVerified}
           onConfirm={verifyOtp}
-          color="bg-gray-900"
+          containerStyle={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+          style={{ background: BRAND_THEME.gradients.primary }}
         />
       </motion.div>
     </div>
@@ -219,20 +224,22 @@ const PaymentModal = ({ order, otpString, onComplete, onClose }) => {
   return (
     <>
       <div className="absolute inset-x-0 bottom-0 z-120 p-0 sm:p-4 h-full flex items-end justify-center pointer-events-none">
-        <Backdrop onClose={onClose} />
         <motion.div 
           initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-          className="w-full bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] p-6 pb-12 pointer-events-auto max-w-lg"
+          className="w-full bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] p-5 pb-8 pointer-events-auto max-w-lg max-h-[90vh] overflow-y-auto"
         >
-          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
-          <div className="flex justify-between items-center mb-6">
+          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-4" />
+          <div className="flex justify-between items-center mb-4">
              <div className="flex items-center gap-3">
-               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isPaid ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
-                 <DollarSign className="w-7 h-7" />
+               <div 
+                 className="w-10 h-10 rounded-xl flex items-center justify-center"
+                 style={isPaid ? { backgroundColor: BRAND_THEME.colors.semantic.successSoft, color: BRAND_THEME.colors.semantic.success } : { backgroundColor: BRAND_THEME.colors.brand.primarySoft, color: BRAND_THEME.colors.brand.primary }}
+               >
+                 <DollarSign className="w-5 h-5" />
                </div>
                <div>
-                 <h2 className="text-xl font-bold text-gray-900">Collect Payment</h2>
-                 <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Step 2 of Verification</p>
+                 <h2 className="text-lg font-black text-gray-900 leading-none">Collect Payment</h2>
+                 <p className="text-[10px] font-bold uppercase tracking-tight text-gray-400 mt-1">Order total to receive</p>
                </div>
              </div>
              <button onClick={onClose} className="p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600"><X className="w-5 h-5"/></button>
@@ -240,23 +247,23 @@ const PaymentModal = ({ order, otpString, onComplete, onClose }) => {
 
           <DeliveryInstructionsPanel note={order?.note} />
 
-          <div className="bg-amber-50 rounded-3xl p-6 border border-amber-100 mb-8">
-             <div className="flex justify-between items-center mb-6">
+          <div className="bg-amber-50 rounded-[2rem] p-5 border border-amber-100 mb-6">
+             <div className="flex justify-between items-center mb-4">
                <div>
-                 <p className="text-amber-700 text-[10px] font-bold uppercase tracking-widest mb-1">
+                 <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: BRAND_THEME.colors.brand.primary }}>
                     {isPaid ? "Amount Paid Online" : "Cash to Collect"}
                  </p>
-                 <p className="text-amber-950 text-4xl font-bold">₹{amountToCollect.toFixed(2)}</p>
+                 <p className="text-gray-900 text-3xl font-black">₹{amountToCollect.toFixed(2)}</p>
                </div>
-               {isPaid && <div className="bg-green-500 text-white px-4 py-2 rounded-full text-[10px] font-bold">PAID ✓</div>}
+               {isPaid && <div className="text-white px-3 py-1.5 rounded-full text-[9px] font-bold" style={{ backgroundColor: BRAND_THEME.colors.semantic.success }}>PAID ✓</div>}
              </div>
 
              {!isPaid && (
-               <div className="space-y-4">
+               <div className="space-y-3">
                  <button 
                    onClick={generateQr}
                    disabled={isGeneratingQr}
-                   className="w-full py-4 bg-white border-2 border-amber-200 text-amber-800 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                   className="w-full py-3.5 bg-white border-2 border-amber-200 text-amber-800 rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"
                  >
                    {isGeneratingQr ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-5 h-5" />}
                    Show Payment QR
@@ -265,21 +272,16 @@ const PaymentModal = ({ order, otpString, onComplete, onClose }) => {
              )}
           </div>
 
-          {/* If the driver collects physical cash, they can directly slide this, bypassing QR */}
-          <ActionSlider 
+           <ActionSlider 
             key="action-payment"
             label="Slide to Complete Order" 
             successLabel="Delivered! ✓"
-            disabled={!isPaid && paymentStatus === 'pending'} // Disable only if we are specifically waiting for QR to sync
+            disabled={!isPaid && paymentStatus === 'pending'} 
             onConfirm={async () => {
-                try {
-                    await onComplete(otpString);
-                } catch (e) {
-                    // Slider handles reset
-                    throw e;
-                }
+                try { await onComplete(otpString); } catch (e) { throw e; }
             }}
-            color="bg-green-600"
+            containerStyle={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+            style={{ background: BRAND_THEME.gradients.primary }}
           />
         </motion.div>
       </div>
@@ -288,30 +290,31 @@ const PaymentModal = ({ order, otpString, onComplete, onClose }) => {
         {showQrModal && (
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-200 bg-[#2979FB]/80 flex items-center justify-center p-6 pointer-events-auto"
+            className="fixed inset-0 z-200 flex items-center justify-center p-6 pointer-events-auto backdrop-blur-md"
+            style={{ backgroundColor: BRAND_THEME.colors.brand.primary + 'CC' }}
             onClick={() => setShowQrModal(false)}
           >
             <motion.div 
               initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
-              className="bg-white w-full max-w-sm rounded-3xl p-8 flex flex-col items-center text-center shadow-2xl"
+              className="bg-white w-full max-w-sm rounded-[2rem] p-7 flex flex-col items-center text-center shadow-2xl"
               onClick={e => e.stopPropagation()}
             >
-              <h3 className="text-gray-950 font-bold text-xl mb-2">Scan to Pay</h3>
-              <p className="text-gray-500 text-sm mb-8 font-medium">Order Total: ₹{amountToCollect.toFixed(2)}</p>
+              <h3 className="text-gray-950 font-extrabold text-xl mb-1">Scan to Pay</h3>
+              <p className="text-gray-500 text-xs mb-6 font-medium">Order Total: ₹{amountToCollect.toFixed(2)}</p>
               
-              <div className="relative p-6 bg-gray-50 rounded-3xl border-2 border-gray-100 mb-8">
+              <div className="relative p-5 bg-gray-50 rounded-2xl border-2 border-gray-100 mb-6">
                  <img 
-                   src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(collectQrLink)}`} 
-                   alt="Razorpay QR"
-                   className="w-56 h-56"
+                   src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(collectQrLink || '')}`} 
+                   alt="Payment QR"
+                   className="w-48 h-48"
                  />
                  <button 
                     onClick={handleManualCheck}
                     disabled={isSyncing}
-                    className="absolute top-2 right-2 flex gap-1.5 items-center bg-green-500 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                    className="absolute -top-3 -right-3 flex gap-1.5 items-center bg-green-500 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
                  >
                     {isSyncing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />} 
-                    Check Status
+                    I have Paid
                  </button>
               </div>
 
@@ -319,7 +322,7 @@ const PaymentModal = ({ order, otpString, onComplete, onClose }) => {
                 onClick={() => setShowQrModal(false)}
                 className="w-full py-4 bg-gray-100 text-gray-500 rounded-2xl font-bold text-xs uppercase tracking-widest"
               >
-                Close QR
+                Go Back
               </button>
             </motion.div>
           </motion.div>
@@ -340,79 +343,78 @@ export const DeliveryVerificationModal = ({ order, onComplete, onClose }) => {
   ).toLowerCase();
   const isCod = ['cash', 'cod', 'cash_on_delivery', 'razorpay_qr'].includes(paymentMethod);
 
-  // Determine initial step: skip OTP if already verified
   const [step, setStep] = useState(() => {
-    if (alreadyVerified) {
-      return isCod ? 'payment' : 'complete';
-    }
+    if (alreadyVerified) return isCod ? 'payment' : 'complete';
     return 'otp';
   });
-  const [verifiedOtp, setVerifiedOtp] = useState(alreadyVerified ? (order.deliveryVerification.dropOtp.code || '') : '');
+  const [verifiedOtp, setVerifiedOtp] = useState(alreadyVerified ? (order?.deliveryVerification?.dropOtp?.code || '') : '');
 
   const handleOtpVerified = (otpValue) => {
     setVerifiedOtp(otpValue);
-    // After OTP is verified: COD → show payment panel, Online → show complete button
     setStep(isCod ? 'payment' : 'complete');
   };
 
-  // If OTP was already verified on mount and it's a non-COD order, auto-complete
   useEffect(() => {
     if (step === 'complete' && !isCod) {
       onComplete(verifiedOtp);
     }
-  }, []); // only on mount
+  }, [step, isCod, verifiedOtp, onComplete]);
 
   if (!order) return null;
 
   return (
-    <AnimatePresence mode="wait">
-      {step === 'otp' && (
-        <OtpModal 
-          key="otp-modal" 
-          order={order} 
-          onVerified={handleOtpVerified} 
-          onClose={onClose || (() => {})} 
-        />
-      )}
-      {step === 'payment' && (
-        <PaymentModal 
-          key="payment-modal" 
-          order={order} 
-          otpString={verifiedOtp} 
-          onComplete={onComplete} 
-          onClose={onClose || (() => {})} 
-        />
-      )}
-      {step === 'complete' && (
-        <div className="absolute inset-x-0 bottom-0 z-120 p-0 sm:p-4 h-full flex items-end justify-center pointer-events-none">
-          <Backdrop onClose={onClose || (() => {})} />
-          <motion.div 
-            key="complete-modal"
-            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-            className="w-full bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] p-6 pb-12 pointer-events-auto max-w-lg"
-          >
-            <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-green-100 text-green-600">
-                <CheckCircle2 className="w-7 h-7" />
+    <div className="fixed inset-0 z-[500] pointer-events-none">
+      <Backdrop onClose={onClose} />
+      <AnimatePresence mode="wait">
+        {step === 'otp' && (
+          <OtpModal 
+            key="otp-modal" 
+            order={order} 
+            onVerified={handleOtpVerified} 
+            onClose={onClose} 
+          />
+        )}
+        {step === 'payment' && (
+          <PaymentModal 
+            key="payment-modal" 
+            order={order} 
+            otpString={verifiedOtp} 
+            onComplete={onComplete} 
+            onClose={onClose} 
+          />
+        )}
+        {step === 'complete' && (
+          <div className="absolute inset-x-0 bottom-0 z-120 p-0 sm:p-4 h-full flex items-end justify-center pointer-events-none">
+            <motion.div 
+              key="complete-modal"
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              className="w-full bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] p-5 pb-8 pointer-events-auto max-w-lg"
+            >
+              <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-4" />
+              <div className="flex items-center gap-3 mb-6">
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: BRAND_THEME.colors.semantic.successSoft, color: BRAND_THEME.colors.semantic.success }}
+                >
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-gray-900 leading-none">OTP Verified</h2>
+                  <p className="text-[10px] font-bold uppercase tracking-tight text-green-600 mt-1">Ready to complete delivery</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">OTP Verified</h2>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-green-600">Payment Received Online</p>
-              </div>
-            </div>
-            <ActionSlider 
-              key="action-complete"
-              label="Slide to Complete Delivery" 
-              successLabel="Delivered! ✓"
-              onConfirm={async () => {
-                await onComplete(verifiedOtp);
-              }}
-              color="bg-green-600"
-            />
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+              <ActionSlider 
+                key="action-complete"
+                label="Slide to Complete Delivery" 
+                successLabel="Delivered! ✓"
+                onConfirm={() => onComplete(verifiedOtp)}
+                containerStyle={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+                style={{ background: BRAND_THEME.gradients.primary }}
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };

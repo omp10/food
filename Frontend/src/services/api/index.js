@@ -59,19 +59,32 @@ export const api = {
 let userMeInFlight = null;
 let userMeCached = null;
 let userMeCacheTime = 0;
+let userMeCacheToken = null;
 const USER_ME_CACHE_MS = 3000;
 
 const getUserMeOnce = () => {
   const now = Date.now();
-  if (userMeCached && now - userMeCacheTime < USER_ME_CACHE_MS) {
+  const currentToken = typeof window !== "undefined" ? localStorage.getItem("user_accessToken") || localStorage.getItem("accessToken") : null;
+
+  if (userMeCached && userMeCacheToken === currentToken && now - userMeCacheTime < USER_ME_CACHE_MS) {
     return Promise.resolve(userMeCached);
   }
+  
+  // Invalidate in-flight if token changed
+  if (userMeInFlight && userMeCacheToken !== currentToken) {
+    userMeInFlight = null;
+  }
+
   if (!userMeInFlight) {
+    const requestToken = currentToken;
+    userMeCacheToken = requestToken;
+    
     userMeInFlight = authService
       .getMe("user")
       .then((res) => {
         userMeCached = res;
         userMeCacheTime = Date.now();
+        userMeCacheToken = requestToken; // Update token along with cache
         return res;
       })
       .finally(() => {

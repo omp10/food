@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from "@food/context/CartContext";
 import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
+import { BRAND_THEME } from '@/config/brandTheme';
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}

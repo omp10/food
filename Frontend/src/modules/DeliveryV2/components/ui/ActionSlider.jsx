@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
+import { BRAND_THEME } from '@/config/brandTheme';
 
 /**
  * ActionSlider - Professional "Swipe to Confirm" UI Component.
@@ -10,6 +11,8 @@ export const ActionSlider = ({
   onConfirm, 
   disabled = false,
   color = "bg-green-600",
+  style = {},
+  containerStyle = {},
   successLabel = "Confirmed ✓"
 }) => {
   const [progress, setProgress] = useState(0);
@@ -29,17 +32,22 @@ export const ActionSlider = ({
     if (disabled || isSuccess) return;
     
     const containerWidth = containerRef.current?.offsetWidth || 300;
-    const handleWidth = 56; // w-14
-    const totalPath = containerWidth - handleWidth - 12; // p-1.5 = 6px each side
+    const handleSize = 56;
+    const padding = 6; // p-1.5 = 6px
+    const totalPath = containerWidth - handleSize - (padding * 2);
     
-    const currentProgress = Math.min(1, Math.max(0, (info.point.x - containerRef.current.getBoundingClientRect().left) / totalPath));
+    // Calculate progress based on relative movement
+    const rect = containerRef.current.getBoundingClientRect();
+    const relativeX = info.point.x - rect.left - (handleSize / 2);
+    const currentProgress = Math.min(1, Math.max(0, relativeX / totalPath));
+    
     setProgress(currentProgress);
   };
 
   const handleDragEnd = async (event, info) => {
     if (disabled || isSuccess) return;
 
-    if (progress > 0.8 || info.offset.x > 150) {
+    if (progress > 0.8) {
       setIsSuccess(true);
       setProgress(1);
       if (onConfirm) {
@@ -60,13 +68,12 @@ export const ActionSlider = ({
   return (
     <div 
       ref={containerRef}
-      className={`relative w-full h-[68px] rounded-full p-1.5 overflow-hidden transition-all duration-300 ${
-        'bg-gray-950 shadow-lg shadow-black/10'
-      }`}
+      className={`relative w-full h-[60px] rounded-full p-1 overflow-hidden transition-all duration-300 shadow-sm border border-black/5`}
+      style={{ backgroundColor: BRAND_THEME.colors.neutral.surfaceMuted, ...containerStyle }}
     >
       {/* Background Track */}
-      <div className={`absolute inset-y-0 left-[76px] right-5 flex items-center justify-center text-center font-bold text-[11px] uppercase tracking-[0.14em] leading-none whitespace-nowrap transition-opacity duration-300 ${
-        isSuccess ? 'opacity-0' : disabled ? 'text-white/70' : 'text-white/88'
+      <div className={`absolute inset-y-0 left-[68px] right-5 flex items-center justify-center text-center font-black text-[10px] uppercase tracking-[0.18em] leading-none whitespace-nowrap transition-opacity duration-300 z-10 ${
+        isSuccess ? 'opacity-0' : 'text-[#000000]'
       }`}>
         {disabled ? 'Action Locked' : label}
       </div>
@@ -74,6 +81,7 @@ export const ActionSlider = ({
       {/* Dynamic Progress Fill */}
       <motion.div 
         className={`absolute inset-0 ${color} rounded-full`}
+        style={style}
         initial={{ width: 0 }}
         animate={{ 
           width: isSuccess ? '100%' : `${progress * 100}%`,
@@ -96,20 +104,21 @@ export const ActionSlider = ({
         )}
       </AnimatePresence>
 
-      {/* The Handle */}
       <motion.div
         drag={disabled || isSuccess ? false : "x"}
-        dragConstraints={{ left: 0, right: containerRef.current?.offsetWidth ? containerRef.current.offsetWidth - 68 : 250 }}
-        dragElastic={0.1}
+        dragConstraints={containerRef}
+        dragElastic={0.05}
+        dragMomentum={false}
         onDrag={handleDrag}
         onDragEnd={handleDragEnd}
         animate={controls}
-        className={`relative w-14 h-14 rounded-full flex items-center justify-center z-20 cursor-grab active:cursor-grabbing shadow-xl transition-colors ${
-          disabled ? 'bg-gray-200 text-gray-400' : 
-          isSuccess ? 'bg-white text-green-600' : 'bg-white text-gray-950'
+        className={`relative w-[52px] h-[52px] rounded-full flex items-center justify-center z-20 cursor-grab active:cursor-grabbing shadow-lg transition-colors ${
+          disabled ? 'bg-white text-gray-300' : 
+          isSuccess ? 'bg-white' : 'bg-white text-gray-900'
         }`}
+        style={isSuccess ? { color: BRAND_THEME.colors.semantic.success } : {}}
       >
-        <ChevronRight className={`w-8 h-8 transition-transform duration-300 ${isSuccess ? 'scale-110' : ''}`} />
+        <ChevronRight className={`w-7 h-7 transition-transform duration-300 ${isSuccess ? 'scale-110' : ''}`} />
       </motion.div>
     </div>
   );

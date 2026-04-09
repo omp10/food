@@ -9,6 +9,7 @@ import { ActionSlider } from '@/modules/DeliveryV2/components/ui/ActionSlider';
 import { uploadAPI } from '@food/api';
 import { toast } from 'sonner';
 import { openCamera } from "@food/utils/imageUploadUtils";
+import { BRAND_THEME } from '@/config/brandTheme';
 
 /**
  * PickupActionModal - Unified White/Green Theme with Slider Actions.
@@ -89,29 +90,29 @@ export const PickupActionModal = ({
       <motion.div
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
-        className="w-full bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] p-6 pb-12"
+        className="w-full bg-white rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] p-5 pb-8 max-h-[90vh] overflow-y-auto"
       >
         {/* Handle / Minimize */}
-        <div className="w-full flex justify-center pb-4 pt-1">
+        <div className="w-full flex justify-center pb-2 pt-1">
           <button onClick={onMinimize} className="p-1 hover:bg-gray-100 active:scale-95 transition-all rounded-full flex flex-col items-center">
-             <ChevronDown className="w-6 h-6 text-gray-400 stroke-[3]" />
+             <ChevronDown className="w-6 h-6 text-gray-300 stroke-[3]" />
           </button>
         </div>
 
         {/* Restaurant Header */}
-        <div className="flex items-start justify-between mb-8 pb-4 border-b border-gray-50">
-          <div className="flex gap-4">
-            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-black/5 overflow-hidden border border-gray-100">
+        <div className="flex items-start justify-between mb-5 pb-3 border-b border-gray-50">
+          <div className="flex gap-3">
+            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-black/5 overflow-hidden border border-gray-100">
               <img src={restaurantLogo} alt="Logo" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h3 className="text-gray-950 text-xl font-bold">{restaurantName}</h3>
-              <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 mt-1.5">
+              <h3 className="text-gray-950 text-lg font-extrabold leading-none">{restaurantName}</h3>
+              <p className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1 mt-2">
                 {isAtPickup ? (
-                  <span className="text-green-600">Reached Location √</span>
+                  <span style={{ color: BRAND_THEME.colors.semantic.success }}>Reached Location √</span>
                 ) : (
-                  <span className="text-orange-500">
-                    {(distanceToTarget / 1000).toFixed(1)} km • {eta || '--'} min to Store
+                  <span style={{ color: BRAND_THEME.colors.brand.primary }}>
+                    {(distanceToTarget / 1000).toFixed(1)} km • {eta || '--'} min
                   </span>
                 )}
               </p>
@@ -122,27 +123,30 @@ export const PickupActionModal = ({
             {restaurantPhone && (
               <button
                 onClick={() => window.location.href = `tel:${restaurantPhone}`}
-                className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600 border border-green-100"
+                className="w-9 h-9 rounded-full flex items-center justify-center border transition-opacity hover:opacity-80"
+                style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft, color: BRAND_THEME.colors.brand.primary, borderColor: BRAND_THEME.colors.brand.primary + '33' }}
               >
-                <Phone className="w-5 h-5" />
+                <Phone className="w-4 h-4" />
               </button>
             )}
             <button 
               onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurantAddress)}`, '_blank')}
-              className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white shadow-lg"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-white shadow-lg"
+              style={{ backgroundColor: BRAND_THEME.colors.neutral.textPrimary }}
             >
-              <Navigation className="w-5 h-5" />
+              <Navigation className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* Action Sliders */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           {!isAtPickup ? (
             <div>
-              <p className={`text-center text-[10px] font-bold uppercase tracking-widest mb-3 transition-colors ${
-                isWithinRange ? 'text-green-600' : 'text-orange-500 animate-pulse'
-              }`}>
+              <p 
+                className="text-center text-[10px] font-bold uppercase tracking-widest mb-3 transition-colors"
+                style={{ color: isWithinRange ? BRAND_THEME.colors.semantic.success : BRAND_THEME.colors.brand.primary }}
+              >
                 {isWithinRange ? 'Ready - Swipe to confirm arrival' : 'Get closer to restaurant'}
               </p>
               <ActionSlider 
@@ -151,7 +155,8 @@ export const PickupActionModal = ({
                 successLabel="Reached!"
                 disabled={!isWithinRange}
                 onConfirm={onReachedPickup}
-                color="bg-green-600"
+                containerStyle={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+                style={{ background: BRAND_THEME.gradients.primary }}
               />
             </div>
           ) : (
@@ -161,16 +166,18 @@ export const PickupActionModal = ({
                    <>
                       <button
                         onClick={handleTakeCameraPhoto}
-                        className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl bg-gray-900 text-white font-bold text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl text-white font-bold text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                        style={{ backgroundColor: BRAND_THEME.colors.neutral.textPrimary }}
                       >
-                        <Camera className="w-5 h-5" />
+                        <Camera className="w-4 h-4" />
                         <span>Camera</span>
                       </button>
                       <button
                         onClick={handlePickFromGallery}
-                        className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl bg-orange-50 text-orange-600 border border-orange-100 font-bold text-xs uppercase tracking-widest active:scale-95 transition-all"
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-widest active:scale-95 transition-all border"
+                        style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft, color: BRAND_THEME.colors.brand.primary, borderColor: BRAND_THEME.colors.brand.primary + '33' }}
                       >
-                        <ImageIcon className="w-5 h-5" />
+                        <ImageIcon className="w-4 h-4" />
                         <span>Gallery</span>
                       </button>
                    </>
@@ -200,7 +207,10 @@ export const PickupActionModal = ({
               </div>
 
               <div>
-                <p className={`text-center text-[10px] font-bold uppercase tracking-widest mb-3 ${billImageUploaded ? 'text-green-600' : 'text-gray-400'}`}>
+                <p 
+                  className="text-center text-[10px] font-bold uppercase tracking-widest mb-3"
+                  style={{ color: billImageUploaded ? BRAND_THEME.colors.semantic.success : BRAND_THEME.colors.neutral.textMuted }}
+                >
                   {billImageUploaded ? "Check the restaurant logo - Swipe to pick up" : "Capture bill to unlock swipe"}
                 </p>
                 <ActionSlider 
@@ -209,7 +219,8 @@ export const PickupActionModal = ({
                   successLabel="Picked Up!"
                   disabled={!billImageUploaded}
                   onConfirm={() => onPickedUp(billImageUrl)}
-                  color="bg-orange-500"
+                  containerStyle={{ backgroundColor: billImageUploaded ? BRAND_THEME.colors.brand.primarySoft : BRAND_THEME.colors.neutral.surfaceMuted }}
+                  style={{ background: billImageUploaded ? BRAND_THEME.gradients.primary : '#E5E7EB' }}
                 />
               </div>
             </div>
@@ -217,11 +228,14 @@ export const PickupActionModal = ({
 
           {/* Delivery Instructions (User Note) */}
           {order?.note && (
-            <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex gap-3 items-start">
-              <ChefHat className="w-5 h-5 text-orange-500 mt-0.5 shrink-0" />
+            <div 
+              className="border rounded-2xl p-3.5 flex gap-3 items-start"
+              style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft, borderColor: BRAND_THEME.colors.brand.primary + '11' }}
+            >
+              <ChefHat className="w-4 h-4 mt-0.5 shrink-0" style={{ color: BRAND_THEME.colors.brand.primary }} />
               <div>
-                <p className="text-[10px] font-bold text-orange-600 uppercase tracking-widest mb-1.5">User Instructions</p>
-                <p className="text-sm font-bold text-gray-800 leading-snug">"{order.note}"</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: BRAND_THEME.colors.brand.primary }}>User Instructions</p>
+                <p className="text-[13px] font-bold text-gray-800 leading-snug">"{order.note}"</p>
               </div>
             </div>
           )}
@@ -229,13 +243,13 @@ export const PickupActionModal = ({
           {/* Collapsible Order Summary */}
           <button 
             onClick={() => setShowItems(!showItems)}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors"
+            className="w-full flex items-center justify-between p-3.5 bg-gray-50 rounded-2x"
           >
-            <div className="flex items-center gap-3 text-gray-900 font-bold text-xs uppercase tracking-widest">
-              <Package className="w-5 h-5 text-gray-400" />
+            <div className="flex items-center gap-3 text-gray-900 font-bold text-[10px] uppercase tracking-widest">
+              <Package className="w-4 h-4 text-gray-400" />
               <span>Order Details ({items.length || 0})</span>
             </div>
-            {showItems ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            {showItems ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronUp className="w-4 h-4 text-gray-400" />}
           </button>
 
           {showItems && (
@@ -243,7 +257,10 @@ export const PickupActionModal = ({
               {items.map((item, idx) => (
                 <div key={idx} className="flex justify-between items-center p-3 border-b border-gray-50 last:border-0">
                   <span className="text-gray-700 text-sm font-bold">{item.name || 'Item Name'}</span>
-                  <span className="text-green-600 font-bold bg-green-50 px-2.5 py-1 rounded-lg text-xs">x{item.quantity || 1}</span>
+                  <span 
+                    className="font-bold px-2.5 py-1 rounded-lg text-xs"
+                    style={{ color: BRAND_THEME.colors.brand.primary, backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
+                  >x{item.quantity || 1}</span>
                 </div>
               ))}
             </div>
