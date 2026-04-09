@@ -23,8 +23,8 @@ export const OrderSummaryModal = ({ order, onDone }) => {
             <CheckCircle className="w-9 h-9" style={{ color: BRAND_THEME.colors.semantic.success }} />
           </div>
           
-          <h1 className="text-white text-2xl font-bold mb-1 tracking-tight">Well Done!</h1>
-          <p className="text-white/80 text-sm mb-6">Trip completed successfully.</p>
+          <h1 className="text-white text-xl font-bold mb-1 tracking-tight">Well Done!</h1>
+          <p className="text-white/80 text-xs mb-4">Trip completed successfully.</p>
 
           <div className="bg-white rounded-3xl p-4 pb-5 mb-8 shadow-2xl text-gray-900 border border-white/20">
             <div className="flex items-center justify-center gap-1.5 mb-2 opacity-60">

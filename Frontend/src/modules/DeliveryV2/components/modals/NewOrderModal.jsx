@@ -220,7 +220,7 @@ export const NewOrderModal = ({ order, onAccept, onReject, onMinimize }) => {
               onConfirm={() => onAccept(order)} 
               containerStyle={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
               style={{ background: BRAND_THEME.gradients.primary }}
-              successLabel="Order Accepted ✓"
+              successLabel="Order Accepted"
             />
 
             <button 

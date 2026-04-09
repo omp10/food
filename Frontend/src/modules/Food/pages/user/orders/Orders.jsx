@@ -544,7 +544,7 @@ export default function Orders() {
     const restaurantPath = order.restaurantSlug || order.restaurantId
     const shareUrl = restaurantPath
       ? `${window.location.origin}/food/user/restaurants/${restaurantPath}`
-      : `${window.location.origin}/food/user/orders/${order.id}`
+      : `${window.location.origin}/orders/${order.id}`
 
     const shareText = `Check out ${order.restaurant} on ${companyName}.
 Location: ${location || "Location not available"}
@@ -576,7 +576,7 @@ Order again from this restaurant in the ${companyName} app.`
 
   const handleViewOrderDetails = (order) => {
     setActiveMenuOrderId(null)
-    navigate(`/food/user/orders/${order.id}`)
+    navigate(`/orders/${order.id}`)
   }
 
   // Open rating modal for an order
@@ -957,7 +957,7 @@ Order again from this restaurant in the ${companyName} app.`
                     )}
                   </div>
                   <div className="flex items-center ml-4">
-                    <Link to={`/food/user/orders/${order.id}`}>
+                    <Link to={`/orders/${order.id}`}>
                       <button className="text-xs font-medium flex items-center gap-1 hover:opacity-80" style={{ color: BRAND_THEME.tokens.orders.primaryText }}>
                         View Details
                         <ChevronRight className="w-4 h-4" />

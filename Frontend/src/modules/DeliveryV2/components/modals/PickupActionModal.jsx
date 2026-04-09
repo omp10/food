@@ -109,7 +109,7 @@ export const PickupActionModal = ({
               <h3 className="text-gray-950 text-lg font-extrabold leading-none">{restaurantName}</h3>
               <p className="text-[9px] font-bold uppercase tracking-widest flex items-center gap-1 mt-2">
                 {isAtPickup ? (
-                  <span style={{ color: BRAND_THEME.colors.semantic.success }}>Reached Location √</span>
+                  <span style={{ color: BRAND_THEME.colors.semantic.success }}>Reached Location</span>
                 ) : (
                   <span style={{ color: BRAND_THEME.colors.brand.primary }}>
                     {(distanceToTarget / 1000).toFixed(1)} km • {eta || '--'} min

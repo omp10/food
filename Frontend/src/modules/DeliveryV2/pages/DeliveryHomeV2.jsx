@@ -618,7 +618,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                 <div className="grid grid-cols-2 gap-3 w-full">
                   {/* LEFT: DISTANCE (Vibrant Orange Card) */}
                   <div 
-                    className="rounded-xl p-2.5 shadow-lg flex items-center justify-between overflow-hidden relative border border-white/10"
+                    className="rounded-lg p-2 shadow-md flex items-center justify-between"
                     style={{ background: BRAND_THEME.gradients.primary }}
                   >
                     <div className="flex flex-col z-10">
@@ -637,7 +637,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
 
                   {/* RIGHT: TIME (Emerald PRO Content) */}
                   <div 
-                    className="rounded-xl p-2.5 shadow-lg flex items-center justify-between relative overflow-hidden group border border-white/10"
+                    className="rounded-lg p-2 shadow-md flex items-center justify-between"
                     style={{ backgroundColor: BRAND_THEME.colors.semantic.success }}
                   >
                     <div className="flex flex-col z-10">
@@ -839,7 +839,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                         )}
                         <ActionSlider 
                           label="Slide to Arrive" 
-                          successLabel="Arrived ✓" 
+                          successLabel="Arrived" 
                           disabled={!isWithinRange} 
                           onConfirm={reachDrop}
                           containerStyle={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}

@@ -2802,7 +2802,7 @@ export default function Home() {
                               {/* Featured Dish Badge - Top Left */}
                               <div className="absolute top-4 left-4 flex items-center z-10 transform transition-transform duration-300 group-hover:scale-105">
                                 <div className={`px-4 py-1.5 rounded-full text-[11px] font-medium tracking-tight flex items-center shadow-2xl ${BRAND_THEME.tokens.homepage.home.restaurantCard.featuredDishBadge}`}>
-                                  {restaurant.featuredDish} â€¢ â‚¹
+                                  {restaurant.featuredDish} • ₹
                                   {restaurant.featuredPrice}
                                 </div>
                               </div>

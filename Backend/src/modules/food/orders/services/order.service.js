@@ -1427,27 +1427,6 @@ export async function updateOrderStatusRestaurant(
   });
   await order.save();
 
-  // Real-time: status update to restaurant room.
-  try {
-    const io = getIO();
-    if (io) {
-      console.log(
-        `[DEBUG] Emitting status update to restaurant ${restaurantId} and user ${order.userId}: ${orderStatus}`,
-      );
-      const payload = {
-        orderMongoId: order._id?.toString?.(),
-        orderId: order.orderId,
-        orderStatus: order.orderStatus,
-        title: title || `Order ${order.orderId} updated`,
-        message: body || "",
-      };
-      io.to(rooms.restaurant(restaurantId)).emit(
-        "order_status_update",
-        payload,
-      );
-      io.to(rooms.user(order.userId)).emit("order_status_update", payload);
-    }
-
     let title = `Order ${order.orderId} updated`;
     let body = `Status changed to ${String(orderStatus).replace(/_/g, " ")}`;
 
@@ -1469,6 +1448,27 @@ export async function updateOrderStatusRestaurant(
       title = "Order Cancelled ❌";
       body = `Unfortunately, your order has been cancelled by the restaurant.${refundDetail}`;
     }
+
+    // Real-time: status update to restaurant room.
+    try {
+      const io = getIO();
+      if (io) {
+        console.log(
+          `[DEBUG] Emitting status update to restaurant ${restaurantId} and user ${order.userId}: ${orderStatus}`,
+        );
+        const payload = {
+          orderMongoId: order._id?.toString?.(),
+          orderId: order.orderId,
+          orderStatus: order.orderStatus,
+          title: title,
+          message: body,
+        };
+        io.to(rooms.restaurant(restaurantId)).emit(
+          "order_status_update",
+          payload,
+        );
+        io.to(rooms.user(order.userId)).emit("order_status_update", payload);
+      }
 
     const notifyList = [
       { ownerType: "USER", ownerId: order.userId },
@@ -1725,7 +1725,6 @@ export async function resendDeliveryNotificationRestaurant(orderId, restaurantId
 
     let notifiedCount = 0;
 
-    const { tryAutoAssign } = await import('./order.service.js');
     if (order.dispatch?.modeAtCreation === 'auto') {
         const assignedOrder = await tryAutoAssign(order._id);
         if (assignedOrder && assignedOrder.dispatch?.status === 'assigned') {
@@ -1736,10 +1735,8 @@ export async function resendDeliveryNotificationRestaurant(orderId, restaurantId
 
     // Fallback or Pool Mode Broadcast
     try {
-        const { getIO, rooms } = await import('../../../../core/sockets/socket.js');
         const io = getIO();
         if (io) {
-            const FoodRestaurant = (await import('../../restaurant/models/restaurant.model.js')).default;
             const restaurant = await FoodRestaurant.findById(order.restaurantId).select('restaurantName location addressLine1 area city state').lean();
             
             const payload = {
@@ -1753,7 +1750,6 @@ export async function resendDeliveryNotificationRestaurant(orderId, restaurantId
                 restaurantName: restaurant?.restaurantName
             };
 
-            const { listNearbyOnlineDeliveryPartners } = await import('./order-dispatch.service.js');
             const { partners } = await listNearbyOnlineDeliveryPartners(order.restaurantId, { maxKm: 30, limit: 30 });
             notifiedCount = partners.length;
             
@@ -1764,7 +1760,6 @@ export async function resendDeliveryNotificationRestaurant(orderId, restaurantId
             }
 
             if (partners.length > 0) {
-                 const { notifyOwnersSafely } = await import('../../../../core/notifications/firebase.service.js');
                  await notifyOwnersSafely(
                     partners.slice(0, 10).map((p) => ({ ownerType: "DELIVERY_PARTNER", ownerId: p.partnerId })),
                     {

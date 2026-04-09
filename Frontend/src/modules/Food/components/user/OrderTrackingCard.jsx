@@ -368,7 +368,7 @@ function OrderTrackingCardInner({ hasBottomNav = true }) {
         <div 
           onClick={() =>
             navigate(
-              `/food/user/orders/${orderRouteId}`,
+              `/orders/${orderRouteId}`,
             )
           }
           className="relative bg-white/95 backdrop-blur-xl rounded-[20px] p-4 shadow-[0_8px_30px_rgba(41,121,251,0.16)] border border-blue-100/70 overflow-visible cursor-pointer group"
