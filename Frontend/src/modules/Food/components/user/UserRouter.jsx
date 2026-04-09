@@ -18,8 +18,6 @@ const ProductDetail = lazy(() => import("@food/pages/user/ProductDetail"))
 
 // Cart
 const Cart = lazy(() => import("@food/pages/user/cart/Cart"))
-const Checkout = lazy(() => import("@food/pages/user/cart/Checkout"))
-const SelectAddress = lazy(() => import("@food/pages/user/cart/SelectAddress"))
 const AddressSelectorPage = lazy(() => import("@food/pages/user/cart/AddressSelectorPage"))
 
 // Orders
@@ -97,8 +95,6 @@ export default function UserRouter() {
 
           {/* Cart - Now Public */}
           <Route path="cart" element={<Cart />} />
-          <Route path="cart/checkout" element={<Checkout />} />
-          <Route path="cart/select-address" element={<SelectAddress />} />
           <Route path="address-selector" element={<AddressSelectorPage />} />
           <Route path="cart/address-selector" element={<AddressSelectorPage />} />
 
