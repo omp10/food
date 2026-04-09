@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
+import { useLocation } from "react-router-dom"
 import { Search, Pencil, Trash2, X, Loader2 } from "lucide-react"
 import { adminAPI } from "@food/api"
 const debugLog = (...args) => {}
@@ -7,6 +8,8 @@ const debugError = (...args) => {}
 
 
 export default function Coupons() {
+  const location = useLocation()
+  const isOffersOnly = location.pathname.toLowerCase().includes("/offers")
   const [searchQuery, setSearchQuery] = useState("")
   const [offers, setOffers] = useState([])
   const [restaurants, setRestaurants] = useState([])
@@ -25,6 +28,7 @@ export default function Coupons() {
   const [loadingPending, setLoadingPending] = useState(false)
   const [pendingError, setPendingError] = useState("")
   const [processingPending, setProcessingPending] = useState({})
+  const [viewOfferModal, setViewOfferModal] = useState(null)
   const formTopRef = useRef(null)
   const [formData, setFormData] = useState({
     couponCode: "",
@@ -46,16 +50,19 @@ export default function Coupons() {
     try {
       setLoading(true)
       setError(null)
-      const response = await adminAPI.getAllOffers({})
-
-      if (response?.data?.success) {
-        const list = response.data.data.offers || []
-        const nonPending = Array.isArray(list)
-          ? list.filter((o) => (o.approvalStatus || "approved") !== "pending")
-          : []
-        setOffers(nonPending)
+      if (isOffersOnly) {
+        setOffers([])
       } else {
-        setError("Failed to fetch offers")
+        const response = await adminAPI.getAllOffers({})
+        if (response?.data?.success) {
+          const list = response.data.data.offers || []
+          const nonPending = Array.isArray(list)
+            ? list.filter((o) => (o.approvalStatus || "approved") !== "pending")
+            : []
+          setOffers(nonPending)
+        } else {
+          setError("Failed to fetch offers")
+        }
       }
     } catch (err) {
       debugError("Error fetching offers:", err)
@@ -66,6 +73,13 @@ export default function Coupons() {
   }, [])
 
   const fetchPendingOffers = useCallback(async () => {
+    // For offers-only view, we no longer show admin approval; skip fetching.
+    if (isOffersOnly) {
+      setPendingOffers([])
+      setLoadingPending(false)
+      setPendingError("")
+      return
+    }
     try {
       setLoadingPending(true)
       setPendingError("")
@@ -367,6 +381,38 @@ export default function Coupons() {
     }
   }
 
+  const handleApproveOfferPending = async (offerId) => {
+    if (!offerId || processingPending[offerId]) return
+    try {
+      setProcessingPending((prev) => ({ ...prev, [offerId]: true }))
+      await adminAPI.approveRestaurantProductOffer(offerId)
+      setPendingOffers((prev) => prev.filter((p) => String(p._id) !== String(offerId)))
+    } catch (err) {
+      setPendingError(err?.response?.data?.message || "Failed to approve offer")
+    } finally {
+      setProcessingPending((prev) => ({ ...prev, [offerId]: false }))
+    }
+  }
+
+  const handleRejectOfferPending = async (offerId) => {
+    if (!offerId || processingPending[offerId]) return
+    const reason = window.prompt("Enter rejection reason", "") || ""
+    try {
+      setProcessingPending((prev) => ({ ...prev, [offerId]: true }))
+      await adminAPI.rejectRestaurantProductOffer(offerId, reason)
+      setPendingOffers((prev) => prev.filter((p) => String(p._id) !== String(offerId)))
+    } catch (err) {
+      setPendingError(err?.response?.data?.message || "Failed to reject offer")
+    } finally {
+      setProcessingPending((prev) => ({ ...prev, [offerId]: false }))
+    }
+  }
+
+  const handleViewOfferPending = (offer) => {
+    if (!offer) return
+    setViewOfferModal(offer)
+  }
+
   const handleViewPending = (offer) => {
     try {
       setFormData({
@@ -401,7 +447,7 @@ export default function Coupons() {
 
   const handleRejectPending = async (offerId) => {
     if (!offerId || processingPending[offerId]) return
-    const reason = window.prompt("Enter rejection reason (optional):") || ""
+    const reason = window.prompt("Enter rejection reason", "") || ""
     try {
       setProcessingPending((prev) => ({ ...prev, [offerId]: true }))
       await adminAPI.rejectRestaurantOffer(offerId, reason)
@@ -433,35 +479,39 @@ export default function Coupons() {
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4">
-            <h1 className="text-2xl font-bold text-slate-900">Restaurant Offers & Coupons</h1>
-            <button
-              type="button"
-              onClick={() => {
-                if (isAddOpen) {
-                  resetForm()
-                }
-                setIsAddOpen((prev) => !prev)
-                setSubmitError("")
-                setSubmitSuccess("")
-              }}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
-                isAddOpen 
-                  ? "bg-slate-100 text-slate-700 hover:bg-slate-200" 
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-              }`}
-            >
-              {isAddOpen ? (
-                <>
-                  <X className="w-4 h-4" />
-                  Cancel
-                </>
-              ) : (
-                "Add Coupon"
-              )}
-            </button>
+            <h1 className="text-2xl font-bold text-slate-900">
+              {isOffersOnly ? "Restaurant Offers" : "Restaurant Offers & Coupons"}
+            </h1>
+            {!isOffersOnly && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (isAddOpen) {
+                    resetForm()
+                  }
+                  setIsAddOpen((prev) => !prev)
+                  setSubmitError("")
+                  setSubmitSuccess("")
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
+                  isAddOpen 
+                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200" 
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                {isAddOpen ? (
+                  <>
+                    <X className="w-4 h-4" />
+                    Cancel
+                  </>
+                ) : (
+                  "Add Coupon"
+                )}
+              </button>
+            )}
           </div>
 
-      {isAddOpen && (
+      {isAddOpen && !isOffersOnly && (
         <form
           ref={formTopRef}
           onSubmit={handleSubmit}
@@ -677,15 +727,15 @@ export default function Coupons() {
                 : "Create Coupon"}
             </button>
           </div>
-        </form>
-      )}
+          </form>
+        )}
 
           {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by restaurant name, dish name, or coupon code..."
+              placeholder={isOffersOnly ? "Search by restaurant name or product..." : "Search by restaurant name, dish name, or coupon code..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -697,8 +747,14 @@ export default function Coupons() {
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
           <div className="flex items-center justify-between mb-4 gap-2">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Pending Restaurant Coupons</h2>
-              <p className="text-xs text-slate-500">Approve or reject coupons submitted by restaurants.</p>
+              <h2 className="text-xl font-bold text-slate-900">
+                {isOffersOnly ? "Pending Restaurant Offers" : "Pending Restaurant Coupons"}
+              </h2>
+              <p className="text-xs text-slate-500">
+                {isOffersOnly
+                  ? "Approve or reject offers submitted by restaurants."
+                  : "Approve or reject coupons submitted by restaurants."}
+              </p>
             </div>
             <button
               type="button"
@@ -710,70 +766,159 @@ export default function Coupons() {
             </button>
           </div>
 
-          {loadingPending ? (
-            <div className="flex items-center gap-2 text-slate-600 text-sm">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Loading pending coupons...
-            </div>
-          ) : pendingError ? (
-            <div className="text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">{pendingError}</div>
-          ) : pendingOffers.length === 0 ? (
-            <p className="text-sm text-slate-500">No pending coupons right now.</p>
-          ) : (
-            <div className="space-y-3">
-              {pendingOffers.map((offer) => (
-                <div
-                  key={offer._id}
-                  className="border border-slate-200 rounded-lg p-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base font-semibold text-slate-900">{offer.couponCode}</span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">pending</span>
-                    </div>
-                    <div className="text-xs text-slate-600">
-                      {offer.restaurantName || "Selected restaurant"} • {offer.discountType === "flat-price"
-                        ? `₹${offer.discountValue} OFF`
-                        : `${offer.discountValue}% OFF${offer.maxDiscount ? ` (up to ₹${offer.maxDiscount})` : ""}`}
-                    </div>
-                    <div className="text-[11px] text-slate-500">
-                      Created: {offer.createdAt ? new Date(offer.createdAt).toLocaleString() : "—"}
-                    </div>
-                  </div>
+        {loadingPending ? (
+          <div className="flex items-center gap-2 text-slate-600 text-sm">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading pending {isOffersOnly ? "offers" : "coupons"}...
+          </div>
+        ) : pendingError ? (
+          <div className="text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">{pendingError}</div>
+        ) : pendingOffers.length === 0 ? (
+          <p className="text-sm text-slate-500">No pending {isOffersOnly ? "offers" : "coupons"} right now.</p>
+        ) : (
+          <div className="space-y-3">
+            {pendingOffers.map((offer) => (
+              <div
+                key={offer._id}
+                className="border border-slate-200 rounded-lg p-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between"
+              >
+                <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleViewPending(offer)}
-                      className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 disabled:opacity-60"
-                      disabled={processingPending[offer._id]}
-                    >
-                      View
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleApprovePending(offer._id)}
-                      disabled={processingPending[offer._id]}
-                      className="px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 disabled:opacity-60"
-                    >
-                      {processingPending[offer._id] ? "Approving..." : "Approve"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRejectPending(offer._id)}
-                      disabled={processingPending[offer._id]}
-                      className="px-3 py-2 rounded-lg bg-red-50 text-red-700 text-sm font-semibold hover:bg-red-100 disabled:opacity-60"
-                    >
-                      Reject
-                    </button>
+                    <span className="text-base font-semibold text-slate-900">
+                      {isOffersOnly ? (offer.title || "Offer") : (offer.couponCode || "Coupon")}
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">pending</span>
+                  </div>
+                  <div className="text-xs text-slate-600">
+                    {offer.restaurantName || "Selected restaurant"} • {offer.discountType === "flat-price"
+                      ? `₹${offer.discountValue} OFF`
+                      : `${offer.discountValue}% OFF${offer.maxDiscount ? ` (up to ₹${offer.maxDiscount})` : ""}`}
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    Created: {offer.createdAt ? new Date(offer.createdAt).toLocaleString() : "—"}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => (isOffersOnly ? handleViewOfferPending(offer) : handleViewPending(offer))}
+                    className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 disabled:opacity-60"
+                    disabled={processingPending[offer._id]}
+                  >
+                    View
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => (isOffersOnly ? handleApproveOfferPending(offer._id) : handleApprovePending(offer._id))}
+                    disabled={processingPending[offer._id]}
+                    className="px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 disabled:opacity-60"
+                  >
+                    {processingPending[offer._id] ? "Approving..." : "Approve"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => (isOffersOnly ? handleRejectOfferPending(offer._id) : handleRejectPending(offer._id))}
+                    disabled={processingPending[offer._id]}
+                    className="px-3 py-2 rounded-lg bg-red-50 text-red-700 text-sm font-semibold hover:bg-red-100 disabled:opacity-60"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         </div>
 
-        {/* Offers List */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        {/* Offer view modal */}
+        {viewOfferModal && (
+          <div
+            className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+            onClick={() => setViewOfferModal(null)}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative border border-slate-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="absolute right-4 top-4 text-slate-500 hover:text-slate-700"
+                onClick={() => setViewOfferModal(null)}
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="text-xl font-bold text-slate-900 mb-4">Offer Details</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500">Title</p>
+                  <p className="font-semibold text-slate-900">{viewOfferModal.title || "—"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500">Restaurant</p>
+                  <p className="font-semibold text-slate-900">{viewOfferModal.restaurantName || "Selected restaurant"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500">Product</p>
+                  <p className="font-semibold text-slate-900">{viewOfferModal.productName || viewOfferModal.dishName || "—"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500">Discount</p>
+                  <p className="font-semibold text-slate-900">
+                    {viewOfferModal.discountType === "flat-price"
+                      ? `₹${viewOfferModal.discountValue || 0} OFF`
+                      : `${viewOfferModal.discountValue || 0}% OFF${
+                          viewOfferModal.maxDiscount ? ` (up to ₹${viewOfferModal.maxDiscount})` : ""
+                        }`}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500">Usage Limit (global)</p>
+                  <p className="font-semibold text-slate-900">{viewOfferModal.usageLimit ?? "—"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500">Per User Limit</p>
+                  <p className="font-semibold text-slate-900">{viewOfferModal.perUserLimit ?? "—"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500">Start Date</p>
+                  <p className="font-semibold text-slate-900">
+                    {viewOfferModal.startDate ? new Date(viewOfferModal.startDate).toLocaleDateString() : "Starts now"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500">End Date</p>
+                  <p className="font-semibold text-slate-900">
+                    {viewOfferModal.endDate ? new Date(viewOfferModal.endDate).toLocaleDateString() : "No expiry"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500">Approval Status</p>
+                  <p className="font-semibold text-slate-900 capitalize">{viewOfferModal.approvalStatus || "pending"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500">Created At</p>
+                  <p className="font-semibold text-slate-900">
+                    {viewOfferModal.createdAt ? new Date(viewOfferModal.createdAt).toLocaleString() : "—"}
+                  </p>
+                </div>
+              </div>
+
+              {viewOfferModal.rejectionReason && (
+                <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                  <p className="font-semibold">Reject reason</p>
+                  <p>{viewOfferModal.rejectionReason}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!isOffersOnly && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-slate-900">
               Offers List
@@ -954,7 +1099,8 @@ export default function Coupons() {
               </table>
             </div>
           )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )

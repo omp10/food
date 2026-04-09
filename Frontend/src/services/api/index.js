@@ -593,6 +593,8 @@ export const adminAPI = {
     apiClient.get("/food/admin/offers", { params, contextModule: "admin" }),
   getPendingRestaurantOffers: (params = {}) =>
     apiClient.get("/food/admin/offers/pending", { params, contextModule: "admin" }),
+  getPendingRestaurantProductOffers: (params = {}) =>
+    apiClient.get("/food/admin/offers/restaurant/pending", { params, contextModule: "admin" }),
   createAdminOffer: (body) =>
     apiClient.post("/food/admin/offers", body ?? {}, {
       contextModule: "admin",
@@ -615,6 +617,10 @@ export const adminAPI = {
     apiClient.patch(`/food/admin/offers/${String(offerId)}/approve`, {}, { contextModule: "admin" }),
   rejectRestaurantOffer: (offerId, reason = "") =>
     apiClient.patch(`/food/admin/offers/${String(offerId)}/reject`, { reason: String(reason || "") }, { contextModule: "admin" }),
+  approveRestaurantProductOffer: (offerId) =>
+    apiClient.patch(`/food/admin/offers/restaurant/${String(offerId)}/approve`, {}, { contextModule: "admin" }),
+  rejectRestaurantProductOffer: (offerId, reason = "") =>
+    apiClient.patch(`/food/admin/offers/restaurant/${String(offerId)}/reject`, { reason: String(reason || "") }, { contextModule: "admin" }),
 
   /** Delivery Partner Bonus (admin) */
   getDeliveryPartnerBonusTransactions: (params = {}) =>
@@ -880,8 +886,8 @@ export const adminAPI = {
   },
 };
 
-/** Restaurant API - OTP login via new backend; no email/password. */
-export const restaurantAPI = {
+  /** Restaurant API - OTP login via new backend; no email/password. */
+  export const restaurantAPI = {
   sendOTP: (phone, _purpose = "login") => {
     if (!phone) return Promise.reject(new Error("Phone is required"));
     return authService.requestRestaurantOtp(phone);
@@ -1001,6 +1007,15 @@ export const restaurantAPI = {
     apiClient.patch(`/food/restaurant/coupons/${String(id)}`, body ?? {}, { contextModule: "restaurant" }),
   deleteCoupon: (id) =>
     apiClient.delete(`/food/restaurant/coupons/${String(id)}`, { contextModule: "restaurant" }),
+  // Restaurant product offers (no coupon code)
+  createRestaurantOffer: (body = {}) =>
+    apiClient.post("/food/restaurant/offers/restaurant", body ?? {}, { contextModule: "restaurant" }),
+  getRestaurantOffers: () =>
+    apiClient.get("/food/restaurant/offers/restaurant", { contextModule: "restaurant" }),
+  deleteRestaurantOffer: (id) =>
+    apiClient.delete(`/food/restaurant/offers/restaurant/${String(id)}`, { contextModule: "restaurant" }),
+  updateRestaurantOffer: (id, body = {}) =>
+    apiClient.patch(`/food/restaurant/offers/restaurant/${String(id)}`, body ?? {}, { contextModule: "restaurant" }),
   /** Backward-compat helper used by Cart: returns coupons array for an item by adapting public offers */
   getCouponsByItemIdPublic: (restaurantId, _itemId) =>
     apiClient.get("/food/restaurant/offers").then((res) => {

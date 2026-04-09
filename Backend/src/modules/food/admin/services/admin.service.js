@@ -25,6 +25,7 @@ import { FoodSafetyEmergencyReport } from '../models/safetyEmergencyReport.model
 import { FoodAddon } from '../../restaurant/models/foodAddon.model.js';
 import { FoodSupportTicket } from '../../user/models/supportTicket.model.js';
 import { FoodRestaurantSupportTicket } from '../../restaurant/models/supportTicket.model.js';
+import { RestaurantOffer } from '../../restaurant/models/restaurantOffer.model.js';
 import { FoodOrder } from '../../orders/models/order.model.js';
 import { FoodTransaction } from '../../orders/models/foodTransaction.model.js';
 import { FoodRestaurantWithdrawal } from '../../restaurant/models/foodRestaurantWithdrawal.model.js';
@@ -3486,6 +3487,60 @@ export async function getPendingRestaurantOffers(query = {}) {
         offers,
         pagination: { page, limit, total, pages }
     };
+}
+
+export async function getPendingRestaurantProductOffers(query = {}) {
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.min(200, Math.max(1, Number(query.limit) || 50));
+    const skip = (page - 1) * limit;
+    const filter = { approvalStatus: 'pending' };
+    const [list, total] = await Promise.all([
+        RestaurantOffer.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate({ path: 'restaurantId', select: 'restaurantName' })
+            .lean(),
+        RestaurantOffer.countDocuments(filter)
+    ]);
+
+    const offers = list.map((o, idx) => ({
+        _id: o._id,
+        sl: skip + idx + 1,
+        title: o.title,
+        discountType: o.discountType,
+        discountValue: o.discountValue,
+        minOrderValue: o.minOrderValue ?? 0,
+        maxDiscount: o.maxDiscount ?? null,
+        usageLimit: o.usageLimit ?? null,
+        perUserLimit: o.perUserLimit ?? null,
+        startDate: o.startDate || null,
+        endDate: o.endDate || null,
+        restaurantId: o.restaurantId?._id ? String(o.restaurantId._id) : (o.restaurantId ? String(o.restaurantId) : null),
+        restaurantName: o.restaurantId?.restaurantName || 'Selected Restaurant',
+        createdAt: o.createdAt || null
+    }));
+
+    const pages = Math.ceil(total / limit) || 1;
+    return { offers, pagination: { page, limit, total, pages } };
+}
+
+export async function approveRestaurantProductOffer(id) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
+    return RestaurantOffer.findByIdAndUpdate(
+        id,
+        { $set: { approvalStatus: 'approved', status: 'active', rejectionReason: '' } },
+        { new: true }
+    ).lean();
+}
+
+export async function rejectRestaurantProductOffer(id, reason) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
+    return RestaurantOffer.findByIdAndUpdate(
+        id,
+        { $set: { approvalStatus: 'rejected', status: 'inactive', rejectionReason: String(reason || '').trim() } },
+        { new: true }
+    ).lean();
 }
 
 export async function approveRestaurantOffer(id) {

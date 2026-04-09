@@ -47,6 +47,12 @@ import {
     listRestaurantOffersController
 } from '../controllers/restaurantOffer.controller.js';
 import {
+    createRestaurantProductOfferController,
+    listRestaurantProductOffersController,
+    deleteRestaurantProductOfferController,
+    updateRestaurantProductOfferController
+} from '../controllers/restaurantProductOffer.controller.js';
+import {
     listAddonsController,
     createAddonController,
     updateAddonController,
@@ -192,6 +198,12 @@ router.post('/coupons', authMiddleware, requireRestaurant, createRestaurantOffer
 router.get('/coupons', authMiddleware, requireRestaurant, listRestaurantOffersController);
 router.patch('/coupons/:id', authMiddleware, requireRestaurant, updateRestaurantOfferController);
 router.delete('/coupons/:id', authMiddleware, requireRestaurant, deleteRestaurantOfferController);
+
+// Product offers (restaurant-created, pending admin approval)
+router.post('/offers/restaurant', authMiddleware, requireRestaurant, createRestaurantProductOfferController);
+router.get('/offers/restaurant', authMiddleware, requireRestaurant, listRestaurantProductOffersController);
+router.delete('/offers/restaurant/:id', authMiddleware, requireRestaurant, deleteRestaurantProductOfferController);
+router.patch('/offers/restaurant/:id', authMiddleware, requireRestaurant, updateRestaurantProductOfferController);
 
 // Orders (restaurant dashboard)
 router.get('/orders', authMiddleware, requireRestaurant, orderController.listOrdersRestaurantController);
