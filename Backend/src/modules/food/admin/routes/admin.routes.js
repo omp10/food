@@ -200,4 +200,15 @@ router.put('/pages-social-media/:key', upsertAdminPageController);
 router.get('/sidebar-badges', adminController.getSidebarBadges);
 router.get('/notifications/fssai-expired', adminController.getExpiredFssaiNotifications);
 
+
+// ----- Store Products (Admin sells to Delivery Boys) -----
+router.get('/store/products', adminController.getStoreProducts);
+router.post('/store/products', adminController.createStoreProduct);
+router.patch('/store/products/:id', adminController.updateStoreProduct);
+router.delete('/store/products/:id', adminController.deleteStoreProduct);
+router.patch('/store/products/:id/stock', adminController.updateStoreProductStock);
+
+// ----- Store Orders -----
+router.get('/store/orders', adminController.getStoreOrders);
+router.put('/store/orders/:id/status', adminController.updateStoreOrderStatus);
 export default router;

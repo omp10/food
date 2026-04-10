@@ -125,6 +125,9 @@ const QuickCommerceOrders = lazy(() => import("@food/pages/admin/quick-commerce/
 const QuickCommerceVendors = lazy(() => import("@food/pages/admin/quick-commerce/QuickCommerceVendors"));
 const QuickCommerceCategories = lazy(() => import("@food/pages/admin/quick-commerce/QuickCommerceCategories"));
 const QuickCommerceProducts = lazy(() => import("@food/pages/admin/quick-commerce/QuickCommerceProducts"));
+// Store Management (Admin → Delivery Boy)
+const StoreProducts = lazy(() => import("@food/pages/admin/store/StoreProducts"));
+const StoreOrders = lazy(() => import("@food/pages/admin/store/StoreOrders"));
 const AdminLogin = lazy(() => import("@food/pages/admin/auth/AdminLogin"));
 const AdminSignup = lazy(() => import("@food/pages/admin/auth/AdminSignup"));
 const AdminForgotPassword = lazy(() => import("@food/pages/admin/auth/AdminForgotPassword"));
@@ -289,6 +292,10 @@ export default function AdminRouter() {
             <Route path="clean-database" element={<CleanDatabase />} />
             <Route path="addon-activation" element={<AddonActivation />} />
             <Route path="hero-banner-management" element={<LandingPageManagement />} />
+
+            {/* STORE MANAGEMENT (Admin → Delivery Boy purchases) */}
+            <Route path="store/products" element={<StoreProducts />} />
+            <Route path="store/orders" element={<StoreOrders />} />
           </Route>
 
           {/* TAXI ADMIN - Placeholder for future implementation */}

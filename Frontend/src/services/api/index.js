@@ -172,6 +172,10 @@ export const notificationAPI = {
 
 /** Admin API - new backend only (GET /auth/me, PATCH /auth/admin/profile, POST /auth/admin/change-password) */
 export const adminAPI = {
+  getStoreOrdersAdmin: (params = {}) =>
+    apiClient.get("/food/admin/store/orders", { params, contextModule: "admin" }),
+  updateStoreOrderStatusAdmin: (orderId, body) =>
+    apiClient.put(`/food/admin/store/orders/${orderId}/status`, body, { contextModule: "admin" }),
   getSidebarBadges: () =>
     apiClient.get("/food/admin/sidebar-badges", { contextModule: "admin" }),
   login: (email, password) => authService.adminLogin(email, password),
@@ -884,6 +888,21 @@ export const adminAPI = {
       contextModule: "admin",
     });
   },
+  /** Store Products (Admin sells to Delivery Boys) */
+  getStoreProducts: (params = {}) =>
+    apiClient.get('/food/admin/store/products', { params, contextModule: 'admin' }),
+  createStoreProduct: (body) =>
+    apiClient.post('/food/admin/store/products', body ?? {}, { contextModule: 'admin' }),
+  updateStoreProduct: (id, body) =>
+    apiClient.patch(`/food/admin/store/products/${String(id)}`, body ?? {}, { contextModule: 'admin' }),
+  deleteStoreProduct: (id) =>
+    apiClient.delete(`/food/admin/store/products/${String(id)}`, { contextModule: 'admin' }),
+  updateStoreProductStock: (id, variantId, stockDelta) =>
+    apiClient.patch(`/food/admin/store/products/${String(id)}/stock`, { variantId: String(variantId), stockDelta: Number(stockDelta) }, { contextModule: 'admin' }),
+
+  /** Store Orders (admin view of delivery boy purchases) */
+  getStoreOrders: (params = {}) =>
+    apiClient.get('/food/admin/store/orders', { params, contextModule: 'admin' }),
 };
 
   /** Restaurant API - OTP login via new backend; no email/password. */
@@ -1994,6 +2013,30 @@ export const deliveryAPI = {
       params: { lat, lng, radius: radiusKm },
       contextModule: "delivery",
     }),
+  /** Store Shop (Delivery Boy purchases from Admin store) */
+  getStoreProducts: (params = {}) =>
+    apiClient.get('/food/delivery/store/products', { params, contextModule: 'delivery' }),
+  getStoreProductById: (id) =>
+    apiClient.get(`/food/delivery/store/products/${String(id)}`, { contextModule: 'delivery' }),
+  createStoreOrder: (body) =>
+    apiClient.post('/food/delivery/store/orders', body ?? {}, { contextModule: 'delivery' }),
+  getMyStoreOrders: (params = {}) =>
+    apiClient.get('/food/delivery/store/orders', { params, contextModule: 'delivery' }),
+  getStoreOrderById: (id) =>
+    apiClient.get(`/food/delivery/store/orders/${String(id)}`, { contextModule: 'delivery' }),
+  /** Store Shop (Delivery Boy purchases) */
+  getStoreProducts: (params = {}) =>
+    apiClient.get('/food/delivery/store/products', { params, contextModule: 'delivery' }),
+  getStoreProductById: (id) =>
+    apiClient.get(`/food/delivery/store/products/${String(id)}`, { contextModule: 'delivery' }),
+  placeStoreOrder: (body) =>
+    apiClient.post('/food/delivery/store/orders', body ?? {}, { contextModule: 'delivery' }),
+  verifyStoreOrder: (body) =>
+    apiClient.post('/food/delivery/store/orders/verify', body ?? {}, { contextModule: 'delivery' }),
+  getMyStoreOrders: (params = {}) =>
+    apiClient.get('/food/delivery/store/orders', { params, contextModule: 'delivery' }),
+  getMyStoreOrderById: (id) =>
+    apiClient.get(`/food/delivery/store/orders/${String(id)}`, { contextModule: 'delivery' }),
 };
 
 export const userAPI = {

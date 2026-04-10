@@ -28,6 +28,8 @@ import { FoodRestaurantSupportTicket } from '../../restaurant/models/supportTick
 import { RestaurantOffer } from '../../restaurant/models/restaurantOffer.model.js';
 import { FoodOrder } from '../../orders/models/order.model.js';
 import { FoodTransaction } from '../../orders/models/foodTransaction.model.js';
+import { StoreProduct } from '../models/storeProduct.model.js';
+import { StoreOrder } from '../models/storeOrder.model.js';
 import { FoodRestaurantWithdrawal } from '../../restaurant/models/foodRestaurantWithdrawal.model.js';
 import { FoodDeliveryWithdrawal } from '../../delivery/models/foodDeliveryWithdrawal.model.js';
 import { FoodDeliveryWallet } from '../../delivery/models/deliveryWallet.model.js';
@@ -4970,3 +4972,176 @@ export async function getSidebarBadges() {
     }
 }
 
+// ===== STORE PRODUCTS (Admin sells to Delivery Boys) =====
+
+export async function getStoreProducts(query = {}) {
+    const limit = Math.min(Math.max(parseInt(query.limit, 10) || 50, 1), 200);
+    const page = Math.max(parseInt(query.page, 10) || 1, 1);
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+    if (query.isPublished !== undefined && query.isPublished !== '') {
+        filter.isPublished = String(query.isPublished) === 'true';
+    }
+    if (query.search) {
+        filter.$or = [
+            { name: { $regex: query.search, $options: 'i' } },
+            { description: { $regex: query.search, $options: 'i' } },
+            { category: { $regex: query.search, $options: 'i' } }
+        ];
+    }
+
+    const [products, total] = await Promise.all([
+        StoreProduct.find(filter).sort({ sortOrder: 1, createdAt: -1 }).skip(skip).limit(limit).lean(),
+        StoreProduct.countDocuments(filter)
+    ]);
+
+    return { products, total, page, limit };
+}
+
+export async function createStoreProduct(body = {}) {
+    const { name, description, image, category, variants, isPublished, sortOrder } = body;
+
+    if (!name || !String(name).trim()) {
+        throw new ValidationError('Product name is required');
+    }
+    if (!Array.isArray(variants) || variants.length === 0) {
+        throw new ValidationError('At least one variant is required');
+    }
+    for (const v of variants) {
+        if (!v.name || !String(v.name).trim()) throw new ValidationError('Each variant must have a name');
+        if (v.price === undefined || v.price === null || Number(v.price) < 0) throw new ValidationError('Each variant must have a valid price');
+        if (v.stock === undefined || v.stock === null || Number(v.stock) < 0) throw new ValidationError('Each variant must have a valid stock quantity');
+    }
+
+    const product = await StoreProduct.create({
+        name: String(name).trim(),
+        description: String(description || '').trim(),
+        image: String(image || '').trim(),
+        category: String(category || '').trim(),
+        variants: variants.map(v => ({
+            name: String(v.name).trim(),
+            price: Number(v.price),
+            stock: Number(v.stock)
+        })),
+        isPublished: Boolean(isPublished),
+        sortOrder: Number(sortOrder) || 0
+    });
+
+    return product;
+}
+
+export async function updateStoreProduct(id, body = {}) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        throw new ValidationError('Invalid product ID');
+    }
+
+    const update = {};
+    if (body.name !== undefined) update.name = String(body.name).trim();
+    if (body.description !== undefined) update.description = String(body.description).trim();
+    if (body.image !== undefined) update.image = String(body.image).trim();
+    if (body.category !== undefined) update.category = String(body.category).trim();
+    if (body.isPublished !== undefined) update.isPublished = Boolean(body.isPublished);
+    if (body.sortOrder !== undefined) update.sortOrder = Number(body.sortOrder) || 0;
+
+    if (Array.isArray(body.variants)) {
+        for (const v of body.variants) {
+            if (!v.name || !String(v.name).trim()) throw new ValidationError('Each variant must have a name');
+            if (v.price === undefined || Number(v.price) < 0) throw new ValidationError('Each variant must have a valid price');
+            if (v.stock === undefined || Number(v.stock) < 0) throw new ValidationError('Each variant must have a valid stock quantity');
+        }
+        update.variants = body.variants.map(v => ({
+            name: String(v.name).trim(),
+            price: Number(v.price),
+            stock: Number(v.stock)
+        }));
+    }
+
+    const updated = await StoreProduct.findByIdAndUpdate(id, { $set: update }, { new: true }).lean();
+    return updated;
+}
+
+export async function deleteStoreProduct(id) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        throw new ValidationError('Invalid product ID');
+    }
+    const deleted = await StoreProduct.findByIdAndDelete(id).lean();
+    return deleted;
+}
+
+export async function updateStoreProductStock(productId, variantId, stockDelta) {
+    // stockDelta: positive to add stock, negative to reduce
+    if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+        throw new ValidationError('Invalid product ID');
+    }
+    if (!variantId || !mongoose.Types.ObjectId.isValid(variantId)) {
+        throw new ValidationError('Invalid variant ID');
+    }
+    const delta = Number(stockDelta);
+    if (!Number.isFinite(delta)) throw new ValidationError('Stock delta must be a number');
+
+    const updated = await StoreProduct.findOneAndUpdate(
+        { _id: productId, 'variants._id': variantId },
+        { $inc: { 'variants.$.stock': delta } },
+        { new: true }
+    ).lean();
+
+    if (!updated) throw new ValidationError('Product or variant not found');
+    return updated;
+}
+
+export async function getStoreOrders(query = {}) {
+    const limit = Math.min(Math.max(parseInt(query.limit, 10) || 50, 1), 200);
+    const page = Math.max(parseInt(query.page, 10) || 1, 1);
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+    if (query.paymentStatus && query.paymentStatus !== 'all') filter.paymentStatus = query.paymentStatus;
+    if (query.orderStatus && query.orderStatus !== 'all') filter.orderStatus = query.orderStatus;
+    if (query.deliveryPartnerId && mongoose.Types.ObjectId.isValid(query.deliveryPartnerId)) {
+        filter.deliveryPartnerId = new mongoose.Types.ObjectId(query.deliveryPartnerId);
+    }
+    if (query.fromDate && query.toDate) {
+        filter.createdAt = { $gte: new Date(query.fromDate), $lte: new Date(query.toDate) };
+    }
+
+    const [orders, total] = await Promise.all([
+        StoreOrder.find(filter)
+            .populate('deliveryPartnerId', 'name phone profilePhoto')
+            .populate('productId', 'name image category')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+        StoreOrder.countDocuments(filter)
+    ]);
+
+    return { orders, total, page, limit };
+}
+
+export async function updateStoreOrderStatus(orderId, body = {}) {
+    if (!orderId || !mongoose.Types.ObjectId.isValid(orderId)) {
+        throw new ValidationError('Invalid store order ID');
+    }
+
+    const allowedStatuses = ['pending', 'confirmed', 'dispatched', 'delivered', 'cancelled'];
+    const nextStatus = String(body?.orderStatus || '').trim().toLowerCase();
+    if (!allowedStatuses.includes(nextStatus)) {
+        throw new ValidationError('Invalid order status');
+    }
+
+    const updated = await StoreOrder.findByIdAndUpdate(
+        orderId,
+        { $set: { orderStatus: nextStatus } },
+        { new: true }
+    )
+        .populate('deliveryPartnerId', 'name phone profilePhoto')
+        .populate('productId', 'name image category')
+        .lean();
+
+    if (!updated) {
+        throw new ValidationError('Store order not found');
+    }
+
+    return updated;
+}

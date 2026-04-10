@@ -3,7 +3,7 @@ import { upload } from '../../../../middleware/upload.js';
 import { authMiddleware } from '../../../../core/auth/auth.middleware.js';
 import { requireRoles } from '../../../../core/roles/role.middleware.js';
 import * as orderController from '../../orders/controllers/order.controller.js';
-import { registerDeliveryPartnerController, updateDeliveryPartnerProfileController, updateDeliveryPartnerBankDetailsController, listSupportTicketsController, createSupportTicketController, getSupportTicketByIdController, updateDeliveryPartnerDetailsController, updateDeliveryPartnerProfilePhotoBase64Controller, updateAvailabilityController, getWalletController, createWithdrawalRequestController, createCashDepositOrderController, verifyCashDepositPaymentController, getEarningsController, getTripHistoryController, getPocketDetailsController, getEmergencyHelpController, getCashLimitController, getDeliveryReferralStatsController, getActiveEarningAddonsController } from '../controllers/delivery.controller.js';
+import { registerDeliveryPartnerController, updateDeliveryPartnerProfileController, updateDeliveryPartnerBankDetailsController, listSupportTicketsController, createSupportTicketController, getSupportTicketByIdController, updateDeliveryPartnerDetailsController, updateDeliveryPartnerProfilePhotoBase64Controller, updateAvailabilityController, getWalletController, createWithdrawalRequestController, createCashDepositOrderController, verifyCashDepositPaymentController, getEarningsController, getTripHistoryController, getPocketDetailsController, getEmergencyHelpController, getCashLimitController, getDeliveryReferralStatsController, getActiveEarningAddonsController, getStoreProductsDelivery, getStoreProductByIdDelivery, createStoreOrderDelivery, verifyStoreOrderDelivery, getMyStoreOrders, getStoreOrderByIdDelivery } from '../controllers/delivery.controller.js';
 
 const router = express.Router();
 
@@ -64,5 +64,13 @@ router.get('/emergency-help', authMiddleware, requireRoles('DELIVERY_PARTNER'), 
 router.get('/cash-limit', authMiddleware, requireRoles('DELIVERY_PARTNER'), getCashLimitController);
 router.get('/referrals/stats', authMiddleware, requireRoles('DELIVERY_PARTNER'), getDeliveryReferralStatsController);
 
+
+// ----- Store Shop (Delivery Boy purchases) -----
+router.get('/store/products', authMiddleware, requireRoles('DELIVERY_PARTNER'), getStoreProductsDelivery);
+router.get('/store/products/:id', authMiddleware, requireRoles('DELIVERY_PARTNER'), getStoreProductByIdDelivery);
+router.post('/store/orders', authMiddleware, requireRoles('DELIVERY_PARTNER'), createStoreOrderDelivery);
+router.post('/store/orders/verify', authMiddleware, requireRoles('DELIVERY_PARTNER'), verifyStoreOrderDelivery);
+router.get('/store/orders', authMiddleware, requireRoles('DELIVERY_PARTNER'), getMyStoreOrders);
+router.get('/store/orders/:id', authMiddleware, requireRoles('DELIVERY_PARTNER'), getStoreOrderByIdDelivery);
 export default router;
 

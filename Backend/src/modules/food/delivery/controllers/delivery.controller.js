@@ -277,3 +277,146 @@ export const getDeliveryReferralStatsController = async (req, res, next) => {
     }
 };
 
+
+
+// ===== STORE SHOP (Delivery Boy purchases from Admin store) =====
+
+export async function getStoreProductsDelivery(req, res, next) {
+    try {
+        const { StoreProduct } = await import('../../admin/models/storeProduct.model.js');
+        const { category, search, limit = 20, page = 1 } = req.query;
+        const filter = { isPublished: true };
+        if (category) filter.category = { $regex: category, $options: 'i' };
+        if (search) filter.name = { $regex: search, $options: 'i' };
+        const skip = (Number(page) - 1) * Number(limit);
+        const [products, total] = await Promise.all([
+            StoreProduct.find(filter).skip(skip).limit(Number(limit)).lean(),
+            StoreProduct.countDocuments(filter)
+        ]);
+        res.status(200).json({ success: true, message: 'Store products fetched', data: { products, total, page: Number(page), limit: Number(limit) } });
+    } catch (error) { next(error); }
+}
+
+export async function getStoreProductByIdDelivery(req, res, next) {
+    try {
+        const { StoreProduct } = await import('../../admin/models/storeProduct.model.js');
+        const product = await StoreProduct.findOne({ _id: req.params.id, isPublished: true }).lean();
+        if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+        res.status(200).json({ success: true, message: 'Product fetched', data: { product } });
+    } catch (error) { next(error); }
+}
+
+export async function createStoreOrderDelivery(req, res, next) {
+    try {
+        const { StoreProduct } = await import('../../admin/models/storeProduct.model.js');
+        const { StoreOrder } = await import('../../admin/models/storeOrder.model.js');
+        const { createRazorpayOrder, getRazorpayKeyId } = await import('../../orders/helpers/razorpay.helper.js');
+        
+        const deliveryPartnerId = req.user?.userId || req.user?._id;
+        const { productId, variantId, quantity = 1 } = req.body || {};
+        if (!deliveryPartnerId) {
+            return res.status(401).json({ success: false, message: 'Delivery partner not authenticated' });
+        }
+        if (!productId || !variantId) {
+            return res.status(400).json({ success: false, message: 'productId and variantId are required' });
+        }
+        const product = await StoreProduct.findOne({ _id: productId, isPublished: true });
+        if (!product) return res.status(404).json({ success: false, message: 'Product not found or not available' });
+
+        const variant = product.variants.id(variantId);
+        if (!variant) return res.status(404).json({ success: false, message: 'Variant not found' });
+        if (variant.stock < quantity) return res.status(400).json({ success: false, message: `Insufficient stock. Available: ${variant.stock}` });
+
+        const totalAmount = variant.price * Number(quantity);
+
+        const order = await StoreOrder.create({
+            deliveryPartnerId,
+            productId: productId,
+            productName: product.name,
+            productImage: product.image,
+            variantId: variantId,
+            variantName: variant.name,
+            unitPrice: variant.price,
+            quantity: Number(quantity),
+            totalAmount,
+            paymentMethod: 'razorpay',
+            paymentStatus: 'pending',
+            orderStatus: 'pending',
+        });
+
+        // Deduct stock atomically to reserve it
+        await StoreProduct.updateOne(
+            { _id: productId, 'variants._id': variantId },
+            { $inc: { 'variants.$.stock': -Number(quantity) } }
+        );
+
+        // Generate Razorpay Order
+        const razorpayOrder = await createRazorpayOrder(totalAmount * 100, 'INR', order._id.toString());
+        order.razorpayOrderId = razorpayOrder.id;
+        await order.save();
+
+        res.status(201).json({ 
+            success: true, 
+            message: 'Order created', 
+            data: { 
+                order, 
+                razorpayOrderId: razorpayOrder.id,
+                razorpayKeyId: getRazorpayKeyId(),
+                amount: totalAmount * 100
+            } 
+        });
+    } catch (error) { next(error); }
+}
+
+export async function verifyStoreOrderDelivery(req, res, next) {
+    try {
+        const { StoreOrder } = await import('../../admin/models/storeOrder.model.js');
+        const { verifyPaymentSignature } = await import('../../orders/helpers/razorpay.helper.js');
+        const deliveryPartnerId = req.user?.userId || req.user?._id;
+        
+        const { orderId, razorpayPaymentId, razorpaySignature } = req.body;
+        if (!orderId || !razorpayPaymentId || !razorpaySignature) {
+            return res.status(400).json({ success: false, message: 'Missing parameters' });
+        }
+
+        const order = await StoreOrder.findOne({ _id: orderId, deliveryPartnerId });
+        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+        const isValid = verifyPaymentSignature(order.razorpayOrderId, razorpayPaymentId, razorpaySignature);
+        if (!isValid) return res.status(400).json({ success: false, message: 'Invalid payment signature' });
+
+        order.paymentStatus = 'paid';
+        order.orderStatus = 'confirmed';
+        order.razorpayPaymentId = razorpayPaymentId;
+        order.razorpaySignature = razorpaySignature;
+        await order.save();
+
+        res.status(200).json({ success: true, message: 'Payment verified and order confirmed', data: { order } });
+    } catch (error) { next(error); }
+}
+
+export async function getMyStoreOrders(req, res, next) {
+    try {
+        const { StoreOrder } = await import('../../admin/models/storeOrder.model.js');
+        const { status, limit = 20, page = 1 } = req.query;
+        const deliveryPartnerId = req.user?.userId || req.user?._id;
+        const filter = { deliveryPartnerId };
+        if (status) filter.orderStatus = status;
+        const skip = (Number(page) - 1) * Number(limit);
+        const [orders, total] = await Promise.all([
+            StoreOrder.find(filter).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).lean(),
+            StoreOrder.countDocuments(filter)
+        ]);
+        res.status(200).json({ success: true, message: 'Orders fetched', data: { orders, total } });
+    } catch (error) { next(error); }
+}
+
+export async function getStoreOrderByIdDelivery(req, res, next) {
+    try {
+        const { StoreOrder } = await import('../../admin/models/storeOrder.model.js');
+        const deliveryPartnerId = req.user?.userId || req.user?._id;
+        const order = await StoreOrder.findOne({ _id: req.params.id, deliveryPartnerId }).lean();
+        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+        res.status(200).json({ success: true, message: 'Order fetched', data: { order } });
+    } catch (error) { next(error); }
+}

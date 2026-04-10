@@ -21,13 +21,15 @@ import ActionSlider from '@/modules/DeliveryV2/components/ui/ActionSlider';
 import PocketV2 from '@/modules/DeliveryV2/pages/PocketV2';
 import HistoryV2 from '@/modules/DeliveryV2/pages/HistoryV2';
 import ProfileV2 from '@/modules/DeliveryV2/pages/ProfileV2';
+import ExploreV2 from '@/modules/DeliveryV2/pages/ExploreV2';
+import ShopV2 from '@/modules/DeliveryV2/pages/ShopV2';
 
 // Icons
 import { 
   Bell, HelpCircle, AlertTriangle, 
   Wallet, History, User as UserIcon, LayoutGrid,
   Plus, Minus, Navigation2, Target, Play, CheckCircle2, Clock, ChevronDown,
-  Contact, Package
+  Contact, Package, Store
 } from 'lucide-react';
 
 import { getHaversineDistance, calculateETA, calculateHeading } from '@/modules/DeliveryV2/utils/geo';
@@ -565,7 +567,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
   return (
     <div className="relative h-screen w-full bg-white text-gray-900 overflow-hidden flex flex-col">
       {/* ─── 1. TOP HEADER (Premium Dark Gray) ─── */}
-      {currentTab !== 'history' && (
+      {currentTab !== 'history' && currentTab !== 'shop' && (
       <div className="absolute top-0 inset-x-0 bg-white backdrop-blur-2xl shadow-2xl z-[200] safe-top pb-2 border-b border-gray-200">
         <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-4">
@@ -674,7 +676,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       )}
 
       {/* ─── 2. MAIN CONTENT ─── */}
-      <div className={`flex-1 relative overflow-y-auto ${currentTab === 'history' ? 'pt-0' : 'pt-[120px]'}`}>
+      <div className={`flex-1 relative overflow-y-auto ${(currentTab === 'history' || currentTab === 'shop') ? 'pt-0' : 'pt-[120px]'}`}>
          {currentTab === 'feed' ? (
            <div className="absolute inset-0 top-[-120px]">
              <LiveMap 
@@ -757,6 +759,8 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
            <PocketV2 />
          ) : currentTab === 'history' ? (
            <HistoryV2 />
+         ) : currentTab === 'shop' ? (
+           <ShopV2 />
          ) : (
            <ProfileV2 />
          )}
@@ -929,6 +933,9 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
          </button>
          <button onClick={() => navigate('/food/delivery/history')} className={`flex flex-col items-center gap-1 transition-all ${currentTab === 'history' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
             <History className="w-6 h-6" /><span className="text-[11px] font-medium font-sans">Trip History</span>
+         </button>
+         <button onClick={() => navigate('/food/delivery/shop')} className={`flex flex-col items-center gap-1 transition-all ${currentTab === 'shop' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
+            <Store className="w-6 h-6" /><span className="text-[11px] font-medium font-sans">Shop</span>
          </button>
          <button onClick={() => navigate('/food/delivery/profile')} className={`flex flex-col items-center gap-1 transition-all ${currentTab === 'profile' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
             <UserIcon className="w-6 h-6" /><span className="text-[11px] font-medium font-sans">Profile</span>

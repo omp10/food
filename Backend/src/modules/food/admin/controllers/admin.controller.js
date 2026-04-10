@@ -1524,3 +1524,83 @@ export async function getExpiredFssaiNotifications(req, res, next) {
         next(error);
     }
 }
+
+// ===== STORE PRODUCTS (Admin ? Delivery Boy Shop) =====
+
+export async function getStoreProducts(req, res, next) {
+    try {
+        const data = await adminService.getStoreProducts(req.query || {});
+        res.status(200).json({ success: true, message: 'Store products fetched successfully', data });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function createStoreProduct(req, res, next) {
+    try {
+        const product = await adminService.createStoreProduct(req.body || {});
+        res.status(201).json({ success: true, message: 'Store product created successfully', data: { product } });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function updateStoreProduct(req, res, next) {
+    try {
+        const { id } = req.params;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid product id' });
+        }
+        const updated = await adminService.updateStoreProduct(id, req.body || {});
+        if (!updated) return res.status(404).json({ success: false, message: 'Product not found' });
+        res.status(200).json({ success: true, message: 'Store product updated successfully', data: { product: updated } });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function deleteStoreProduct(req, res, next) {
+    try {
+        const { id } = req.params;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid product id' });
+        }
+        const deleted = await adminService.deleteStoreProduct(id);
+        if (!deleted) return res.status(404).json({ success: false, message: 'Product not found' });
+        res.status(200).json({ success: true, message: 'Store product deleted successfully', data: { product: deleted } });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function updateStoreProductStock(req, res, next) {
+    try {
+        const { id } = req.params;
+        const { variantId, stockDelta } = req.body || {};
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: 'Invalid product id' });
+        }
+        const updated = await adminService.updateStoreProductStock(id, variantId, stockDelta);
+        res.status(200).json({ success: true, message: 'Stock updated successfully', data: { product: updated } });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function getStoreOrders(req, res, next) {
+    try {
+        const data = await adminService.getStoreOrders(req.query || {});
+        res.status(200).json({ success: true, message: 'Store orders fetched successfully', data });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function updateStoreOrderStatus(req, res, next) {
+    try {
+        const order = await adminService.updateStoreOrderStatus(req.params.id, req.body || {});
+        res.status(200).json({ success: true, message: 'Store order status updated successfully', data: { order } });
+    } catch (error) {
+        next(error);
+    }
+}
