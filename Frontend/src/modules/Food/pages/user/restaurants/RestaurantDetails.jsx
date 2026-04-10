@@ -2286,13 +2286,6 @@ function RestaurantDetailsContent() {
                                 {offer?.discountType === "flat-price"
                                   ? `Flat \u20B9${offer?.discountValue || 0} OFF`
                                   : `${offer?.discountValue || 0}% OFF${offer?.maxDiscount ? ` up to \u20B9${offer.maxDiscount}` : ""}`}
-                                {(offer?.startDate || offer?.endDate) && (
-                                  <>
-                                    {" "}·{" "}
-                                    {offer?.startDate ? new Date(offer.startDate).toLocaleDateString() : "Starts now"} to{" "}
-                                    {offer?.endDate ? new Date(offer.endDate).toLocaleDateString() : "No expiry"}
-                                  </>
-                                )}
                               </p>
                             </div>
 
@@ -3934,3 +3927,4 @@ export default function RestaurantDetails() {
     </RestaurantDetailsErrorBoundary>
   )
 }
+
