@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Lenis from "lenis"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import { 
   Home,
   ShoppingBag,
@@ -38,7 +37,6 @@ import BRAND_THEME from "@/config/brandTheme"
 export default function RestaurantDetailsPage() {
   const navigate = useNavigate()
   const [activeCategory, setActiveCategory] = useState("all")
-  const [showMenu, setShowMenu] = useState(false)
   const [restaurantData, setRestaurantData] = useState(() => getRestaurantData())
   const [foodItems, setFoodItems] = useState([])
   const [logoLoadFailed, setLogoLoadFailed] = useState(false)
@@ -333,18 +331,12 @@ export default function RestaurantDetailsPage() {
       </div>
 
       {/* Bottom Navigation Bar - Mobile Only */}
-      <BottomNavbar onMenuClick={(e) => {
-        if (e) {
-          e.preventDefault()
-          e.stopPropagation()
-        }
-        setShowMenu(true)
-      }} />
+      <BottomNavOrders />
 
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
     </div>
   )
 }
+
 
 

@@ -14,8 +14,7 @@ import {
 } from "lucide-react"
 import { Card, CardContent } from "@food/components/ui/card"
 import { Button } from "@food/components/ui/button"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import { formatCurrency } from "@food/utils/currency"
 import { restaurantAPI } from "@food/api"
 import { flattenMenuItems, getMenuFromResponse } from "@food/utils/menuItems"
@@ -45,7 +44,6 @@ export default function FoodDetailsPage() {
   const navigate = useNavigate()
   const { id } = useParams()
   const [activeTab, setActiveTab] = useState("overview")
-  const [showMenu, setShowMenu] = useState(false)
   const [showStockModal, setShowStockModal] = useState(false)
   const [menuSections, setMenuSections] = useState([])
   const [loading, setLoading] = useState(true)
@@ -580,10 +578,9 @@ export default function FoodDetailsPage() {
       </div>
 
       {/* Bottom Navigation Bar - Mobile Only */}
-      <BottomNavbar onMenuClick={() => setShowMenu(true)} />
+      <BottomNavOrders />
       
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
 
       {/* Update Stock Modal */}
       <AnimatePresence>
@@ -708,5 +705,6 @@ export default function FoodDetailsPage() {
     </div>
   )
 }
+
 
 

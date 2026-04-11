@@ -10,8 +10,7 @@ import {
   Plus,
   Star
 } from "lucide-react"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import { formatCurrency } from "@food/utils/currency"
 import BRAND_THEME from "@/config/brandTheme"
 import { restaurantAPI } from "@food/api"
@@ -23,7 +22,6 @@ export default function AllFoodPage() {
   const [searchParams] = useSearchParams()
   const [activeCategory, setActiveCategory] = useState("All")
   const [searchQuery, setSearchQuery] = useState("")
-  const [showMenu, setShowMenu] = useState(false)
   const [showFilterModal, setShowFilterModal] = useState(false)
   const [foodTypeFilter, setFoodTypeFilter] = useState("all")
   const [stockFilter, setStockFilter] = useState("all")
@@ -321,10 +319,9 @@ export default function AllFoodPage() {
       </motion.button>
 
       {/* Bottom Navigation Bar - Mobile Only */}
-      <BottomNavbar onMenuClick={() => setShowMenu(true)} />
+      <BottomNavOrders />
       
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
 
       {/* Filter Modal */}
       <AnimatePresence>
@@ -460,5 +457,6 @@ export default function AllFoodPage() {
     </div>
   )
 }
+
 
 

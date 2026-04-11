@@ -11,8 +11,7 @@ import {
 import { Card, CardContent } from "@food/components/ui/card"
 import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -21,7 +20,6 @@ const debugError = (...args) => {}
 export default function ReviewsPage() {
   const navigate = useNavigate()
   const goBack = useRestaurantBackNavigation()
-  const [showMenu, setShowMenu] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [failedImages, setFailedImages] = useState(new Set())
 
@@ -175,13 +173,13 @@ export default function ReviewsPage() {
       </div>
 
       {/* Bottom Navigation Bar */}
-      <BottomNavbar onMenuClick={() => setShowMenu(true)} />
+      <BottomNavOrders />
       
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
     </div>
   )
 }
+
 
 
 

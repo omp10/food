@@ -4,14 +4,12 @@ import { useNavigate } from "react-router-dom"
 import Lenis from "lenis"
 import { ArrowLeft, Search, Utensils, User, ShoppingBag, X, Truck } from "lucide-react"
 import { Input } from "@food/components/ui/input"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 
 export default function ConversationListPage() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("Customer")
-  const [showMenu, setShowMenu] = useState(false)
 
   // Lenis smooth scrolling
   useEffect(() => {
@@ -205,12 +203,12 @@ export default function ConversationListPage() {
       </div>
 
       {/* Bottom Navigation Bar */}
-      <BottomNavbar onMenuClick={() => setShowMenu(true)} />
+      <BottomNavOrders />
 
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
     </div>
   )
 }
+
 
 

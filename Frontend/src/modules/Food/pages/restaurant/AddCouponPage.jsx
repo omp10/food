@@ -4,7 +4,7 @@ import { ArrowLeft, Calendar, Loader2, Wand2, Info, CheckCircle2, XCircle } from
 import { Card, CardContent } from "@food/components/ui/card"
 import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation"
 import { restaurantAPI } from "@food/api"
 import BRAND_THEME from "@/config/brandTheme"
@@ -386,7 +386,8 @@ export default function AddCouponPage(props) {
         </p>
       </div>
 
-      <BottomNavbar />
+      <BottomNavOrders />
     </div>
   )
 }
+

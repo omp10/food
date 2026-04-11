@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Lenis from "lenis"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import NewOrderNotification from "@food/components/restaurant/NewOrderNotification"
 import { useRestaurantNotifications } from "@food/hooks/useRestaurantNotifications"
 import { 
@@ -32,7 +31,6 @@ export default function OrdersPage() {
   const navigate = useNavigate()
   // Default to "all" to show all orders (active + history)
   const [activeFilterTab, setActiveFilterTab] = useState("all")
-  const [showMenu, setShowMenu] = useState(false)
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -554,10 +552,9 @@ export default function OrdersPage() {
       </div>
 
       {/* Bottom Navigation Bar - Mobile Only */}
-      <BottomNavbar onMenuClick={() => setShowMenu(true)} />
+      <BottomNavOrders />
       
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
 
       {/* New Order Notification */}
       <NewOrderNotification
@@ -570,6 +567,7 @@ export default function OrdersPage() {
     </div>
   )
 }
+
 
 
 

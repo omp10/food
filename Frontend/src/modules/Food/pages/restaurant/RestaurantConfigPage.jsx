@@ -7,8 +7,7 @@ import { ArrowLeft, X, Plus } from "lucide-react"
 import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
 import { Card, CardContent } from "@food/components/ui/card"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -17,7 +16,6 @@ const debugError = (...args) => {}
 export default function RestaurantConfigPage() {
   const navigate = useNavigate()
   const goBack = useRestaurantBackNavigation()
-  const [showMenu, setShowMenu] = useState(false)
 
   // Lenis smooth scrolling
   useEffect(() => {
@@ -559,13 +557,13 @@ export default function RestaurantConfigPage() {
       </div>
 
       {/* Bottom Navigation Bar - Mobile Only */}
-      <BottomNavbar onMenuClick={() => setShowMenu(true)} />
+      <BottomNavOrders />
       
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
     </div>
   )
 }
+
 
 
 

@@ -7,8 +7,7 @@ import { ArrowLeft, CheckCircle } from "lucide-react"
 import BRAND_THEME from "@/config/brandTheme"
 import { Card, CardContent } from "@food/components/ui/card"
 import { Button } from "@food/components/ui/button"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import { formatCurrency, usdToInr } from "@food/utils/currency"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
@@ -18,7 +17,6 @@ const debugError = (...args) => {}
 export default function BusinessPlanPage() {
   const navigate = useNavigate()
   const goBack = useRestaurantBackNavigation()
-  const [showMenu, setShowMenu] = useState(false)
   const [showPlans, setShowPlans] = useState(false)
   const [selectedPlanId, setSelectedPlanId] = useState("basic")
 
@@ -140,10 +138,9 @@ export default function BusinessPlanPage() {
       </div>
 
       {/* Bottom Navigation Bar - Mobile Only */}
-      <BottomNavbar onMenuClick={() => setShowMenu(true)} />
+      <BottomNavOrders />
 
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
 
       {/* Plans Bottom Sheet */}
       <AnimatePresence>
@@ -286,6 +283,7 @@ export default function BusinessPlanPage() {
     </div>
   )
 }
+
 
 
 

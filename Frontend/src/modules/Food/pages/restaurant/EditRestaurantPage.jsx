@@ -4,8 +4,7 @@ import { ArrowLeft, Upload, Image as ImageIcon } from "lucide-react"
 import { Button } from "@food/components/ui/button"
 import { Card, CardContent } from "@food/components/ui/card"
 import { getRestaurantData, updateRestaurantData } from "@food/utils/restaurantManagement"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import { restaurantAPI } from "@food/api"
 import { ImageSourcePicker } from "@food/components/ImageSourcePicker"
 import { isFlutterBridgeAvailable } from "@food/utils/imageUploadUtils"
@@ -16,7 +15,6 @@ const debugError = (...args) => {}
 export default function EditRestaurantPage() {
   const navigate = useNavigate()
   const [activeLanguage, setActiveLanguage] = useState("english")
-  const [showMenu, setShowMenu] = useState(false)
   
   const logoInputRef = useRef(null)
   const coverInputRef = useRef(null)
@@ -427,10 +425,9 @@ export default function EditRestaurantPage() {
       </div>
 
       {/* Bottom Navigation Bar - Mobile Only */}
-      <BottomNavbar onMenuClick={() => setShowMenu(true)} />
+      <BottomNavOrders />
       
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
 
       <ImageSourcePicker
         isOpen={!!activePicker}
@@ -444,4 +441,5 @@ export default function EditRestaurantPage() {
     </div>
   )
 }
+
 

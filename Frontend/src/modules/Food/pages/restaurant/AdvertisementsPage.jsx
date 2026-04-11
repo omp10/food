@@ -15,8 +15,7 @@ import {
   Trash2
 } from "lucide-react"
 import { Card, CardContent } from "@food/components/ui/card"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -27,7 +26,6 @@ export default function AdvertisementsPage() {
   const goBack = useRestaurantBackNavigation()
   const [activeFilter, setActiveFilter] = useState("all")
   const [openMenuId, setOpenMenuId] = useState(null)
-  const [showMenu, setShowMenu] = useState(false)
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -285,13 +283,13 @@ export default function AdvertisementsPage() {
       </motion.button>
 
       {/* Bottom Navigation Bar */}
-      <BottomNavbar onMenuClick={() => setShowMenu(true)} />
+      <BottomNavOrders />
       
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
     </div>
   )
 }
+
 
 
 

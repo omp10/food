@@ -16,8 +16,7 @@ import {
 } from "lucide-react"
 import { Card, CardContent } from "@food/components/ui/card"
 import { Button } from "@food/components/ui/button"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import { restaurantAPI } from "@food/api"
 import { findItemInSections, flattenMenuItems, getMenuFromResponse } from "@food/utils/menuItems"
 import { useRef } from "react"
@@ -58,7 +57,6 @@ export default function EditFoodPage() {
   const navigate = useNavigate()
   const { id } = useParams()
   const isNewFood = id === "new" || !id
-  const [showMenu, setShowMenu] = useState(false)
   const [menuSections, setMenuSections] = useState([])
   const [availableCategories, setAvailableCategories] = useState([])
 
@@ -925,10 +923,9 @@ export default function EditFoodPage() {
       </div>
 
       {/* Bottom Navigation Bar - Mobile Only */}
-      <BottomNavbar onMenuClick={() => setShowMenu(true)} />
+      <BottomNavOrders />
       
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
 
       <ImageSourcePicker
         isOpen={isPhotoPickerOpen}
@@ -942,5 +939,6 @@ export default function EditFoodPage() {
     </div>
   )
 }
+
 
 

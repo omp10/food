@@ -22,8 +22,7 @@ import {
   ChevronRight
 } from "lucide-react"
 import { Card, CardContent } from "@food/components/ui/card"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
@@ -33,7 +32,6 @@ const debugError = (...args) => {}
 export default function SettingsPage() {
   const navigate = useNavigate()
   const goBack = useRestaurantBackNavigation()
-  const [showMenu, setShowMenu] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [darkMode, setDarkMode] = useState(false)
 
@@ -213,13 +211,13 @@ export default function SettingsPage() {
       </div>
 
       {/* Bottom Navigation Bar */}
-      <BottomNavbar onMenuClick={() => setShowMenu(true)} />
+      <BottomNavOrders />
       
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
     </div>
   )
 }
+
 
 
 

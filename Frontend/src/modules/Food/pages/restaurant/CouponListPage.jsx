@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { ArrowLeft, MoreVertical, Plus, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react"
 import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation"
 import { Card, CardContent } from "@food/components/ui/card"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import { formatCurrency } from "@food/utils/currency"
 import { restaurantAPI } from "@food/api"
 import BRAND_THEME from "@/config/brandTheme"
@@ -20,7 +19,6 @@ const badge = (approvalStatus) => {
 export default function CouponListPage() {
   const navigate = useNavigate()
   const goBack = useRestaurantBackNavigation()
-  const [showMenu, setShowMenu] = useState(false)
   const [openMenuId, setOpenMenuId] = useState(null)
   const [coupons, setCoupons] = useState([])
   const [loading, setLoading] = useState(true)
@@ -240,8 +238,7 @@ export default function CouponListPage() {
         <Plus className="w-6 h-6" />
       </motion.button>
 
-      <BottomNavbar onMenuClick={() => setShowMenu(true)} />
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
+      <BottomNavOrders />
     </div>
   )
 }

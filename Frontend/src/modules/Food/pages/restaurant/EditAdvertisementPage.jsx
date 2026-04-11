@@ -13,7 +13,7 @@ import {
 import { Card, CardContent } from "@food/components/ui/card"
 import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import { ImageSourcePicker } from "@food/components/ImageSourcePicker"
 import { isFlutterBridgeAvailable } from "@food/utils/imageUploadUtils"
 import { toast } from "sonner"
@@ -460,7 +460,7 @@ export default function EditAdvertisementPage() {
       </div>
 
       {/* Bottom Navigation Bar */}
-      <BottomNavbar />
+      <BottomNavOrders />
 
       <ImageSourcePicker
         isOpen={isPhotoPickerOpen}
@@ -474,6 +474,7 @@ export default function EditAdvertisementPage() {
     </div>
   )
 }
+
 
 
 

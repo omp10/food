@@ -10,7 +10,7 @@ import {
 import { Card, CardContent } from "@food/components/ui/card"
 import { Button } from "@food/components/ui/button"
 import { Textarea } from "@food/components/ui/textarea"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
@@ -177,11 +177,12 @@ export default function UpdateReplyPage() {
 
       {/* Bottom Navigation Bar - Hidden on this page to avoid overlap */}
       <div className="hidden md:block">
-        <BottomNavbar />
+        <BottomNavOrders />
       </div>
     </div>
   )
 }
+
 
 
 

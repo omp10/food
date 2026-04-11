@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { restaurantAPI } from "@food/api"
 import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation"
 import { Card, CardContent } from "@food/components/ui/card"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 
 export default function OffersPage() {
   const navigate = useNavigate()
@@ -116,7 +116,8 @@ export default function OffersPage() {
         <Plus className="w-6 h-6" />
       </button>
 
-      <BottomNavbar />
+      <BottomNavOrders />
     </div>
   )
 }
+

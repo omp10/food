@@ -2,8 +2,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import Lenis from "lenis"
-import BottomNavbar from "@food/components/restaurant/BottomNavbar"
-import MenuOverlay from "@food/components/restaurant/MenuOverlay"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
 import { 
   Wallet, 
   DollarSign, 
@@ -35,7 +34,6 @@ import BRAND_THEME from "@/config/brandTheme"
 
 export default function WalletPage() {
   const navigate = useNavigate()
-  const [showMenu, setShowMenu] = useState(false)
   const [activeTab, setActiveTab] = useState("withdraw")
   const [showAdjustModal, setShowAdjustModal] = useState(false)
   const [isBalanceAdjusted, setIsBalanceAdjusted] = useState(getBalanceAdjusted())
@@ -670,13 +668,13 @@ export default function WalletPage() {
 
       {/* Bottom Navigation Bar - Mobile Only (Hide when withdraw modal is open) */}
       {!showWithdrawModal && (
-        <BottomNavbar onMenuClick={() => setShowMenu(true)} />
+        <BottomNavOrders />
       )}
       
       {/* Menu Overlay */}
-      <MenuOverlay showMenu={showMenu} setShowMenu={setShowMenu} />
     </div>
   )
 }
+
 
 
