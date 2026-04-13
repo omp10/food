@@ -78,6 +78,12 @@ function RestaurantDetailsContent() {
   const goBack = useAppBackNavigation()
   const [searchParams] = useSearchParams()
   const showOnlyUnder250 = searchParams.get('under250') === 'true'
+  const underPriceLimit = useMemo(() => {
+    const raw = searchParams.get("under")
+    const parsed = Number(raw)
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+  }, [searchParams])
+  const activeUnderPriceLimit = underPriceLimit ?? (showOnlyUnder250 ? 250 : null)
   const targetDishId = useMemo(() => String(searchParams.get('dish') || '').trim(), [searchParams])
   const { addToCart, updateQuantity, removeFromCart, getCartItem, cart } = useCart()
   const { vegMode, addDishFavorite, removeDishFavorite, isDishFavorite, getDishFavorites, getFavorites, addFavorite, removeFavorite, isFavorite } = useProfile()
@@ -573,7 +579,7 @@ function RestaurantDetailsContent() {
                 publicOffersResponse?.data?.offers ||
                 []
 
-              if (Array.isArray(publicOffers) && publicOffers.length > 0) {
+              if (Array.isArray(publicOffers)) {
                 setPublicRestaurantOffers(publicOffers)
               } else if (Array.isArray(transformedRestaurant?.offers) && transformedRestaurant.offers.length > 0) {
                 setPublicRestaurantOffers(transformedRestaurant.offers)
@@ -1038,7 +1044,7 @@ function RestaurantDetailsContent() {
         console.debug("Restaurant public offers (scoped)", { restaurantId, count: list?.length, list })
 
         const fallback = Array.isArray(restaurant?.offers) ? restaurant.offers : []
-        setPublicRestaurantOffers(Array.isArray(list) && list.length > 0 ? list : fallback)
+        setPublicRestaurantOffers(Array.isArray(list) ? list : fallback)
       } catch (err) {
         debugWarn("Failed to fetch restaurant offers for user page", err?.message)
         if (Array.isArray(restaurant?.offers)) {
@@ -1049,13 +1055,6 @@ function RestaurantDetailsContent() {
 
     fetchOffers()
   }, [restaurant?.restaurantId, restaurant?.id, restaurant?._id, restaurant?.mongoId, restaurant?.offers])
-
-  // Keep UI in sync if offers are attached directly on restaurant object
-  useEffect(() => {
-    if (Array.isArray(restaurant?.offers) && restaurant.offers.length > 0) {
-      setPublicRestaurantOffers(restaurant.offers)
-    }
-  }, [restaurant?.offers])
 
   // Track previous values to prevent unnecessary recalculations
   const prevCoordsRef = useRef({ userLat: null, userLng: null, restaurantLat: null, restaurantLng: null })
@@ -1700,10 +1699,10 @@ function RestaurantDetailsContent() {
     if (!items) return items
 
     return items.filter((item) => {
-      // Under 250 filter (when coming from Under 250 page)
-      if (showOnlyUnder250) {
+      // Budget filter (when coming from Under X pages)
+      if (Number.isFinite(activeUnderPriceLimit) && activeUnderPriceLimit !== null) {
         const finalPrice = getFinalPrice(item);
-        if (finalPrice > 250) return false;
+        if (finalPrice > activeUnderPriceLimit) return false;
       }
 
       // Search filter
@@ -1777,14 +1776,14 @@ function RestaurantDetailsContent() {
 
   // Helper function to check if a section has any items under Rs 250
   const sectionHasItemsUnder250 = (section) => {
-    if (!showOnlyUnder250) return true; // If not filtering, show all sections
+    if (!Number.isFinite(activeUnderPriceLimit) || activeUnderPriceLimit === null) return true
 
     // Check direct items
     if (section.items && section.items.length > 0) {
       const hasUnder250Items = section.items.some(item => {
         if (item.isAvailable === false) return false;
         const finalPrice = getFinalPrice(item);
-        return finalPrice <= 250;
+        return finalPrice <= activeUnderPriceLimit;
       });
       if (hasUnder250Items) return true;
     }
@@ -1796,7 +1795,7 @@ function RestaurantDetailsContent() {
           const hasUnder250Items = subsection.items.some(item => {
             if (item.isAvailable === false) return false;
             const finalPrice = getFinalPrice(item);
-            return finalPrice <= 250;
+            return finalPrice <= activeUnderPriceLimit;
           });
           if (hasUnder250Items) return true;
         }
@@ -1872,7 +1871,7 @@ function RestaurantDetailsContent() {
   }
 
   const hasActiveMenuFilters = Boolean(
-    showOnlyUnder250 ||
+    Number.isFinite(activeUnderPriceLimit) ||
     searchQuery.trim() ||
     vegMode === true ||
     filters.sortBy ||
@@ -1883,7 +1882,7 @@ function RestaurantDetailsContent() {
 
   const filteredSections = useMemo(
     () => getFilteredSections(),
-    [restaurant?.menuSections, showOnlyUnder250, searchQuery, vegMode, filters, selectedMenuCategory]
+    [restaurant?.menuSections, activeUnderPriceLimit, searchQuery, vegMode, filters, selectedMenuCategory]
   )
 
   useEffect(() => {

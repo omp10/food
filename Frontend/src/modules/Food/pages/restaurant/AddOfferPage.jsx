@@ -18,6 +18,8 @@ export default function AddOfferPage() {
     discountType: "percentage",
     discountValue: "",
     maxDiscount: "",
+    maxOfferQuantityPerOrder: "",
+    perUserLimit: "",
     startDate: "",
     endDate: ""
   })
@@ -112,6 +114,14 @@ export default function AddOfferPage() {
       const md = Number(form.maxDiscount)
       if (!Number.isFinite(md) || md <= 0) return setError("Max discount required for percentage")
     }
+    if (form.maxOfferQuantityPerOrder !== "") {
+      const limit = Number(form.maxOfferQuantityPerOrder)
+      if (!Number.isFinite(limit) || limit < 0) return setError("Max items per order must be 0 or greater")
+    }
+    if (form.perUserLimit !== "") {
+      const limit = Number(form.perUserLimit)
+      if (!Number.isFinite(limit) || limit < 0) return setError("Per user redeem limit must be 0 or greater")
+    }
     try {
       setSaving(true)
       if (isEditMode) {
@@ -119,14 +129,18 @@ export default function AddOfferPage() {
           ...form,
           productId: form.productIds[0],
           discountValue: dv,
-          maxDiscount: form.discountType === "percentage" ? Number(form.maxDiscount) : undefined
+          maxDiscount: form.discountType === "percentage" ? Number(form.maxDiscount) : undefined,
+          maxOfferQuantityPerOrder: form.maxOfferQuantityPerOrder === "" ? 0 : Number(form.maxOfferQuantityPerOrder),
+          perUserLimit: form.perUserLimit === "" ? 0 : Number(form.perUserLimit)
         })
       } else {
         await restaurantAPI.createRestaurantOffer({
           ...form,
           productId: form.productIds[0],
           discountValue: dv,
-          maxDiscount: form.discountType === "percentage" ? Number(form.maxDiscount) : undefined
+          maxDiscount: form.discountType === "percentage" ? Number(form.maxDiscount) : undefined,
+          maxOfferQuantityPerOrder: form.maxOfferQuantityPerOrder === "" ? 0 : Number(form.maxOfferQuantityPerOrder),
+          perUserLimit: form.perUserLimit === "" ? 0 : Number(form.perUserLimit)
         })
       }
       navigate("/restaurant/offers")
@@ -156,6 +170,8 @@ export default function AddOfferPage() {
             discountType: found.discountType || "percentage",
             discountValue: found.discountValue != null ? String(found.discountValue) : "",
             maxDiscount: found.maxDiscount != null ? String(found.maxDiscount) : "",
+            maxOfferQuantityPerOrder: found.maxOfferQuantityPerOrder != null ? String(found.maxOfferQuantityPerOrder) : "",
+            perUserLimit: found.perUserLimit != null ? String(found.perUserLimit) : "",
             startDate: found.startDate ? new Date(found.startDate).toISOString().slice(0, 10) : "",
             endDate: found.endDate ? new Date(found.endDate).toISOString().slice(0, 10) : ""
           })
@@ -258,6 +274,30 @@ export default function AddOfferPage() {
                 />
               </div>
             )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Max Items Per Order</label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={form.maxOfferQuantityPerOrder}
+                  onChange={(e) => updateField("maxOfferQuantityPerOrder", e.target.value)}
+                  placeholder="e.g. 5"
+                />
+                <p className="mt-1 text-xs text-gray-500">Leave empty for unlimited. If cart items exceed this count, offer will not apply.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Per User Redeem Limit</label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={form.perUserLimit}
+                  onChange={(e) => updateField("perUserLimit", e.target.value)}
+                  placeholder="e.g. 2"
+                />
+                <p className="mt-1 text-xs text-gray-500">Leave empty for unlimited total redemptions per user.</p>
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Start Date (optional)</label>

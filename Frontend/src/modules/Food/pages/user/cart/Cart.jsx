@@ -89,6 +89,7 @@ export default function Cart() {
   const orderSuccessAudioRef = useRef(null)
   const hasRestoredRecipientRef = useRef(false)
   const hasRestoredNoteRef = useRef(false)
+  const lastAutoOfferToastRef = useRef("")
 
   // Defensive check: Ensure CartProvider is available
   let cartContext;
@@ -907,9 +908,30 @@ export default function Cart() {
         if (response?.data?.success && response?.data?.data?.pricing) {
           const backendPricing = response.data.data.pricing
           setPricing(backendPricing)
+          const backendAutoAppliedOffer =
+            backendPricing.autoAppliedOffer?.type === "restaurant-auto-offer"
+              ? backendPricing.autoAppliedOffer
+              : null
+          const backendAutoOfferFeedback =
+            backendPricing.autoOfferFeedback?.type === "restaurant-auto-offer"
+              ? backendPricing.autoOfferFeedback
+              : null
 
           // Update applied coupon if backend returns one
-          if (backendPricing.appliedCoupon && !appliedCoupon) {
+          if (backendAutoAppliedOffer) {
+            const hasManualCouponApplied =
+              appliedCoupon &&
+              appliedCoupon?.type !== "restaurant-auto-offer" &&
+              Boolean(appliedCoupon?.code)
+            const hasSameAutoOffer =
+              appliedCoupon?.type === "restaurant-auto-offer" &&
+              String(appliedCoupon.offerId || "") === String(backendAutoAppliedOffer.offerId || "") &&
+              Number(appliedCoupon.discount || 0) === Number(backendAutoAppliedOffer.discount || 0)
+            if (!hasSameAutoOffer && !hasManualCouponApplied) {
+              setAppliedCoupon(backendAutoAppliedOffer)
+            }
+            lastAutoOfferToastRef.current = ""
+          } else if (backendPricing.appliedCoupon && !appliedCoupon) {
             const backendAppliedCoupon = backendPricing.appliedCoupon
             if (backendAppliedCoupon?.type === "restaurant-auto-offer") {
               setAppliedCoupon(backendAppliedCoupon)
@@ -921,6 +943,19 @@ export default function Cart() {
             }
           } else if (!backendPricing.appliedCoupon && appliedCoupon?.type === "restaurant-auto-offer") {
             setAppliedCoupon(null)
+          }
+
+          if (backendAutoOfferFeedback?.reason === "max_items_exceeded") {
+            const feedbackKey = `${backendAutoOfferFeedback.offerId || "offer"}:${backendAutoOfferFeedback.eligibleItemCount || 0}:${backendAutoOfferFeedback.maxOfferQuantityPerOrder || 0}`
+            if (lastAutoOfferToastRef.current !== feedbackKey) {
+              lastAutoOfferToastRef.current = feedbackKey
+              toast.error(
+                backendAutoOfferFeedback.message ||
+                  `Only ${backendAutoOfferFeedback.maxOfferQuantityPerOrder} items are allowed for this offer in one order.`,
+              )
+            }
+          } else if (!backendAutoAppliedOffer) {
+            lastAutoOfferToastRef.current = ""
           }
         }
       } catch (error) {

@@ -5,6 +5,7 @@ import { FoodFeeSettings } from '../../admin/models/feeSettings.model.js';
 import { FoodOffer } from '../../admin/models/offer.model.js';
 import { FoodOfferUsage } from '../../admin/models/offerUsage.model.js';
 import { RestaurantOffer } from '../../restaurant/models/restaurantOffer.model.js';
+import { RestaurantOfferUsage } from '../../restaurant/models/restaurantOfferUsage.model.js';
 import { ValidationError } from '../../../../core/auth/errors.js';
 
 const getCartItemProductId = (item = {}) =>
@@ -28,7 +29,7 @@ const calculateRestaurantOfferDiscount = (offer, eligibleSubtotal) => {
   return Math.max(0, Math.min(eligibleSubtotal, Math.floor(capped)));
 };
 
-const findApplicableRestaurantAutoOffer = async (restaurantId, items = []) => {
+const findApplicableRestaurantAutoOffer = async (restaurantId, items = [], userId = null) => {
   const normalizedRestaurantId = String(restaurantId || '').trim();
   if (
     !normalizedRestaurantId ||
@@ -54,6 +55,7 @@ const findApplicableRestaurantAutoOffer = async (restaurantId, items = []) => {
   }).lean();
 
   let bestMatch = null;
+  let invalidMatch = null;
 
   for (const offer of offers) {
     const productIds = Array.isArray(offer?.productIds) && offer.productIds.length > 0
@@ -66,10 +68,45 @@ const findApplicableRestaurantAutoOffer = async (restaurantId, items = []) => {
     if (offer?.status === 'paused') continue;
     if (offer?.startDate && now < new Date(offer.startDate)) continue;
     if (offer?.endDate && now >= new Date(offer.endDate)) continue;
+    if (
+      Number(offer?.usageLimit) > 0 &&
+      Number(offer?.usedCount || 0) >= Number(offer?.usageLimit)
+    ) {
+      continue;
+    }
+
+    if (userId && Number(offer?.perUserLimit) > 0) {
+      const usage = await RestaurantOfferUsage.findOne({
+        offerId: offer._id,
+        userId,
+      }).lean();
+      if (usage && Number(usage.count) >= Number(offer.perUserLimit)) {
+        continue;
+      }
+    }
 
     const allowedProducts = new Set(productIds);
     const allCartItemsBelongToOffer = uniqueCartProductIds.every((id) => allowedProducts.has(id));
     if (!allCartItemsBelongToOffer) continue;
+
+    const eligibleItemCount = items.reduce((sum, item) => {
+      const itemId = getCartItemProductId(item);
+      if (!allowedProducts.has(itemId)) return sum;
+      return sum + Math.max(0, Number(item?.quantity) || 0);
+    }, 0);
+
+    if (
+      Number(offer?.maxOfferQuantityPerOrder) > 0 &&
+      eligibleItemCount > Number(offer.maxOfferQuantityPerOrder)
+    ) {
+      invalidMatch = {
+        offer,
+        reason: 'max_items_exceeded',
+        eligibleItemCount,
+        maxOfferQuantityPerOrder: Number(offer.maxOfferQuantityPerOrder),
+      };
+      continue;
+    }
 
     const eligibleSubtotal = items.reduce((sum, item) => {
       const itemId = getCartItemProductId(item);
@@ -87,7 +124,7 @@ const findApplicableRestaurantAutoOffer = async (restaurantId, items = []) => {
     }
   }
 
-  return bestMatch;
+  return bestMatch || (invalidMatch ? { invalidReason: invalidMatch.reason, ...invalidMatch } : null);
 };
 
 export async function calculateOrderPricing(userId, dto) {
@@ -251,8 +288,9 @@ export async function calculateOrderPricing(userId, dto) {
     }
   }
 
-  const autoOfferMatch = await findApplicableRestaurantAutoOffer(dto.restaurantId, items);
-  if (autoOfferMatch) {
+  const autoOfferMatch = await findApplicableRestaurantAutoOffer(dto.restaurantId, items, userId);
+  let autoOfferFeedback = null;
+  if (autoOfferMatch?.offer && !autoOfferMatch?.invalidReason) {
     autoOfferDiscount = autoOfferMatch.discount;
     autoAppliedOffer = {
       code: null,
@@ -262,6 +300,19 @@ export async function calculateOrderPricing(userId, dto) {
       autoApplied: true,
       offerId: String(autoOfferMatch.offer._id),
       eligibleSubtotal: autoOfferMatch.eligibleSubtotal,
+      maxOfferQuantityPerOrder: Number(autoOfferMatch.offer?.maxOfferQuantityPerOrder) || null,
+    };
+  } else if (autoOfferMatch?.invalidReason === 'max_items_exceeded') {
+    autoOfferFeedback = {
+      type: 'restaurant-auto-offer',
+      reason: autoOfferMatch.invalidReason,
+      title: autoOfferMatch.offer?.title || 'Restaurant offer',
+      offerId: String(autoOfferMatch.offer?._id || ''),
+      eligibleItemCount: Number(autoOfferMatch.eligibleItemCount) || 0,
+      maxOfferQuantityPerOrder: Number(autoOfferMatch.maxOfferQuantityPerOrder) || null,
+      message: Number(autoOfferMatch.maxOfferQuantityPerOrder) > 0
+        ? `Only ${Number(autoOfferMatch.maxOfferQuantityPerOrder)} item${Number(autoOfferMatch.maxOfferQuantityPerOrder) > 1 ? 's are' : ' is'} allowed for this offer in one order.`
+        : 'This restaurant offer is no longer applicable.',
     };
   }
 
@@ -287,6 +338,7 @@ export async function calculateOrderPricing(userId, dto) {
       couponCode: appliedCoupon?.code || codeRaw || null,
       appliedCoupon,
       autoAppliedOffer,
+      autoOfferFeedback,
     },
   };
 }

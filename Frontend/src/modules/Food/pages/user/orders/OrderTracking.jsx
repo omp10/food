@@ -1,4 +1,4 @@
-import { useParams, Link, useSearchParams } from "react-router-dom"
+import { useParams, useNavigate, useSearchParams } from "react-router-dom"
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
@@ -433,6 +433,7 @@ function normalizeLookupId(value) {
 
 export default function OrderTracking() {
   const companyName = useCompanyName()
+  const navigate = useNavigate()
   const { orderId } = useParams()
   const [searchParams] = useSearchParams()
   const confirmed = searchParams.get("confirmed") === "true"
@@ -1303,15 +1304,16 @@ export default function OrderTracking() {
       >
         {/* Navigation bar */}
         <div className="flex items-center justify-between px-4 py-3">
-          <Link to="/orders">
-            <motion.button
-              className="w-10 h-10 flex items-center justify-center"
-              whileTap={{ scale: 0.9 }}
-            >
-              <ArrowLeft className="w-6 h-6" />
-            </motion.button>
-          </Link>
-          <h2 className="font-semibold text-lg">{order.restaurant}</h2>
+          <motion.button
+            type="button"
+            aria-label="Back to orders"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/80 text-black shadow-sm"
+            whileTap={{ scale: 0.9 }}
+            onClick={() => navigate("/orders")}
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </motion.button>
+          <h2 className="font-semibold text-lg text-black">{order.restaurant}</h2>
           <motion.button
             className="w-10 h-10 flex items-center justify-center cursor-pointer"
             whileTap={{ scale: 0.9 }}
@@ -1325,7 +1327,7 @@ export default function OrderTracking() {
         {!['at_pickup', 'ready', 'on_way', 'at_drop', 'delivered'].includes(orderStatus) && (
           <div className="px-4 pb-4 text-center">
             <motion.h1
-              className="text-2xl font-bold mb-3"
+              className="text-2xl font-bold mb-3 text-black"
               key={currentStatus.title}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1340,11 +1342,11 @@ export default function OrderTracking() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <span className="text-sm">{currentStatus.subtitle}</span>
+              <span className="text-sm text-black">{currentStatus.subtitle}</span>
               {orderStatus === 'preparing' && (
                 <>
                   <span className="w-1 h-1 rounded-full bg-white" />
-                  <span className="text-sm text-blue-200">On time</span>
+                  <span className="text-sm text-black">On time</span>
                 </>
               )}
               <motion.button

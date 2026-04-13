@@ -41,7 +41,16 @@ const pricingSchema = z.object({
     discount: z.number().min(0).optional(),
     total: z.number().min(0),
     currency: z.string().optional(),
-    couponCode: z.string().nullable().optional()
+    couponCode: z.string().nullable().optional(),
+    autoAppliedOffer: z.object({
+        offerId: z.string().optional(),
+        title: z.string().optional(),
+        discount: z.number().optional(),
+        type: z.string().optional(),
+        autoApplied: z.boolean().optional(),
+        eligibleSubtotal: z.number().optional(),
+        maxOfferQuantityPerOrder: z.number().nullable().optional()
+    }).optional()
 });
 
 export function validateCalculateOrderDto(body) {

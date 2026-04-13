@@ -51,7 +51,7 @@ export const updateRestaurantProductOfferController = async (req, res, next) => 
 
 export const listPublicRestaurantProductOffersController = async (req, res, next) => {
     try {
-        const offers = await listPublicRestaurantProductOffers(req.params.id);
+        const offers = await listPublicRestaurantProductOffers(req.params.id, req.user);
         return sendResponse(res, 200, 'Offers fetched successfully', { offers });
     } catch (error) {
         next(error);

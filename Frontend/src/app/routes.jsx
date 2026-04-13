@@ -24,6 +24,12 @@ const LegacyFoodUserRedirect = () => {
   return <Navigate to={`${nextPath}${location.search || ''}`} replace />
 }
 
+const LegacyUserRedirect = () => {
+  const location = useLocation()
+  const nextPath = location.pathname.replace(/^\/user/, '') || '/'
+  return <Navigate to={`${nextPath}${location.search || ''}`} replace />
+}
+
 const AppRoutes = () => {
   const location = useLocation()
 
@@ -60,6 +66,7 @@ const AppRoutes = () => {
         }
       />
 
+      <Route path="/user/*" element={<LegacyUserRedirect />} />
       <Route path="/food/user/*" element={<LegacyFoodUserRedirect />} />
       <Route path="/food/*" element={<FoodAppWrapper />} />
       <Route path="/*" element={<FoodAppWrapper />} />

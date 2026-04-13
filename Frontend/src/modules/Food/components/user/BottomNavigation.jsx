@@ -8,7 +8,13 @@ export default function BottomNavigation() {
   const { navigation } = BRAND_THEME.tokens
 
   // Check active routes - support both /user/* and /* paths
-  const isUnder250 = pathname === "/food/under-250" || pathname.startsWith("/food/user/under-250")
+  const isUnder250 =
+    pathname === "/food/under-250" ||
+    pathname.startsWith("/food/user/under-250") ||
+    /^\/under-\d+$/.test(pathname) ||
+    /^\/user\/under-\d+$/.test(pathname) ||
+    /^\/food\/under-\d+$/.test(pathname) ||
+    /^\/food\/user\/under-\d+$/.test(pathname)
   const isProfile = pathname.startsWith("/food/profile") || pathname.startsWith("/food/user/profile")
   const isDelivery =
     !isUnder250 &&
@@ -17,7 +23,7 @@ export default function BottomNavigation() {
       pathname === "/food/" ||
       pathname === "/food/user" ||
       (pathname.startsWith("/food/user") &&
-        !pathname.includes("/under-250") &&
+        !pathname.includes("/under-") &&
         !pathname.includes("/profile")))
 
   return (

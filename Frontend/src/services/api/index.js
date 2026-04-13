@@ -1019,8 +1019,12 @@ export const adminAPI = {
   // Public restaurant offers; if restaurantId provided, hits public route
   getPublicOffers: (restaurantId) =>
     restaurantId
-      ? apiClient.get(`/food/restaurant/public/restaurants/${restaurantId}/offers`)
-      : apiClient.get("/food/restaurant/offers"),
+      ? apiClient.get(`/food/restaurant/public/restaurants/${restaurantId}/offers`, {
+          contextModule: "user",
+        })
+      : apiClient.get("/food/restaurant/offers", {
+          contextModule: "user",
+        }),
   /** Restaurant-created coupons (pending admin approval) */
   createCoupon: (body = {}) =>
     apiClient.post("/food/restaurant/coupons", body ?? {}, { contextModule: "restaurant" }),
@@ -1360,11 +1364,12 @@ export const adminAPI = {
     if (typeof restaurantIdOrParams === "string" && restaurantIdOrParams.trim()) {
       return apiClient.get(
         `/food/restaurant/public/restaurants/${String(restaurantIdOrParams).trim()}/offers`,
-        { ...config },
+        { contextModule: "user", ...config },
       )
     }
     return apiClient.get("/food/restaurant/offers", {
       params: restaurantIdOrParams || {},
+      contextModule: "user",
       ...config,
     })
   },

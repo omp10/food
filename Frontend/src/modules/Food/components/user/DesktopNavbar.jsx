@@ -55,14 +55,24 @@ export default function DesktopNavbar({ showLogo = true }) {
 
     // Check active routes - support both /user/* and /* paths
     const isQuick = location.pathname.endsWith("/quick")
-    const isUnder250 = location.pathname === "/food/user/under-250" || location.pathname === "/food/under-250"
+    const isUnder250 =
+        location.pathname === "/food/user/under-250" ||
+        location.pathname === "/food/under-250" ||
+        /^\/under-\d+$/.test(location.pathname) ||
+        /^\/user\/under-\d+$/.test(location.pathname) ||
+        /^\/food\/under-\d+$/.test(location.pathname) ||
+        /^\/food\/user\/under-\d+$/.test(location.pathname)
     const isProfile = location.pathname.startsWith("/food/user/profile") || location.pathname.startsWith("/food/profile")
-    const isDelivery = !isUnder250 && !isProfile && !isQuick && (location.pathname === "/food/user" || location.pathname === "/food" || (location.pathname.startsWith("/food/user") && !location.pathname.includes("/under-250") && !location.pathname.includes("/profile")))
+    const isDelivery = !isUnder250 && !isProfile && !isQuick && (location.pathname === "/food/user" || location.pathname === "/food" || (location.pathname.startsWith("/food/user") && !location.pathname.includes("/under-") && !location.pathname.includes("/profile")))
     const isBannerRoute =
         location.pathname === "/food/user" ||
         location.pathname === "/food" ||
         location.pathname === "/food/user/under-250" ||
-        location.pathname === "/food/under-250"
+        location.pathname === "/food/under-250" ||
+        /^\/under-\d+$/.test(location.pathname) ||
+        /^\/user\/under-\d+$/.test(location.pathname) ||
+        /^\/food\/under-\d+$/.test(location.pathname) ||
+        /^\/food\/user\/under-\d+$/.test(location.pathname)
 
     // Load business settings logo
     useEffect(() => {

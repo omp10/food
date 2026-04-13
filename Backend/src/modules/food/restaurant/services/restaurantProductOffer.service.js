@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { ValidationError } from '../../../../core/auth/errors.js';
 import { RestaurantOffer } from '../models/restaurantOffer.model.js';
+import { RestaurantOfferUsage } from '../models/restaurantOfferUsage.model.js';
 
 const ensureObjectId = (id, label) => {
     if (!id || !mongoose.Types.ObjectId.isValid(String(id))) {
@@ -44,8 +45,20 @@ export async function createRestaurantProductOffer(restaurantId, body = {}) {
         }
     }
 
+    const maxOfferQuantityPerOrder = body.maxOfferQuantityPerOrder !== undefined
+        ? Number(body.maxOfferQuantityPerOrder)
+        : null;
     const usageLimit = body.usageLimit !== undefined ? Number(body.usageLimit) : null;
     const perUserLimit = body.perUserLimit !== undefined ? Number(body.perUserLimit) : null;
+    if (maxOfferQuantityPerOrder !== null && (!Number.isFinite(maxOfferQuantityPerOrder) || maxOfferQuantityPerOrder < 0)) {
+        throw new ValidationError('maxOfferQuantityPerOrder must be 0 or greater');
+    }
+    if (usageLimit !== null && (!Number.isFinite(usageLimit) || usageLimit < 0)) {
+        throw new ValidationError('usageLimit must be 0 or greater');
+    }
+    if (perUserLimit !== null && (!Number.isFinite(perUserLimit) || perUserLimit < 0)) {
+        throw new ValidationError('perUserLimit must be 0 or greater');
+    }
 
     const startDate = body.startDate ? new Date(body.startDate) : null;
     const endDate = body.endDate ? new Date(body.endDate) : null;
@@ -62,6 +75,7 @@ export async function createRestaurantProductOffer(restaurantId, body = {}) {
         discountType,
         discountValue,
         maxDiscount,
+        maxOfferQuantityPerOrder: Number.isFinite(maxOfferQuantityPerOrder) && maxOfferQuantityPerOrder > 0 ? maxOfferQuantityPerOrder : null,
         usageLimit: Number.isFinite(usageLimit) && usageLimit >= 0 ? usageLimit : null,
         perUserLimit: Number.isFinite(perUserLimit) && perUserLimit >= 0 ? perUserLimit : null,
         startDate: startDate || null,
@@ -84,14 +98,67 @@ export async function listRestaurantProductOffers(restaurantId) {
     }));
 }
 
-export async function listPublicRestaurantProductOffers(restaurantId) {
+export async function listPublicRestaurantProductOffers(restaurantId, authUser = null) {
     const rid = ensureObjectId(restaurantId, 'restaurant id');
+    const now = new Date();
     const list = await RestaurantOffer.find({ restaurantId: rid })
         .populate({ path: 'productId', select: 'name image coverImage photos price discountedPrice foodType preparationTime description' })
         .populate({ path: 'productIds', select: 'name image coverImage photos price discountedPrice foodType preparationTime description' })
         .sort({ createdAt: -1 })
         .lean();
-    return list.map((o) => ({
+    const filtered = [];
+
+    const userId =
+        authUser?.role === 'USER' && authUser?.userId && mongoose.Types.ObjectId.isValid(String(authUser.userId))
+            ? new mongoose.Types.ObjectId(String(authUser.userId))
+            : null;
+
+    for (const offer of list) {
+        if ((offer?.approvalStatus || 'approved') !== 'approved') continue;
+        if (offer?.status !== 'active') continue;
+        if (offer?.startDate && now < new Date(offer.startDate)) continue;
+        if (offer?.endDate && now >= new Date(offer.endDate)) continue;
+        if (
+            Number(offer?.usageLimit) > 0 &&
+            Number(offer?.usedCount || 0) >= Number(offer?.usageLimit)
+        ) {
+            continue;
+        }
+        if (userId && Number(offer?.perUserLimit) > 0) {
+            const usage = await RestaurantOfferUsage.findOne({
+                offerId: offer._id,
+                userId,
+            }).lean();
+            if (usage && Number(usage.count) >= Number(offer.perUserLimit)) {
+                continue;
+            }
+        }
+
+        const approvedPrimaryProduct =
+            offer?.productId &&
+            String(offer.productId.approvalStatus || '') === 'approved' &&
+            offer.productId.isAvailable !== false
+                ? offer.productId
+                : null;
+        const approvedProducts = Array.isArray(offer?.productIds)
+            ? offer.productIds.filter(
+                (product) =>
+                    product &&
+                    String(product.approvalStatus || '') === 'approved' &&
+                    product.isAvailable !== false,
+            )
+            : [];
+
+        if (!approvedPrimaryProduct && approvedProducts.length === 0) {
+            continue;
+        }
+
+        offer.productId = approvedPrimaryProduct;
+        offer.productIds = approvedProducts;
+        filtered.push(offer);
+    }
+
+    return filtered.map((o) => ({
         ...o,
         id: String(o._id),
         productName: o.productId?.name || '',
@@ -161,8 +228,20 @@ export async function updateRestaurantProductOffer(restaurantId, offerId, body =
         maxDiscount = null;
     }
 
+    const maxOfferQuantityPerOrder = body.maxOfferQuantityPerOrder !== undefined
+        ? Number(body.maxOfferQuantityPerOrder)
+        : existing.maxOfferQuantityPerOrder;
     const usageLimit = body.usageLimit !== undefined ? Number(body.usageLimit) : existing.usageLimit;
     const perUserLimit = body.perUserLimit !== undefined ? Number(body.perUserLimit) : existing.perUserLimit;
+    if (maxOfferQuantityPerOrder !== null && (!Number.isFinite(maxOfferQuantityPerOrder) || maxOfferQuantityPerOrder < 0)) {
+        throw new ValidationError('maxOfferQuantityPerOrder must be 0 or greater');
+    }
+    if (usageLimit !== null && (!Number.isFinite(usageLimit) || usageLimit < 0)) {
+        throw new ValidationError('usageLimit must be 0 or greater');
+    }
+    if (perUserLimit !== null && (!Number.isFinite(perUserLimit) || perUserLimit < 0)) {
+        throw new ValidationError('perUserLimit must be 0 or greater');
+    }
 
     const startDate = body.startDate !== undefined ? (body.startDate ? new Date(body.startDate) : null) : existing.startDate;
     const endDate = body.endDate !== undefined ? (body.endDate ? new Date(body.endDate) : null) : existing.endDate;
@@ -180,6 +259,7 @@ export async function updateRestaurantProductOffer(restaurantId, offerId, body =
                 discountType,
                 discountValue,
                 maxDiscount,
+                maxOfferQuantityPerOrder: Number.isFinite(maxOfferQuantityPerOrder) && maxOfferQuantityPerOrder > 0 ? maxOfferQuantityPerOrder : null,
                 usageLimit: Number.isFinite(usageLimit) && usageLimit >= 0 ? usageLimit : null,
                 perUserLimit: Number.isFinite(perUserLimit) && perUserLimit >= 0 ? perUserLimit : null,
                 startDate: startDate || null,

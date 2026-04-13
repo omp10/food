@@ -60,7 +60,7 @@ import {
     deleteAddonController
 } from '../controllers/restaurantAddon.controller.js';
 import * as orderController from '../../orders/controllers/order.controller.js';
-import { authMiddleware } from '../../../../core/auth/auth.middleware.js';
+import { authMiddleware, optionalAuthMiddleware } from '../../../../core/auth/auth.middleware.js';
 import { sendError } from '../../../../utils/response.js';
 import { getRestaurantFinanceController } from '../controllers/restaurantFinance.controller.js';
 
@@ -206,7 +206,7 @@ router.get('/offers/restaurant', authMiddleware, requireRestaurant, listRestaura
 router.delete('/offers/restaurant/:id', authMiddleware, requireRestaurant, deleteRestaurantProductOfferController);
 router.patch('/offers/restaurant/:id', authMiddleware, requireRestaurant, updateRestaurantProductOfferController);
 // Public: list offers for a restaurant for user-facing pages
-router.get('/public/restaurants/:id/offers', listPublicRestaurantProductOffersController);
+router.get('/public/restaurants/:id/offers', optionalAuthMiddleware, listPublicRestaurantProductOffersController);
 
 // Orders (restaurant dashboard)
 router.get('/orders', authMiddleware, requireRestaurant, orderController.listOrdersRestaurantController);
