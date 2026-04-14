@@ -948,7 +948,7 @@ export default function Under250() {
         bannerContent={
           bannerImages.length > 0 ? (
             <div
-              className="h-[416px] w-full"
+              className="h-[450px] w-full"
               onTouchStart={handleBannerTouchStart}
               onTouchMove={handleBannerTouchMove}
               onTouchEnd={handleBannerTouchEnd}

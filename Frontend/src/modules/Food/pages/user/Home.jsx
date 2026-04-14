@@ -2549,7 +2549,7 @@ export default function Home() {
           }}
           bannerContent={
             headerVideoUrl ? (
-              <div className="relative h-[416px] w-full overflow-hidden">
+              <div className="relative h-[450px] w-full overflow-hidden">
                 <video
                   src={headerVideoUrl}
                   autoPlay
