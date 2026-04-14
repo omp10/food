@@ -325,7 +325,7 @@ export async function getPaymentStatusController(req, res, next) {
 
 export async function listOrdersAdminController(req, res, next) {
     try {
-        const result = await orderService.listOrdersAdmin(req.query);
+        const result = await orderService.listOrdersAdmin(req.query, req.adminAuth || {});
         return sendResponse(res, 200, 'Orders retrieved', result);
     } catch (err) {
         next(err);
@@ -335,7 +335,7 @@ export async function listOrdersAdminController(req, res, next) {
 export async function getOrderByIdAdminController(req, res, next) {
     try {
         const orderId = req.params.orderId;
-        const order = await orderService.getOrderById(orderId, { admin: true });
+        const order = await orderService.getOrderById(orderId, { admin: true, adminScope: req.adminAuth || {} });
         return sendResponse(res, 200, 'Order retrieved', { order });
     } catch (err) {
         next(err);
@@ -358,7 +358,7 @@ export async function deleteOrderAdminController(req, res, next) {
     try {
         const adminId = req.user?.userId;
         const orderId = req.params.orderId;
-        const result = await orderService.deleteOrderAdmin(orderId, adminId);
+        const result = await orderService.deleteOrderAdmin(orderId, adminId, req.adminAuth || {});
         return sendResponse(res, 200, 'Order deleted successfully', result);
     } catch (err) {
         next(err);

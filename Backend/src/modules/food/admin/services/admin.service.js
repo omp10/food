@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-import { ValidationError } from '../../../../core/auth/errors.js';
+import { ValidationError, ForbiddenError } from '../../../../core/auth/errors.js';
+import { FoodAdmin } from '../../../../core/admin/admin.model.js';
 import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
 import { FoodDeliveryPartner } from '../../delivery/models/deliveryPartner.model.js';
 import { DeliverySupportTicket } from '../../delivery/models/supportTicket.model.js';
@@ -47,6 +48,7 @@ import {
     normalizeFoodVariantsInput,
     serializeFoodVariants
 } from './foodVariant.service.js';
+import { normalizeAdminPermissions } from '../constants/adminPermissions.js';
 
 const parseBooleanLike = (value, fieldName) => {
     if (typeof value === 'boolean') return value;
@@ -56,6 +58,46 @@ const parseBooleanLike = (value, fieldName) => {
         if (['false', '0', 'no', 'n', 'off', 'inactive'].includes(normalized)) return false;
     }
     throw new ValidationError(`${fieldName} must be a boolean`);
+};
+
+const normalizeAdminScope = (adminScope = {}) => {
+    const adminType = String(adminScope?.adminType || 'SUPER_ADMIN').toUpperCase();
+    const zoneIds = Array.isArray(adminScope?.zoneIds)
+        ? adminScope.zoneIds
+            .map((id) => (id ? String(id).trim() : ''))
+            .filter((id) => mongoose.Types.ObjectId.isValid(id))
+            .map((id) => new mongoose.Types.ObjectId(id))
+        : [];
+    return {
+        adminType,
+        isSuperAdmin: adminType === 'SUPER_ADMIN',
+        isSubAdmin: adminType === 'SUB_ADMIN',
+        zoneIds,
+    };
+};
+
+const assertZoneAccess = (adminScope = {}, zoneIdLike) => {
+    const scope = normalizeAdminScope(adminScope);
+    if (!scope.isSubAdmin) return;
+    const rawZoneId = zoneIdLike ? String(zoneIdLike).trim() : '';
+    if (!rawZoneId || !mongoose.Types.ObjectId.isValid(rawZoneId)) {
+        throw new ForbiddenError('Sub-admin can only access assigned zones');
+    }
+    const hasZone = scope.zoneIds.some((zoneId) => String(zoneId) === rawZoneId);
+    if (!hasZone) {
+        throw new ForbiddenError('Sub-admin can only access assigned zones');
+    }
+};
+
+const applyZoneConstraint = (filter = {}, adminScope = {}, fieldName = 'zoneId') => {
+    const scope = normalizeAdminScope(adminScope);
+    if (!scope.isSubAdmin) return filter;
+    if (!scope.zoneIds.length) {
+        filter._id = { $in: [] };
+        return filter;
+    }
+    filter[fieldName] = { $in: scope.zoneIds };
+    return filter;
 };
 
 const toFiniteNumber = (value) => {
@@ -278,7 +320,7 @@ export async function updateRestaurantComplaint(id, updateData) {
     return updated;
 }
 
-export async function getRestaurants(query) {
+export async function getRestaurants(query, adminScope = {}) {
     const limit = Math.min(Math.max(parseInt(query.limit, 10) || 100, 1), 1000);
     const page = Math.max(parseInt(query.page, 10) || 1, 1);
     const skip = (page - 1) * limit;
@@ -287,6 +329,7 @@ export async function getRestaurants(query) {
     if (status && ['pending', 'approved', 'rejected'].includes(status)) {
         filter.status = status;
     }
+    applyZoneConstraint(filter, adminScope, 'zoneId');
     const [restaurants, total] = await Promise.all([
         FoodRestaurant.find(filter)
             .sort({ createdAt: -1 })
@@ -344,11 +387,17 @@ const getDateRangeByPeriod = (periodRaw) => {
 const formatMonthShort = (year, monthIndex) =>
     new Date(year, monthIndex, 1).toLocaleString('en-IN', { month: 'short' });
 
-export async function getDashboardStats(query = {}) {
+export async function getDashboardStats(query = {}, adminScope = {}) {
     const periodRange = getDateRangeByPeriod(query.period);
-    const zoneId = query.zoneId && mongoose.Types.ObjectId.isValid(query.zoneId)
+    const scope = normalizeAdminScope(adminScope);
+    const requestedZoneId = query.zoneId && mongoose.Types.ObjectId.isValid(query.zoneId)
         ? new mongoose.Types.ObjectId(query.zoneId)
         : null;
+    const zoneId = scope.isSubAdmin
+        ? (requestedZoneId && scope.zoneIds.some((zid) => String(zid) === String(requestedZoneId))
+            ? requestedZoneId
+            : (scope.zoneIds[0] || null))
+        : requestedZoneId;
 
     const orderMatch = {
         $or: [
@@ -1105,7 +1154,7 @@ export async function getTaxReportDetail(restaurantId, query = {}) {
 }
 
 // ----- Customers / Users (admin) -----
-export async function getCustomers(query = {}) {
+export async function getCustomers(query = {}, adminScope = {}) {
     const limit = Math.min(Math.max(parseInt(query.limit, 10) || 50, 1), 1000);
     const page = Math.max(parseInt(query.page, 10) || 1, 1);
     const skip = (page - 1) * limit;
@@ -1143,6 +1192,15 @@ export async function getCustomers(query = {}) {
     if (sortBy === 'name-asc') sort.name = 1;
     else if (sortBy === 'name-desc') sort.name = -1;
     else sort.createdAt = -1;
+
+    const scope = normalizeAdminScope(adminScope);
+    if (scope.isSubAdmin) {
+        if (!scope.zoneIds.length) {
+            return { customers: [], total: 0, page, limit };
+        }
+        const scopedUserIds = await FoodOrder.distinct('userId', { zoneId: { $in: scope.zoneIds } });
+        filter._id = { $in: scopedUserIds };
+    }
 
     const [docs, total] = await Promise.all([
         FoodUser.find(filter)
@@ -2064,12 +2122,17 @@ export async function getRestaurantReviews(query = {}) {
     return { reviews, total, page, limit };
 }
 
-export async function getRestaurantById(id) {
+export async function getRestaurantById(id, adminScope = {}) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
-    return FoodRestaurant.findById(id)
+    const restaurant = await FoodRestaurant.findById(id)
         .select('-__v')
         .populate('zoneId', 'name zoneName serviceLocation isActive')
         .lean();
+    if (!restaurant) return null;
+    if (normalizeAdminScope(adminScope).isSubAdmin) {
+        assertZoneAccess(adminScope, restaurant.zoneId?._id || restaurant.zoneId);
+    }
+    return restaurant;
 }
 
 export async function getRestaurantAnalytics(restaurantId) {
@@ -2232,10 +2295,11 @@ export async function getPendingRestaurants() {
     }));
 }
 
-export async function updateRestaurantById(id, body = {}) {
+export async function updateRestaurantById(id, body = {}, adminScope = {}) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
     const doc = await FoodRestaurant.findById(id);
     if (!doc) return null;
+    assertZoneAccess(adminScope, doc.zoneId);
 
     const toStr = (v) => (v != null ? String(v).trim() : '');
     const toFinite = (v) => {
@@ -2340,8 +2404,11 @@ export async function updateRestaurantById(id, body = {}) {
     return FoodRestaurant.findById(id).select('-__v').populate('zoneId', 'name zoneName serviceLocation isActive').lean();
 }
 
-export async function updateRestaurantStatus(id, body = {}) {
+export async function updateRestaurantStatus(id, body = {}, adminScope = {}) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
+    const existing = await FoodRestaurant.findById(id).select('zoneId').lean();
+    if (!existing) return null;
+    assertZoneAccess(adminScope, existing.zoneId);
     const raw = body.status !== undefined ? body.status : body.isActive;
     const isActive = parseBooleanLike(raw, 'status');
     const status = isActive ? 'approved' : 'rejected';
@@ -2360,10 +2427,11 @@ export async function updateRestaurantStatus(id, body = {}) {
     ).lean();
 }
 
-export async function updateRestaurantLocation(id, body = {}) {
+export async function updateRestaurantLocation(id, body = {}, adminScope = {}) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
     const doc = await FoodRestaurant.findById(id);
     if (!doc) return null;
+    assertZoneAccess(adminScope, doc.zoneId);
 
     const source = (body.location && typeof body.location === 'object') ? body.location : body;
     const toStr = (v) => (v != null ? String(v).trim() : '');
@@ -2418,6 +2486,7 @@ export async function updateRestaurantLocation(id, body = {}) {
         } else if (!mongoose.Types.ObjectId.isValid(zoneId)) {
             throw new ValidationError('Invalid zoneId');
         } else {
+            assertZoneAccess(adminScope, zoneId);
             doc.zoneId = new mongoose.Types.ObjectId(zoneId);
         }
     }
@@ -4588,7 +4657,7 @@ export async function rejectDeliveryPartner(id, reason) {
 }
 
 // ----- Zones CRUD -----
-export async function getZones(query) {
+export async function getZones(query, adminScope = {}) {
     const limit = Math.min(Math.max(parseInt(query.limit, 10) || 100, 1), 1000);
     const page = Math.max(parseInt(query.page, 10) || 1, 1);
     const skip = (page - 1) * limit;
@@ -4607,6 +4676,7 @@ export async function getZones(query) {
             { country: { $regex: search, $options: 'i' } }
         ];
     }
+    applyZoneConstraint(filter, adminScope, '_id');
 
     const [zones, total] = await Promise.all([
         FoodZone.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
@@ -4615,8 +4685,11 @@ export async function getZones(query) {
     return { zones, total, page, limit };
 }
 
-export async function getZoneById(id) {
-    return FoodZone.findById(id).lean();
+export async function getZoneById(id, adminScope = {}) {
+    const zone = await FoodZone.findById(id).lean();
+    if (!zone) return null;
+    assertZoneAccess(adminScope, zone._id);
+    return zone;
 }
 
 export async function createZone(body) {
@@ -4668,6 +4741,186 @@ export async function updateZone(id, body) {
 export async function deleteZone(id) {
     const zone = await FoodZone.findByIdAndDelete(id);
     return zone ? { id } : null;
+}
+
+// ----- Admin Management -----
+const normalizeAdminType = (value) => {
+    const type = String(value || 'SUB_ADMIN').trim().toUpperCase();
+    return type === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'SUB_ADMIN';
+};
+
+const toObjectIdList = (values = []) => {
+    if (!Array.isArray(values)) return [];
+    return [...new Set(
+        values
+            .map((id) => String(id || '').trim())
+            .filter((id) => mongoose.Types.ObjectId.isValid(id))
+    )].map((id) => new mongoose.Types.ObjectId(id));
+};
+
+export async function listAdmins(query = {}) {
+    const search = String(query.search || '').trim();
+    const status = String(query.status || '').trim().toLowerCase();
+    const type = String(query.adminType || '').trim().toUpperCase();
+
+    const filter = { role: 'ADMIN' };
+    if (status === 'active') filter.isActive = true;
+    if (status === 'inactive') filter.isActive = false;
+    if (type === 'SUPER_ADMIN' || type === 'SUB_ADMIN') filter.adminType = type;
+    if (search) {
+        filter.$or = [
+            { name: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } },
+            { phone: { $regex: search, $options: 'i' } },
+        ];
+    }
+
+    const admins = await FoodAdmin.find(filter)
+        .select('-password')
+        .populate('zoneIds', 'name zoneName serviceLocation isActive')
+        .sort({ createdAt: -1 })
+        .lean();
+    return { admins };
+}
+
+export async function createAdmin(body = {}, actor = {}) {
+    if (!actor?.isSuperAdmin) {
+        throw new ForbiddenError('Only super admin can create admins');
+    }
+
+    const email = String(body.email || '').trim().toLowerCase();
+    const password = String(body.password || '').trim();
+    if (!email) throw new ValidationError('Email is required');
+    if (!password || password.length < 6) throw new ValidationError('Password must be at least 6 characters');
+
+    const existing = await FoodAdmin.findOne({ email }).select('_id').lean();
+    if (existing) throw new ValidationError('Admin already exists with this email');
+
+    const adminType = normalizeAdminType(body.adminType);
+    const permissions = adminType === 'SUPER_ADMIN' ? [] : normalizeAdminPermissions(body.permissions || []);
+    const zoneIds = adminType === 'SUPER_ADMIN' ? [] : toObjectIdList(body.zoneIds || []);
+
+    if (adminType === 'SUB_ADMIN') {
+        if (!permissions.length) throw new ValidationError('At least one sidebar permission is required for sub-admin');
+        if (!zoneIds.length) throw new ValidationError('At least one zone is required for sub-admin');
+    }
+
+    const created = await FoodAdmin.create({
+        email,
+        password,
+        name: String(body.name || '').trim(),
+        phone: String(body.phone || '').trim(),
+        role: 'ADMIN',
+        adminType,
+        permissions,
+        zoneIds,
+        isActive: body.isActive !== false,
+        servicesAccess: ['food'],
+    });
+
+    return FoodAdmin.findById(created._id)
+        .select('-password')
+        .populate('zoneIds', 'name zoneName serviceLocation isActive')
+        .lean();
+}
+
+export async function updateAdmin(id, body = {}, actor = {}) {
+    if (!actor?.isSuperAdmin) {
+        throw new ForbiddenError('Only super admin can update admins');
+    }
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) throw new ValidationError('Invalid admin id');
+
+    const admin = await FoodAdmin.findById(id);
+    if (!admin) throw new ValidationError('Admin not found');
+
+    if (body.name !== undefined) admin.name = String(body.name || '').trim();
+    if (body.phone !== undefined) admin.phone = String(body.phone || '').trim();
+    if (body.email !== undefined) {
+        const email = String(body.email || '').trim().toLowerCase();
+        if (!email) throw new ValidationError('Email is required');
+        const existing = await FoodAdmin.findOne({ email, _id: { $ne: admin._id } }).select('_id').lean();
+        if (existing) throw new ValidationError('Email is already in use');
+        admin.email = email;
+    }
+    if (body.password !== undefined) {
+        const password = String(body.password || '').trim();
+        if (!password || password.length < 6) throw new ValidationError('Password must be at least 6 characters');
+        admin.password = password;
+    }
+
+    if (body.adminType !== undefined) {
+        admin.adminType = normalizeAdminType(body.adminType);
+    }
+
+    if (body.isActive !== undefined) {
+        admin.isActive = body.isActive !== false;
+    }
+
+    if (admin.adminType === 'SUPER_ADMIN') {
+        admin.permissions = [];
+        admin.zoneIds = [];
+    } else {
+        if (body.permissions !== undefined) {
+            admin.permissions = normalizeAdminPermissions(body.permissions || []);
+        }
+        if (body.zoneIds !== undefined) {
+            admin.zoneIds = toObjectIdList(body.zoneIds || []);
+        }
+        if (!admin.permissions?.length) throw new ValidationError('Sub-admin must have at least one permission');
+        if (!admin.zoneIds?.length) throw new ValidationError('Sub-admin must have at least one assigned zone');
+    }
+
+    await admin.save();
+    return FoodAdmin.findById(admin._id)
+        .select('-password')
+        .populate('zoneIds', 'name zoneName serviceLocation isActive')
+        .lean();
+}
+
+export async function updateAdminStatus(id, body = {}, actor = {}) {
+    if (!actor?.isSuperAdmin) {
+        throw new ForbiddenError('Only super admin can update admin status');
+    }
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) throw new ValidationError('Invalid admin id');
+    const updated = await FoodAdmin.findByIdAndUpdate(
+        id,
+        { $set: { isActive: body?.isActive !== false } },
+        { new: true }
+    )
+        .select('-password')
+        .populate('zoneIds', 'name zoneName serviceLocation isActive')
+        .lean();
+    if (!updated) throw new ValidationError('Admin not found');
+    return updated;
+}
+
+export async function deleteAdmin(id, actor = {}) {
+    if (!actor?.isSuperAdmin) {
+        throw new ForbiddenError('Only super admin can delete admins');
+    }
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+        throw new ValidationError('Invalid admin id');
+    }
+    if (String(actor.id || '') === String(id)) {
+        throw new ValidationError('You cannot delete your own admin account');
+    }
+
+    const target = await FoodAdmin.findById(id).select('_id adminType').lean();
+    if (!target) throw new ValidationError('Admin not found');
+
+    if (String(target.adminType || '').toUpperCase() === 'SUPER_ADMIN') {
+        const superAdminCount = await FoodAdmin.countDocuments({
+            role: 'ADMIN',
+            adminType: 'SUPER_ADMIN',
+            isActive: true,
+        });
+        if (superAdminCount <= 1) {
+            throw new ValidationError('Cannot delete the last active super admin');
+        }
+    }
+
+    await FoodAdmin.deleteOne({ _id: target._id });
+    return { id: String(target._id) };
 }
 
 // ----- Withdrawals (admin) -----

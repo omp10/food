@@ -104,6 +104,25 @@ const iconMap = {
   X,
 }
 
+const normalizePath = (value = "") => {
+  const raw = String(value || "").trim()
+  if (!raw) return "/"
+  const cleaned = raw.replace(/\/+$/, "")
+  return cleaned || "/"
+}
+
+const hasPathAccess = (permissions = [], path = "") => {
+  const target = normalizePath(path)
+  return permissions.some((permissionPath) => {
+    const normalizedPermission = normalizePath(permissionPath)
+    return (
+      target === normalizedPermission ||
+      target.startsWith(`${normalizedPermission}/`) ||
+      normalizedPermission.startsWith(`${target}/`)
+    )
+  })
+}
+
 export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange }) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -281,10 +300,48 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
 
   const isQuickAdmin = location.pathname.startsWith("/admin/quick-commerce")
   const activeMenuData = isQuickAdmin ? quickAdminSidebarMenu : adminSidebarMenu
+  const currentAdminUser = useMemo(() => {
+    try {
+      const raw = localStorage.getItem("admin_user")
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      return null
+    }
+  }, [])
+  const isSuperAdmin = String(currentAdminUser?.adminType || "SUPER_ADMIN").toUpperCase() === "SUPER_ADMIN"
+  const subAdminPermissions = useMemo(
+    () => (Array.isArray(currentAdminUser?.permissions) ? currentAdminUser.permissions.map((p) => normalizePath(p)) : []),
+    [currentAdminUser?.permissions],
+  )
+
+  const accessibleMenuData = useMemo(() => {
+    if (isQuickAdmin || isSuperAdmin) return activeMenuData
+    return activeMenuData
+      .map((item) => {
+        if (item.type === "link") {
+          return hasPathAccess(subAdminPermissions, item.path) ? item : null
+        }
+        if (item.type !== "section" || !Array.isArray(item.items)) return null
+        const allowedItems = item.items
+          .map((subItem) => {
+            if (subItem.type === "link") {
+              return hasPathAccess(subAdminPermissions, subItem.path) ? subItem : null
+            }
+            if (subItem.type === "expandable" && Array.isArray(subItem.subItems)) {
+              const allowedSubItems = subItem.subItems.filter((si) => hasPathAccess(subAdminPermissions, si.path))
+              return allowedSubItems.length > 0 ? { ...subItem, subItems: allowedSubItems } : null
+            }
+            return null
+          })
+          .filter(Boolean)
+        return allowedItems.length > 0 ? { ...item, items: allowedItems } : null
+      })
+      .filter(Boolean)
+  }, [activeMenuData, isQuickAdmin, isSuperAdmin, subAdminPermissions])
 
   // Ensure expandable keys exist for whichever admin module is active (food/quick)
   useEffect(() => {
-    const activeKeys = getExpandableSectionKeys(activeMenuData)
+    const activeKeys = getExpandableSectionKeys(accessibleMenuData)
     setExpandedSections((prev) => {
       const next = { ...prev }
       activeKeys.forEach((key) => {
@@ -294,7 +351,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
       })
       return next
     })
-  }, [activeMenuData])
+  }, [accessibleMenuData])
 
   const switchAdminModule = (target) => {
     if (target === "quick") {
@@ -310,13 +367,13 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
   // Filter menu items based on search query
   const filteredMenuData = useMemo(() => {
     if (!searchQuery.trim()) {
-      return activeMenuData
+      return accessibleMenuData
     }
 
     const query = searchQuery.toLowerCase().trim()
     const filtered = []
 
-    activeMenuData.forEach((item) => {
+    accessibleMenuData.forEach((item) => {
       if (item.type === "link") {
         if (item.label.toLowerCase().includes(query)) {
           filtered.push(item)
@@ -354,7 +411,7 @@ export default function AdminSidebar({ isOpen = false, onClose, onCollapseChange
     })
 
     return filtered
-  }, [searchQuery, activeMenuData])
+  }, [searchQuery, accessibleMenuData])
 
   // Auto-expand sections with matches when searching
   useEffect(() => {

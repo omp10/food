@@ -172,6 +172,16 @@ export const notificationAPI = {
 
 /** Admin API - new backend only (GET /auth/me, PATCH /auth/admin/profile, POST /auth/admin/change-password) */
 export const adminAPI = {
+  getManagedAdmins: (params = {}) =>
+    apiClient.get("/food/admin/admins", { params, contextModule: "admin" }),
+  createManagedAdmin: (body = {}) =>
+    apiClient.post("/food/admin/admins", body ?? {}, { contextModule: "admin" }),
+  updateManagedAdmin: (id, body = {}) =>
+    apiClient.patch(`/food/admin/admins/${String(id)}`, body ?? {}, { contextModule: "admin" }),
+  updateManagedAdminStatus: (id, isActive) =>
+    apiClient.patch(`/food/admin/admins/${String(id)}/status`, { isActive: isActive !== false }, { contextModule: "admin" }),
+  deleteManagedAdmin: (id) =>
+    apiClient.delete(`/food/admin/admins/${String(id)}`, { contextModule: "admin" }),
   getStoreOrdersAdmin: (params = {}) =>
     apiClient.get("/food/admin/store/orders", { params, contextModule: "admin" }),
   updateStoreOrderStatusAdmin: (orderId, body) =>

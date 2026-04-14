@@ -800,6 +800,22 @@ export async function calculateOrder(userId, dto) {
   };
 }
 
+const normalizeAdminScope = (adminScope = {}) => {
+  const adminType = String(adminScope?.adminType || "SUPER_ADMIN").toUpperCase();
+  const zoneIds = Array.isArray(adminScope?.zoneIds)
+    ? adminScope.zoneIds
+      .map((id) => String(id || "").trim())
+      .filter((id) => mongoose.Types.ObjectId.isValid(id))
+      .map((id) => new mongoose.Types.ObjectId(id))
+    : [];
+  return {
+    adminType,
+    isSubAdmin: adminType === "SUB_ADMIN",
+    isSuperAdmin: adminType === "SUPER_ADMIN",
+    zoneIds,
+  };
+};
+
 // ----- Create order -----
 export async function createOrder(userId, dto) {
   const orderType = dto.orderType === "quick" ? "quick" : "food";
@@ -1321,7 +1337,7 @@ export async function listOrdersUser(userId, query) {
 
 export async function getOrderById(
   orderId,
-  { userId, restaurantId, deliveryPartnerId, admin } = {},
+  { userId, restaurantId, deliveryPartnerId, admin, adminScope } = {},
 ) {
   const identity = buildOrderIdentityFilter(orderId);
   if (!identity) throw new ValidationError("Order id required");
@@ -1336,7 +1352,15 @@ export async function getOrderById(
     .lean();
   if (!order) throw new NotFoundError("Order not found");
 
-  if (admin) return normalizeOrderForClient(order);
+  if (admin) {
+    const scope = normalizeAdminScope(adminScope || {});
+    if (scope.isSubAdmin) {
+      const orderZoneId = order?.zoneId ? String(order.zoneId) : "";
+      const hasZoneAccess = scope.zoneIds.some((zid) => String(zid) === orderZoneId);
+      if (!hasZoneAccess) throw new ForbiddenError("Sub-admin can only access assigned zones");
+    }
+    return normalizeOrderForClient(order);
+  }
 
   const orderUserId = order.userId?._id?.toString() || order.userId?.toString();
   const orderRestaurantId = order.restaurantId?._id?.toString() || order.restaurantId?.toString();
@@ -2789,7 +2813,7 @@ export async function getPaymentStatus(orderId, deliveryPartnerId) {
 }
 
 // ----- Admin -----
-export async function listOrdersAdmin(query) {
+export async function listOrdersAdmin(query, adminScope = {}) {
   const { page, limit, skip } = buildPaginationOptions(query);
   const filter = {
     $or: [
@@ -2886,6 +2910,15 @@ export async function listOrdersAdmin(query) {
     }
   }
 
+  const scope = normalizeAdminScope(adminScope);
+  if (scope.isSubAdmin) {
+    if (!scope.zoneIds.length) {
+      const paginated = buildPaginatedResult({ docs: [], total: 0, page, limit });
+      return { ...paginated, orders: [] };
+    }
+    filter.zoneId = { $in: scope.zoneIds };
+  }
+
   const [docs, total] = await Promise.all([
     FoodOrder.find(filter)
       .populate("userId", "name phone email")
@@ -2931,12 +2964,18 @@ export async function assignDeliveryPartnerAdmin(
     return order.toObject();
 }
 
-export async function deleteOrderAdmin(orderId, adminId) {
+export async function deleteOrderAdmin(orderId, adminId, adminScope = {}) {
   const identity = buildOrderIdentityFilter(orderId);
   if (!identity) throw new ValidationError("Order id required");
 
   const order = await FoodOrder.findOne(identity).lean();
   if (!order) throw new NotFoundError("Order not found");
+  const scope = normalizeAdminScope(adminScope);
+  if (scope.isSubAdmin) {
+    const orderZoneId = order?.zoneId ? String(order.zoneId) : "";
+    const hasZoneAccess = scope.zoneIds.some((zid) => String(zid) === orderZoneId);
+    if (!hasZoneAccess) throw new ForbiddenError("Sub-admin can only access assigned zones");
+  }
 
   // Keep support tickets but detach deleted order reference.
   await Promise.all([

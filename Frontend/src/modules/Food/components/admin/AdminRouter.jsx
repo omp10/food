@@ -119,6 +119,7 @@ const ReactSite = lazy(() => import("@food/pages/admin/system/ReactSite"));
 const CleanDatabase = lazy(() => import("@food/pages/admin/system/CleanDatabase"));
 const AddonActivation = lazy(() => import("@food/pages/admin/system/AddonActivation"));
 const LandingPageManagement = lazy(() => import("@food/pages/admin/system/LandingPageManagement"));
+const AdminManagement = lazy(() => import("@food/pages/admin/system/AdminManagement"));
 const EditRestaurant = lazy(() => import("@food/pages/admin/restaurant/EditRestaurant"));
 const QuickCommerceDashboard = lazy(() => import("@food/pages/admin/quick-commerce/QuickCommerceDashboard"));
 const QuickCommerceOrders = lazy(() => import("@food/pages/admin/quick-commerce/QuickCommerceOrders"));
@@ -292,6 +293,7 @@ export default function AdminRouter() {
             <Route path="clean-database" element={<CleanDatabase />} />
             <Route path="addon-activation" element={<AddonActivation />} />
             <Route path="hero-banner-management" element={<LandingPageManagement />} />
+            <Route path="manage-admins" element={<AdminManagement />} />
 
             {/* STORE MANAGEMENT (Admin → Delivery Boy purchases) */}
             <Route path="store/products" element={<StoreProducts />} />

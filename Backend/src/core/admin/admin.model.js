@@ -30,6 +30,20 @@ const adminSchema = new mongoose.Schema(
             type: String,
             default: 'ADMIN'
         },
+        adminType: {
+            type: String,
+            enum: ['SUPER_ADMIN', 'SUB_ADMIN'],
+            default: 'SUPER_ADMIN',
+            index: true
+        },
+        permissions: {
+            type: [String],
+            default: []
+        },
+        zoneIds: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'FoodZone'
+        }],
         isActive: {
             type: Boolean,
             default: true
@@ -47,6 +61,7 @@ const adminSchema = new mongoose.Schema(
 );
 
 adminSchema.index({ servicesAccess: 1 });
+adminSchema.index({ adminType: 1, isActive: 1 });
 
 adminSchema.pre('save', async function (next) {
     if (!this.isModified('password')) {

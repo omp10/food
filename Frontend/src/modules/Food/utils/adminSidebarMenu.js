@@ -223,6 +223,7 @@ export const adminSidebarMenu = [
     type: "section",
     label: "SYSTEM SETTINGS",
     items: [
+      { type: "link", label: "Manage Admins", path: "/admin/food/manage-admins", icon: "UserCog" },
       { type: "link", label: "Broadcast Notification", path: "/admin/food/broadcast-notification", icon: "Bell" },
       { type: "link", label: "Business Setup", path: "/admin/food/business-setup", icon: "Settings" },
     ],

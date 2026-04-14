@@ -214,6 +214,9 @@ export const adminLogin = async (email, password) => {
   if (!admin) {
     throw new AuthError("Invalid credentials");
   }
+  if (admin.isActive === false) {
+    throw new AuthError("Admin account is deactivated");
+  }
 
   const isMatch = await admin.comparePassword(password);
   if (!isMatch) {

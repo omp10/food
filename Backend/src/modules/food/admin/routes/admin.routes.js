@@ -1,5 +1,6 @@
 import express from 'express';
 import { AuthError } from '../../../../core/auth/errors.js';
+import { FoodAdmin } from '../../../../core/admin/admin.model.js';
 import * as adminController from '../controllers/admin.controller.js';
 import * as foodApprovalController from '../controllers/foodApproval.controller.js';
 import * as addonsApprovalController from '../controllers/addonsApproval.controller.js';
@@ -7,6 +8,11 @@ import * as businessSettingsController from '../controllers/businessSettings.con
 import * as feedbackExperienceController from '../controllers/feedbackExperience.controller.js';
 import * as notificationBroadcastController from '../controllers/notificationBroadcast.controller.js';
 import * as orderController from '../../orders/controllers/order.controller.js';
+import {
+    ADMIN_PERMISSION_PATHS,
+    canAccessPermissionPath,
+    getRequiredPermissionForApiRoute,
+} from '../constants/adminPermissions.js';
 import { getAdminPageController, upsertAdminPageController } from '../controllers/pageContent.controller.js';
 import { upload } from '../../../../middleware/upload.js';
 
@@ -15,15 +21,78 @@ const router = express.Router();
 // ----- Public Business Settings (No Admin Required) -----
 router.get('/business-settings/public', businessSettingsController.getBusinessSettings);
 
-const requireAdmin = (req, _res, next) => {
-    const user = req.user;
-    if (!user || user.role !== 'ADMIN') {
-        return next(new AuthError('Admin access required'));
+const normalizeObjectIdList = (value) => {
+    if (!Array.isArray(value)) return [];
+    return value
+        .map((id) => (id ? String(id) : ''))
+        .map((id) => id.trim())
+        .filter(Boolean);
+};
+
+const requireAdmin = async (req, _res, next) => {
+    try {
+        const user = req.user;
+        if (!user || user.role !== 'ADMIN') {
+            return next(new AuthError('Admin access required'));
+        }
+
+        const adminDoc = await FoodAdmin.findById(user.userId)
+            .select('_id role email name isActive adminType permissions zoneIds')
+            .lean();
+
+        if (!adminDoc || adminDoc.isActive === false) {
+            return next(new AuthError('Admin account is inactive or not found'));
+        }
+
+        const adminType = String(adminDoc.adminType || 'SUPER_ADMIN').toUpperCase();
+        const permissions = Array.isArray(adminDoc.permissions) ? adminDoc.permissions : [];
+        const zoneIds = normalizeObjectIdList(adminDoc.zoneIds);
+
+        req.adminAuth = {
+            id: String(adminDoc._id),
+            role: 'ADMIN',
+            adminType,
+            permissions,
+            zoneIds,
+            isSuperAdmin: adminType === 'SUPER_ADMIN',
+            isSubAdmin: adminType === 'SUB_ADMIN',
+        };
+
+        if (adminType === 'SUB_ADMIN') {
+            const requiredPermission = getRequiredPermissionForApiRoute(req.method, req.path);
+            if (requiredPermission && !canAccessPermissionPath(permissions, requiredPermission)) {
+                return next(new AuthError('Sub-admin does not have permission for this action'));
+            }
+        }
+
+        return next();
+    } catch (error) {
+        return next(error);
+    }
+};
+
+router.use(requireAdmin);
+
+const requireSuperAdmin = (req, _res, next) => {
+    if (!req.adminAuth?.isSuperAdmin) {
+        return next(new AuthError('Super admin access required'));
     }
     return next();
 };
 
-router.use(requireAdmin);
+const requireAdminPermission = (permissionPath) => (req, _res, next) => {
+    if (req.adminAuth?.isSuperAdmin) return next();
+    if (!req.adminAuth?.isSubAdmin) return next();
+    if (canAccessPermissionPath(req.adminAuth.permissions, permissionPath)) return next();
+    return next(new AuthError('Sub-admin does not have permission for this action'));
+};
+
+// ----- Admin Management -----
+router.get('/admins', requireAdminPermission(ADMIN_PERMISSION_PATHS.MANAGE_ADMINS), adminController.listAdmins);
+router.post('/admins', requireSuperAdmin, adminController.createAdmin);
+router.patch('/admins/:id', requireSuperAdmin, adminController.updateAdmin);
+router.patch('/admins/:id/status', requireSuperAdmin, adminController.updateAdminStatus);
+router.delete('/admins/:id', requireSuperAdmin, adminController.deleteAdmin);
 
 // ----- Broadcast Notifications -----
 router.post('/notifications/broadcast', notificationBroadcastController.createBroadcastNotificationController);

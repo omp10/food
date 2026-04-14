@@ -12,7 +12,7 @@ import { validateReferralSettingsUpsertDto } from '../validators/referralSetting
 // ----- Customers / Users -----
 export async function getCustomers(req, res, next) {
     try {
-        const data = await adminService.getCustomers(req.query || {});
+        const data = await adminService.getCustomers(req.query || {}, req.adminAuth || {});
         res.status(200).json({ success: true, message: 'Customers fetched successfully', data });
     } catch (error) {
         next(error);
@@ -128,7 +128,7 @@ export async function globalSearch(req, res, next) {
 
 export async function getRestaurants(req, res, next) {
     try {
-        const data = await adminService.getRestaurants(req.query);
+        const data = await adminService.getRestaurants(req.query, req.adminAuth || {});
         res.status(200).json({
             success: true,
             message: 'Restaurants fetched successfully',
@@ -154,7 +154,7 @@ export async function getRestaurantReport(req, res, next) {
 
 export async function getDashboardStats(req, res, next) {
     try {
-        const data = await adminService.getDashboardStats(req.query || {});
+        const data = await adminService.getDashboardStats(req.query || {}, req.adminAuth || {});
         res.status(200).json({
             success: true,
             message: 'Dashboard stats fetched successfully',
@@ -224,7 +224,7 @@ export async function getRestaurantById(req, res, next) {
         if (!id || !mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ success: false, message: 'Invalid restaurant id' });
         }
-        const restaurant = await adminService.getRestaurantById(id);
+        const restaurant = await adminService.getRestaurantById(id, req.adminAuth || {});
         if (!restaurant) {
             return res.status(404).json({ success: false, message: 'Restaurant not found' });
         }
@@ -296,7 +296,7 @@ export async function updateRestaurantById(req, res, next) {
         if (!id || !mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ success: false, message: 'Invalid restaurant id' });
         }
-        const updated = await adminService.updateRestaurantById(id, req.body || {});
+        const updated = await adminService.updateRestaurantById(id, req.body || {}, req.adminAuth || {});
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Restaurant not found' });
         }
@@ -312,7 +312,7 @@ export async function updateRestaurantStatus(req, res, next) {
         if (!id || !mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ success: false, message: 'Invalid restaurant id' });
         }
-        const updated = await adminService.updateRestaurantStatus(id, req.body || {});
+        const updated = await adminService.updateRestaurantStatus(id, req.body || {}, req.adminAuth || {});
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Restaurant not found' });
         }
@@ -328,7 +328,7 @@ export async function updateRestaurantLocation(req, res, next) {
         if (!id || !mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ success: false, message: 'Invalid restaurant id' });
         }
-        const updated = await adminService.updateRestaurantLocation(id, req.body || {});
+        const updated = await adminService.updateRestaurantLocation(id, req.body || {}, req.adminAuth || {});
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Restaurant not found' });
         }
@@ -1321,7 +1321,7 @@ export async function rejectDeliveryPartner(req, res, next) {
 // ----- Zones -----
 export async function getZones(req, res, next) {
     try {
-        const data = await adminService.getZones(req.query);
+        const data = await adminService.getZones(req.query, req.adminAuth || {});
         res.status(200).json({
             success: true,
             message: 'Zones fetched successfully',
@@ -1334,7 +1334,7 @@ export async function getZones(req, res, next) {
 
 export async function getZoneById(req, res, next) {
     try {
-        const zone = await adminService.getZoneById(req.params.id);
+        const zone = await adminService.getZoneById(req.params.id, req.adminAuth || {});
         if (!zone) {
             return res.status(404).json({
                 success: false,
@@ -1531,6 +1531,71 @@ export async function getStoreProducts(req, res, next) {
     try {
         const data = await adminService.getStoreProducts(req.query || {});
         res.status(200).json({ success: true, message: 'Store products fetched successfully', data });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function listAdmins(req, res, next) {
+    try {
+        const data = await adminService.listAdmins(req.query || {});
+        res.status(200).json({
+            success: true,
+            message: 'Admins fetched successfully',
+            data,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function createAdmin(req, res, next) {
+    try {
+        const admin = await adminService.createAdmin(req.body || {}, req.adminAuth || {});
+        res.status(201).json({
+            success: true,
+            message: 'Admin created successfully',
+            data: { admin },
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function updateAdmin(req, res, next) {
+    try {
+        const admin = await adminService.updateAdmin(req.params.id, req.body || {}, req.adminAuth || {});
+        res.status(200).json({
+            success: true,
+            message: 'Admin updated successfully',
+            data: { admin },
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function updateAdminStatus(req, res, next) {
+    try {
+        const admin = await adminService.updateAdminStatus(req.params.id, req.body || {}, req.adminAuth || {});
+        res.status(200).json({
+            success: true,
+            message: 'Admin status updated successfully',
+            data: { admin },
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function deleteAdmin(req, res, next) {
+    try {
+        const result = await adminService.deleteAdmin(req.params.id, req.adminAuth || {});
+        res.status(200).json({
+            success: true,
+            message: 'Admin deleted successfully',
+            data: result,
+        });
     } catch (error) {
         next(error);
     }
