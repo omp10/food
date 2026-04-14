@@ -1,10 +1,10 @@
 import { getPublicGourmetRestaurants } from '../services/gourmet.service.js';
 import { getLandingSettings } from '../services/landingSettings.service.js';
 import { FoodHeroBanner } from '../models/heroBanner.model.js';
-import { FoodUnder250Banner } from '../models/under250Banner.model.js';
 import { FoodExploreIcon } from '../models/exploreIcon.model.js';
 import { FoodRestaurant } from '../../restaurant/models/restaurant.model.js';
 import { sendResponse } from '../../../../utils/response.js';
+import { listUnder250Banners } from '../services/under250Banner.service.js';
 
 /** Public hero banners for user home: active only, sorted, with linkedRestaurants populated for click-through */
 export const getPublicHeroBannersController = async (req, res, next) => {
@@ -33,7 +33,7 @@ export const getPublicHeroBannersController = async (req, res, next) => {
 
 export const getPublicUnder250BannersController = async (req, res, next) => {
     try {
-        const docs = await FoodUnder250Banner.find({ isActive: true }).sort({ sortOrder: 1, createdAt: -1 }).lean();
+        const docs = await listUnder250Banners({ isActive: true });
         return sendResponse(res, 200, 'Under 250 banners fetched', { banners: docs });
     } catch (error) {
         next(error);

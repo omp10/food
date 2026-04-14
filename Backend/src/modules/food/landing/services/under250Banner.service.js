@@ -1,8 +1,22 @@
 import { FoodUnder250Banner } from '../models/under250Banner.model.js';
 import { v2 as cloudinary } from 'cloudinary';
 
-export const listUnder250Banners = async () => {
-    return FoodUnder250Banner.find().sort({ sortOrder: 1, createdAt: -1 }).lean();
+const normalizePriceLimit = (value) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) return null;
+    return Math.round(parsed);
+};
+
+export const listUnder250Banners = async ({ priceLimit = null, isActive = null } = {}) => {
+    const filter = {};
+    const normalizedPriceLimit = normalizePriceLimit(priceLimit);
+    if (normalizedPriceLimit !== null) {
+        filter.priceLimit = normalizedPriceLimit;
+    }
+    if (typeof isActive === 'boolean') {
+        filter.isActive = isActive;
+    }
+    return FoodUnder250Banner.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
 };
 
 export const createUnder250BannersFromFiles = async (files, meta = {}) => {
@@ -32,6 +46,7 @@ export const createUnder250BannersFromFiles = async (files, meta = {}) => {
                 ctaText: meta.ctaText,
                 ctaLink: meta.ctaLink,
                 zoneId: meta.zoneId,
+                priceLimit: normalizePriceLimit(meta.priceLimit) ?? 250,
                 sortOrder: meta.sortOrder ?? 0,
                 isActive: true,
             });

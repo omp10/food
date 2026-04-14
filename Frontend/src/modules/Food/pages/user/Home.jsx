@@ -126,6 +126,13 @@ const HOME_FILTER_ACTIVE_ICON_FILL_CLASS =
   BRAND_THEME.tokens.homepage.filters.activeIconFill;
 
 const WEBVIEW_SESSION_CACHE_BUSTER = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const UNDER_PRICE_DEFAULT_STORAGE_KEY = "food-under-price-default";
+const DEFAULT_UNDER_PRICE_LIMIT = 250;
+const resolveUnderPriceLimit = (value, fallback = DEFAULT_UNDER_PRICE_LIMIT) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.round(parsed);
+};
 
 const getRestaurantDisplayName = (restaurant) => {
   const nameCandidates = [
@@ -418,6 +425,12 @@ export default function Home() {
   const [landingExploreMore, setLandingExploreMore] = useState([]);
   const [exploreMoreHeading, setExploreMoreHeading] = useState("Explore More");
   const [headerVideoUrl, setHeaderVideoUrl] = useState("");
+  const [homeUnderPriceLimit, setHomeUnderPriceLimit] = useState(() => {
+    if (typeof window === "undefined") return DEFAULT_UNDER_PRICE_LIMIT;
+    return resolveUnderPriceLimit(
+      window.localStorage.getItem(UNDER_PRICE_DEFAULT_STORAGE_KEY),
+    );
+  });
   const [recommendedRestaurantIds, setRecommendedRestaurantIds] = useState([]);
   const [
     recommendedRestaurantsFromSettings,
@@ -902,6 +915,17 @@ export default function Home() {
         const settings = settingsRes?.data?.data || {};
         setExploreMoreHeading(settings.exploreMoreHeading || "Explore More");
         setHeaderVideoUrl(settings.headerVideoUrl || "");
+        const savedUnderPrice = resolveUnderPriceLimit(
+          settings.defaultUnderPriceLimit,
+          DEFAULT_UNDER_PRICE_LIMIT,
+        );
+        setHomeUnderPriceLimit(savedUnderPrice);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(
+            UNDER_PRICE_DEFAULT_STORAGE_KEY,
+            String(savedUnderPrice),
+          );
+        }
         setRecommendedRestaurantIds(settings.recommendedRestaurantIds || []);
         setRecommendedRestaurantsFromSettings(
           settings.recommendedRestaurants || [],
@@ -2416,6 +2440,11 @@ export default function Home() {
   }, [heroBannerImages, currentBannerIndex, showBannerSkeleton, heroBannersData, navigate]);
 
   // Memoized Category Rail Component
+  const homeUnderRoute = useMemo(
+    () => "/user/under-price",
+    [],
+  );
+
   const CategoryRailSection = useMemo(() => {
     return (
       <section className="space-y-1 sm:space-y-1.5 lg:space-y-2 min-h-[108px] sm:min-h-[120px]">
@@ -2429,17 +2458,17 @@ export default function Home() {
           className="flex gap-3 sm:gap-4 lg:gap-5 overflow-x-auto overflow-y-visible scrollbar-hide scroll-smooth px-2 sm:px-3 py-2 sm:py-3"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {/* Meals Under 200 Card */}
+          {/* Meals Under 250 Card */}
           <div 
             className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95"
-            onClick={() => navigate("/user/under-250")}
+            onClick={() => navigate(homeUnderRoute)}
           >
             <div
               className="w-16 h-16 sm:w-20 sm:h-20 rounded-b-full rounded-t-sm shadow-md border-t-4 border-blue-200 flex flex-col items-center justify-center p-1"
               style={{ backgroundColor: BRAND_THEME.tokens.homepage.home.promoBadgeBackground }}
             >
               <span className="text-[10px] sm:text-xs font-bold text-white text-center leading-tight">UNDER</span>
-              <span className="text-sm sm:text-base font-extrabold text-white">₹200</span>
+              <span className="text-sm sm:text-base font-extrabold text-white">{"\u20B9"}{resolveUnderPriceLimit(homeUnderPriceLimit)}</span>
               <div className="w-10 h-3.5 bg-white rounded-full mt-1 flex items-center justify-center">
                 <span className="text-[8px] font-bold" style={{ color: BRAND_THEME.tokens.homepage.home.promoBadgeText }}>Explore</span>
               </div>
@@ -2486,7 +2515,7 @@ export default function Home() {
         </div>
       </section>
     );
-  }, [displayCategories, showCategorySkeleton, navigate]);
+  }, [displayCategories, showCategorySkeleton, navigate, homeUnderRoute, homeUnderPriceLimit]);
 
   return (
     <div className={`relative min-h-screen ${BRAND_THEME.tokens.homepage.shared.pageBackground} pb-16 md:pb-6 overflow-x-clip`}>
@@ -4102,3 +4131,5 @@ export default function Home() {
     </div>
   );
 }
+
+

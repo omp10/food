@@ -12,6 +12,12 @@ const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
 
+const DEFAULT_PRICE_LIMIT = 250
+const normalizePriceLimit = (value, fallback = DEFAULT_PRICE_LIMIT) => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback
+  return Math.round(parsed)
+}
 
 export default function LandingPageManagement() {
   const [activeTab, setActiveTab] = useState('banners')
@@ -49,10 +55,11 @@ export default function LandingPageManagement() {
   const [under250BannersUploading, setUnder250BannersUploading] = useState(false)
   const [under250BannersUploadProgress, setUnder250BannersUploadProgress] = useState({ current: 0, total: 0 })
   const [under250BannersDeleting, setUnder250BannersDeleting] = useState(null)
+  const [under250UploadPriceLimit, setUnder250UploadPriceLimit] = useState(String(DEFAULT_PRICE_LIMIT))
   const under250BannersFileInputRef = useRef(null)
 
   // Settings
-  const [settings, setSettings] = useState({ exploreMoreHeading: "Explore More", recommendedRestaurantIds: [], headerVideoUrl: "" })
+  const [settings, setSettings] = useState({ exploreMoreHeading: "Explore More", recommendedRestaurantIds: [], headerVideoUrl: "", defaultUnderPriceLimit: DEFAULT_PRICE_LIMIT })
   const [settingsLoading, setSettingsLoading] = useState(true)
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [headerVideoUploading, setHeaderVideoUploading] = useState(false)
@@ -822,13 +829,15 @@ export default function LandingPageManagement() {
         // Backend expects field name "files" (upload.array('files'))
         formData.append('files', file)
       })
+      formData.append('priceLimit', String(normalizePriceLimit(under250UploadPriceLimit)))
 
       const response = await api.post('/food/hero-banners/under-250/multiple', formData, getAuthConfig({
         headers: { 'Content-Type': 'multipart/form-data' },
       }))
 
       if (response.data.success) {
-        setSuccess(`${response.data.data.banners?.length || files.length} under 250 banner(s) uploaded successfully!`)
+        const appliedLimit = normalizePriceLimit(under250UploadPriceLimit)
+        setSuccess(`${response.data.data.banners?.length || files.length} banner(s) uploaded for under ₹${appliedLimit}.`)
         await fetchUnder250Banners()
         setTimeout(() => setSuccess(null), 3000)
       }
@@ -843,14 +852,14 @@ export default function LandingPageManagement() {
   }
 
   const handleDeleteUnder250Banner = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this under 250 banner?')) return
+    if (!window.confirm('Are you sure you want to delete this price banner?')) return
     try {
       setUnder250BannersDeleting(id)
       setError(null)
       setSuccess(null)
       const response = await api.delete(`/food/hero-banners/under-250/${id}`, getAuthConfig())
       if (response.data.success) {
-        setSuccess('Under 250 banner deleted successfully!')
+        setSuccess('Price banner deleted successfully!')
         await fetchUnder250Banners()
         setTimeout(() => setSuccess(null), 3000)
       }
@@ -905,13 +914,15 @@ export default function LandingPageManagement() {
         setSettings({
           exploreMoreHeading: nextSettings.exploreMoreHeading || "Explore More",
           recommendedRestaurantIds: Array.isArray(nextSettings.recommendedRestaurantIds) ? nextSettings.recommendedRestaurantIds : [],
-          headerVideoUrl: nextSettings.headerVideoUrl || ""
+          headerVideoUrl: nextSettings.headerVideoUrl || "",
+          defaultUnderPriceLimit: normalizePriceLimit(nextSettings.defaultUnderPriceLimit, DEFAULT_PRICE_LIMIT),
         })
+        setUnder250UploadPriceLimit(String(normalizePriceLimit(nextSettings.defaultUnderPriceLimit, DEFAULT_PRICE_LIMIT)))
       }
     } catch (err) {
       // Silently handle 401/404 errors - endpoints may not exist yet, use default settings
       if (err.response?.status === 401 || err.response?.status === 404) {
-        setSettings({ exploreMoreHeading: "Explore More", recommendedRestaurantIds: [], headerVideoUrl: "" }) // Use default settings
+        setSettings({ exploreMoreHeading: "Explore More", recommendedRestaurantIds: [], headerVideoUrl: "", defaultUnderPriceLimit: DEFAULT_PRICE_LIMIT }) // Use default settings
         setError(null) // Clear any previous error
       } else {
         // Filter out token-related errors
@@ -930,7 +941,8 @@ export default function LandingPageManagement() {
       setSuccess(null)
       const response = await api.patch('/food/hero-banners/landing/settings', {
         exploreMoreHeading: settings.exploreMoreHeading,
-        recommendedRestaurantIds: Array.isArray(settings.recommendedRestaurantIds) ? settings.recommendedRestaurantIds : []
+        recommendedRestaurantIds: Array.isArray(settings.recommendedRestaurantIds) ? settings.recommendedRestaurantIds : [],
+        defaultUnderPriceLimit: normalizePriceLimit(settings.defaultUnderPriceLimit, DEFAULT_PRICE_LIMIT),
       }, getAuthConfig())
       if (response.data.success) {
         const savedSettings = response.data.data?.settings || response.data.data || {}
@@ -940,13 +952,36 @@ export default function LandingPageManagement() {
           headerVideoUrl: typeof savedSettings.headerVideoUrl === 'string' ? savedSettings.headerVideoUrl : prev.headerVideoUrl,
           recommendedRestaurantIds: Array.isArray(savedSettings.recommendedRestaurantIds)
             ? savedSettings.recommendedRestaurantIds
-            : prev.recommendedRestaurantIds
+            : prev.recommendedRestaurantIds,
+          defaultUnderPriceLimit: normalizePriceLimit(savedSettings.defaultUnderPriceLimit, prev.defaultUnderPriceLimit),
         }))
         setSuccess('Settings saved successfully!')
         setTimeout(() => setSuccess(null), 3000)
       }
     } catch (err) {
       setErrorSafely(err.response?.data?.message || 'Failed to save settings.')
+    } finally {
+      setSettingsSaving(false)
+    }
+  }
+
+  const handleSaveUnderPriceLimit = async () => {
+    try {
+      const nextPrice = normalizePriceLimit(under250UploadPriceLimit, DEFAULT_PRICE_LIMIT)
+      setSettingsSaving(true)
+      setError(null)
+      setSuccess(null)
+      const response = await api.patch('/food/hero-banners/landing/settings', {
+        defaultUnderPriceLimit: nextPrice,
+      }, getAuthConfig())
+      if (response.data.success) {
+        setSettings((prev) => ({ ...prev, defaultUnderPriceLimit: nextPrice }))
+        setUnder250UploadPriceLimit(String(nextPrice))
+        setSuccess(`Default under-price saved: ₹${nextPrice}`)
+        setTimeout(() => setSuccess(null), 3000)
+      }
+    } catch (err) {
+      setErrorSafely(err.response?.data?.message || 'Failed to save under-price.')
     } finally {
       setSettingsSaving(false)
     }
@@ -1134,7 +1169,7 @@ export default function LandingPageManagement() {
   // ==================== RENDER ====================
   const tabs = [
     { id: 'banners', label: 'Hero Banners', icon: ImageIcon },
-    { id: 'under-250', label: '250 Banner', icon: Tag },
+    { id: 'under-250', label: 'Price Banners', icon: Tag },
     { id: 'homepage-video', label: 'Homepage Video', icon: Layout },
     { id: 'explore-more', label: 'Explore More', icon: Layout },
   ]
@@ -1348,7 +1383,34 @@ export default function LandingPageManagement() {
           <>
             {/* Upload Section */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-4">Upload New Banner(s)</h2>
+              <h2 className="text-lg font-bold text-slate-900 mb-4">Upload New Price Banner(s)</h2>
+              <div className="mb-4 max-w-xs">
+                <Label htmlFor="under250UploadPriceLimit" className="text-sm text-slate-700">Price Limit (₹)</Label>
+                <Input
+                  id="under250UploadPriceLimit"
+                  type="number"
+                  min="1"
+                  value={under250UploadPriceLimit}
+                  onChange={(e) => setUnder250UploadPriceLimit(e.target.value)}
+                  onBlur={() => setUnder250UploadPriceLimit((prev) => String(normalizePriceLimit(prev)))}
+                  placeholder="250"
+                  className="mt-2"
+                />
+                <p className="text-xs text-slate-500 mt-1">This banner will be mapped to “Under ₹{normalizePriceLimit(under250UploadPriceLimit)}”.</p>
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleSaveUnderPriceLimit}
+                    disabled={settingsSaving}
+                    className="inline-flex h-9 items-center rounded-md bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                  >
+                    {settingsSaving ? 'Saving...' : 'Save Price'}
+                  </button>
+                  <span className="text-xs text-slate-600">
+                    Saved default: Under ₹{normalizePriceLimit(settings.defaultUnderPriceLimit, DEFAULT_PRICE_LIMIT)}
+                  </span>
+                </div>
+              </div>
               <div
                 className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50/30 cursor-pointer transition-colors hover:border-blue-400 hover:bg-blue-50/50"
                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -1416,7 +1478,7 @@ export default function LandingPageManagement() {
               ) : under250Banners.length === 0 ? (
                 <div className="text-center py-12 text-slate-500">
                   <Tag className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                  <p>No under 250 banners uploaded yet.</p>
+                  <p>No price banners uploaded yet.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1431,6 +1493,9 @@ export default function LandingPageManagement() {
                         </div>
                         <div className="absolute top-2 left-2">
                           <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">Order: {banner.order}</span>
+                        </div>
+                        <div className="absolute bottom-2 left-2">
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-black/75 text-white">Under ₹{normalizePriceLimit(banner.priceLimit)}</span>
                         </div>
                       </div>
                       <div className="p-4 bg-white">

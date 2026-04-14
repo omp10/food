@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
 import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { Star, Clock, MapPin, ArrowDownUp, Timer, ArrowRight, ChevronDown, Bookmark, Share2, Plus, Minus, X, AlertCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -24,6 +24,13 @@ const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
 const RUPEE_SYMBOL = "\u20B9"
+const UNDER_PRICE_DEFAULT_STORAGE_KEY = "food-under-price-default"
+const DEFAULT_UNDER_PRICE_LIMIT = 250
+const resolveUnderPriceLimit = (value, fallback = DEFAULT_UNDER_PRICE_LIMIT) => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback
+  return Math.round(parsed)
+}
 const UNDER_250_FILTERS_STORAGE_KEY = "food-under-250-filters"
 const UNDER_250_VEG_MODE_KEY = "food-under-250-veg-mode"
 const readUnder250Filters = () => {
@@ -62,6 +69,19 @@ const readUnder250Filters = () => {
 
 
 export default function Under250() {
+  const { maxPrice: maxPriceParam } = useParams()
+  const maxPrice = useMemo(() => {
+    const storedDefault =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem(UNDER_PRICE_DEFAULT_STORAGE_KEY)
+        : null
+    return resolveUnderPriceLimit(maxPriceParam, resolveUnderPriceLimit(storedDefault))
+  }, [maxPriceParam])
+  const underPriceDisplay = useMemo(() => `Under ${RUPEE_SYMBOL}${maxPrice}`, [maxPrice])
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    window.localStorage.setItem(UNDER_PRICE_DEFAULT_STORAGE_KEY, String(maxPrice))
+  }, [maxPrice])
   const initialFiltersRef = useRef(readUnder250Filters())
   const { location } = useLocation()
   const { zoneId, zoneStatus, isInService, isOutOfService } = useZone(location)
@@ -284,7 +304,7 @@ export default function Under250() {
     return filtered
   }, [under250Restaurants, selectedSort, under30MinsFilter, activeCategory, categories, vegMode])
 
-  // Fetch under-250 banner from public API
+  // Fetch under-price banner from public API
   useEffect(() => {
     let cancelled = false
     setLoadingBanner(true)
@@ -400,7 +420,7 @@ export default function Under250() {
     isBannerSwipingRef.current = false
   }, [bannerImages.length, resetBannerAutoSlide])
 
-  // Fetch restaurants with dishes under ?250 from backend
+  // Fetch restaurants with dishes under selected price from backend
   useEffect(() => {
     const fetchRestaurantsUnder250 = async () => {
       try {
@@ -421,7 +441,7 @@ export default function Under250() {
               const menuResponse = await restaurantAPI.getMenuByRestaurantId(restaurantId)
               const menu = getMenuFromResponse(menuResponse)
               const menuItems = flattenMenuItems(menu)
-                .filter((item) => Number(item?.price || 0) <= 250 && item?.isAvailable !== false)
+                .filter((item) => Number(item?.price || 0) <= maxPrice && item?.isAvailable !== false)
                 .map((item) => {
                   const foodType = String(item?.foodType || "").toLowerCase()
                   const isVeg = foodType.includes("veg") && !foodType.includes("non")
@@ -496,7 +516,7 @@ export default function Under250() {
 
         setUnder250Restaurants(restaurantsWithUnder250Dishes.filter(Boolean))
       } catch (error) {
-        debugError('Error fetching restaurants under 250:', error)
+        debugError(`Error fetching restaurants under ${maxPrice}:`, error)
         setUnder250Restaurants([])
       } finally {
         setLoadingRestaurants(false)
@@ -504,7 +524,7 @@ export default function Under250() {
     }
 
     fetchRestaurantsUnder250()
-  }, [zoneId, isOutOfService, location?.latitude, location?.longitude])
+  }, [zoneId, isOutOfService, location?.latitude, location?.longitude, maxPrice])
 
   // Fetch categories from backend (no static fallback list)
   useEffect(() => {
@@ -705,7 +725,7 @@ export default function Under250() {
     }))
 
     // Find restaurant name from the item or use provided parameter
-    const restaurant = restaurantName || item.restaurant || "Under 250"
+    const restaurant = restaurantName || item.restaurant || underPriceDisplay
 
     // Prepare cart item with all required properties
     const cartItem = {
@@ -832,7 +852,7 @@ export default function Under250() {
       if (navigator.share) {
         await navigator.share({
           title: item.name || "Dish",
-          text: `Check out ${item.name || "this dish"} from ${item.restaurant || "Under 250"}`,
+          text: `Check out ${item.name || "this dish"} from ${item.restaurant || underPriceDisplay}`,
           url: shareUrl,
         })
         return
@@ -852,7 +872,7 @@ export default function Under250() {
     const shareUrl = restaurantSlug
       ? `${window.location.origin}/food/user/restaurants/${restaurantSlug}${itemId ? `?dish=${encodeURIComponent(itemId)}` : ""}`
       : window.location.href
-    const shareText = `Check out ${selectedItem.name || "this dish"} from ${selectedItem.restaurant || "Under 250"}`
+    const shareText = `Check out ${selectedItem.name || "this dish"} from ${selectedItem.restaurant || underPriceDisplay}`
     const encodedUrl = encodeURIComponent(shareUrl)
     const encodedText = encodeURIComponent(`${shareText} ${shareUrl}`)
 
@@ -941,7 +961,7 @@ export default function Under250() {
                   <div key={`${bannerImage}-${index}`} className="relative h-full w-full shrink-0">
                     <OptimizedImage
                       src={bannerImage}
-                      alt={`Under 250 Banner ${index + 1}`}
+                      alt={`Under ${maxPrice} Banner ${index + 1}`}
                       className="h-full w-full"
                       objectFit="cover"
                       priority={index === 0}
@@ -1067,7 +1087,7 @@ export default function Under250() {
           <div className="flex justify-center items-center py-12">
             <div className="text-gray-500 dark:text-gray-400">
               {under250Restaurants.length === 0
-                ? `No restaurants with dishes under ${RUPEE_SYMBOL}250 found.`
+                ? `No restaurants with dishes under ${RUPEE_SYMBOL}${maxPrice} found.`
                 : "No restaurants match the selected filters."}
             </div>
           </div>
@@ -1230,7 +1250,7 @@ export default function Under250() {
                     </div>
 
                     {/* View Full Menu Button */}
-                    <Link className="flex justify-center mt-2 md:mt-3 lg:mt-4" to={`/food/user/restaurants/${restaurantSlug}?under250=true`}>
+                    <Link className="flex justify-center mt-2 md:mt-3 lg:mt-4" to={`/food/user/restaurants/${restaurantSlug}?under=${encodeURIComponent(maxPrice)}`}>
                       <Button
                         variant="outline"
                         className="w-min align-center text-center rounded-lg md:rounded-xl mx-auto bg-gray-50 dark:bg-[#1a1a1a] hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-white text-gray-700 border-gray-200 dark:border-gray-800 h-9 md:h-10 lg:h-11 px-4 md:px-6 lg:px-8 text-sm md:text-base lg:text-lg"
@@ -1460,7 +1480,7 @@ export default function Under250() {
 
                 {/* Description */}
                 <p className="text-sm md:text-base lg:text-lg text-gray-600 dark:text-gray-400 mb-4 md:mb-6 lg:mb-8 leading-relaxed">
-                  {selectedItem.description || `${selectedItem.name} from ${selectedItem.restaurant || 'Under 250'}`}
+                  {selectedItem.description || `${selectedItem.name} from ${selectedItem.restaurant || underPriceDisplay}`}
                 </p>
 
                 {/* Highly Reordered Progress Bar */}

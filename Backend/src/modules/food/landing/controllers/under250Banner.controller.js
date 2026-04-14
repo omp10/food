@@ -8,9 +8,19 @@ import {
 import { sendResponse } from '../../../../utils/response.js';
 import { ValidationError } from '../../../../core/auth/errors.js';
 
+const parsePriceLimit = (value) => {
+    if (value === undefined || value === null || value === '') return null;
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        throw new ValidationError('priceLimit must be a positive number');
+    }
+    return Math.round(parsed);
+};
+
 export const listUnder250BannersController = async (req, res, next) => {
     try {
-        const data = await listUnder250Banners();
+        const priceLimit = parsePriceLimit(req.query?.priceLimit);
+        const data = await listUnder250Banners({ priceLimit });
         return sendResponse(res, 200, 'Under 250 banners fetched successfully', { banners: data });
     } catch (error) {
         next(error);
@@ -28,6 +38,7 @@ export const uploadUnder250BannersController = async (req, res, next) => {
             ctaText: req.body.ctaText,
             ctaLink: req.body.ctaLink,
             zoneId: req.body.zoneId,
+            priceLimit: parsePriceLimit(req.body.priceLimit) ?? 250,
         };
 
         const results = await createUnder250BannersFromFiles(req.files, meta);

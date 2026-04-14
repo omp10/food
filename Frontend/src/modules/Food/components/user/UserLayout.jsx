@@ -120,7 +120,7 @@ export default function UserLayout() {
   // Note: Authentication checks and redirects are handled by ProtectedRoute components
   // UserLayout should not interfere with authentication redirects
 
-  // Show bottom navigation only on home page, under-250 page, and profile page
+  // Show bottom navigation only on home page, under-price pages, and profile page
   const path = location.pathname.startsWith("/food")
     ? location.pathname.substring(5) || "/"
     : location.pathname
@@ -130,15 +130,28 @@ export default function UserLayout() {
   const isProfileRoot =
     normalizedPath === "/profile" ||
     normalizedPath === "/user/profile"
+  const isUnderPriceRoute =
+    normalizedPath === "/under-price" ||
+    normalizedPath === "/user/under-price" ||
+    /^\/under-\d+$/.test(normalizedPath) ||
+    /^\/user\/under-\d+$/.test(normalizedPath)
 
   const showBottomNav = normalizedPath === "/" ||
     normalizedPath === "/user" ||
+    normalizedPath === "/under-price" ||
+    normalizedPath === "/user/under-price" ||
     normalizedPath === "/under-250" ||
     normalizedPath === "/user/under-250" ||
+    isUnderPriceRoute ||
     isProfileRoot ||
     normalizedPath === "" // Handle empty string case for root relative to /food
 
-  const isUnder250 = normalizedPath === "/under-250" || normalizedPath === "/user/under-250"
+  const isUnder250 =
+    normalizedPath === "/under-price" ||
+    normalizedPath === "/user/under-price" ||
+    normalizedPath === "/under-250" ||
+    normalizedPath === "/user/under-250" ||
+    isUnderPriceRoute
 
   return (
     <div

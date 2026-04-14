@@ -22,6 +22,13 @@ export const updateAdminLandingSettingsController = async (req, res, next) => {
         if (typeof payload !== 'object') {
             throw new ValidationError('Invalid settings payload');
         }
+        if (payload.defaultUnderPriceLimit !== undefined) {
+            const parsed = Number(payload.defaultUnderPriceLimit);
+            if (!Number.isFinite(parsed) || parsed <= 0) {
+                throw new ValidationError('defaultUnderPriceLimit must be a positive number');
+            }
+            payload.defaultUnderPriceLimit = Math.round(parsed);
+        }
         const updated = await updateLandingSettings(payload);
         return sendResponse(res, 200, 'Landing settings updated successfully', { settings: updated });
     } catch (error) {

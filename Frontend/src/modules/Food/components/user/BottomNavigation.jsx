@@ -2,13 +2,33 @@ import { Link, useLocation } from "react-router-dom"
 import { Tag, User, Truck } from "lucide-react"
 import BRAND_THEME from "@/config/brandTheme"
 
+const UNDER_PRICE_DEFAULT_STORAGE_KEY = "food-under-price-default"
+const DEFAULT_UNDER_PRICE_LIMIT = 250
+const resolveUnderPriceLimit = (value, fallback = DEFAULT_UNDER_PRICE_LIMIT) => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback
+  return Math.round(parsed)
+}
+
 export default function BottomNavigation() {
   const location = useLocation()
   const pathname = location.pathname
   const { navigation } = BRAND_THEME.tokens
+  const routePriceMatch = pathname.match(/\/under-(\d+)$/)
+  const activeUnderPrice = routePriceMatch?.[1]
+  const defaultUnderPrice = resolveUnderPriceLimit(
+    activeUnderPrice ??
+      (typeof window !== "undefined"
+        ? window.localStorage.getItem(UNDER_PRICE_DEFAULT_STORAGE_KEY)
+        : null),
+  )
 
   // Check active routes - support both /user/* and /* paths
   const isUnder250 =
+    pathname === "/food/under-price" ||
+    pathname.startsWith("/food/user/under-price") ||
+    pathname === "/under-price" ||
+    pathname === "/user/under-price" ||
     pathname === "/food/under-250" ||
     pathname.startsWith("/food/user/under-250") ||
     /^\/under-\d+$/.test(pathname) ||
@@ -53,7 +73,7 @@ export default function BottomNavigation() {
 
         {/* Under 250 Tab */}
         <Link
-          to="/food/user/under-250"
+          to="/food/under-price"
           className={`flex flex-1 flex-col items-center gap-1.5 px-2 sm:px-3 py-2 transition-all duration-200 relative ${isUnder250
               ? navigation.activeText
               : navigation.inactiveText
@@ -61,7 +81,7 @@ export default function BottomNavigation() {
         >
           <Tag className={`h-5 w-5 ${isUnder250 ? navigation.activeText : navigation.inactiveText}`} strokeWidth={2} />
           <span className={`text-xs sm:text-sm font-medium ${isUnder250 ? `${navigation.activeText} font-semibold` : navigation.inactiveText}`}>
-            Under 250
+            Under {defaultUnderPrice}
           </span>
           {isUnder250 && (
             <div className={`absolute top-0 left-0 right-0 h-0.5 ${navigation.indicator} rounded-b-full`} />

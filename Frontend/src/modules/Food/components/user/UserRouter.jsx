@@ -85,7 +85,10 @@ export default function UserRouter() {
           {/* Home & Discovery */}
           <Route path="" element={<Home />} />
           <Route path="quick" element={<Home />} />
-          <Route path="under-250" element={<Under250 />} />
+          <Route path="under-price" element={<Under250 />} />
+          <Route path="under-250" element={<Navigate to="/food/under-price" replace />} />
+          <Route path="under-:maxPrice" element={<Navigate to="/food/under-price" replace />} />
+          <Route path="under-*" element={<Navigate to="/food/under-price" replace />} />
           <Route path="categories" element={<Categories />} />
           <Route path="category/:category" element={<CategoryPage />} />
           <Route path="restaurants" element={<Restaurants />} />
