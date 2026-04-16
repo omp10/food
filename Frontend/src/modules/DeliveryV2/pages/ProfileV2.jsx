@@ -1,29 +1,26 @@
-import { useEffect, useRef, useState } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   User,
-  ArrowRight,
   Bike,
   Ticket,
   ChevronRight,
-  Share2,
   LogOut,
   X,
   Loader2,
-  Briefcase
+  Share2,
+  Gift,
+  ShieldAlert,
+  FileText
 } from "lucide-react"
 import { deliveryAPI } from "@food/api"
 import { toast } from "sonner"
 import { clearModuleAuth } from "@food/utils/auth"
 import BRAND_THEME from "@/config/brandTheme"
 
-/**
- * ProfileV2 - 1:1 EXACT Restoration of the Legacy Profile Hub.
- * Matches ProfilePage.jsx exactly.
- */
 export const ProfileV2 = () => {
   const navigate = useNavigate()
-  const location = useLocation()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [referralReward, setReferralReward] = useState(0)
@@ -88,140 +85,167 @@ export const ProfileV2 = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center font-poppins">
-        <div className="flex items-center gap-2 text-gray-700">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-sm font-medium">Loading profile...</span>
-        </div>
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center font-poppins gap-3">
+        <Loader2 className="w-6 h-6 text-gray-400 animate-spin" style={{ color: BRAND_THEME.colors.brand.primary }} />
+        <span className="text-xs font-medium text-gray-500">Loading Profile...</span>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 font-poppins pb-24">
-      {/* Profile Header Block */}
-      <div className="bg-white p-4 w-full shadow-sm">
-        <div 
-          onClick={() => navigate("/food/delivery/profile/details")}
-          className="flex items-start justify-between cursor-pointer"
-        >
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-2xl md:text-3xl font-bold">{profile?.name || ""}</h2>
-              <ChevronRight className="w-5 h-5 text-gray-400" />
-            </div>
-            <p className="text-gray-600 text-sm md:text-base mb-3 font-medium">{profile?.deliveryId || ""}</p>
-          </div>
-          <div className="relative shrink-0 ml-4">
-            {profile?.profileImage?.url ? (
-              <img src={profile.profileImage.url} alt="Profile" className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-2 border-gray-200" />
-            ) : (
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200">
-                <User className="w-10 h-10 md:w-12 md:h-12 text-gray-400" />
-              </div>
-            )}
-            <div className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-md border-2 border-white">
-              <Briefcase className="w-4 h-4 text-gray-600" />
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-poppins pb-28">
+      
+      {/* Basic Compact Header */}
+      <div className="bg-white border-b border-gray-100 flex items-center px-4 py-3 sticky top-0 z-50">
+        <h1 className="text-base font-bold text-gray-900">My Profile</h1>
       </div>
 
-      <div className="px-4 py-6">
-        {/* Navigation Buttons */}
-        <div className="grid grid-cols-1 gap-3 mb-6">
+      <div className="px-4 pt-3 space-y-3">
+        
+        {/* Simple Profile Identity Card */}
+        <div 
+          onClick={() => navigate("/food/delivery/profile/details")}
+          className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+             <div className="bg-gray-100 w-12 h-12 rounded-full overflow-hidden shrink-0 border border-gray-200 flex items-center justify-center">
+               {profile?.profileImage?.url ? (
+                 <img src={profile.profileImage.url} alt="Profile" className="w-full h-full object-cover" />
+               ) : (
+                 <User className="w-6 h-6 text-gray-400" />
+               )}
+             </div>
+             <div>
+               <h2 className="text-sm font-bold text-gray-900 leading-tight mb-0.5">{profile?.name || "Delivery Partner"}</h2>
+               <p className="text-xs text-gray-500 font-medium">ID: {profile?.deliveryId || "N/A"}</p>
+             </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+        </div>
+
+        {/* Action Grid (Compact) */}
+        <div className="grid grid-cols-2 gap-3">
+           <button
+             onClick={() => navigate("/food/delivery/history")}
+             className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm flex items-center gap-3 active:bg-gray-50 transition-colors"
+           >
+             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+               <Bike className="w-4 h-4" />
+             </div>
+             <div className="text-left">
+               <span className="text-xs font-semibold text-gray-800 block">Trips</span>
+               <span className="text-[10px] text-gray-400 font-medium">History</span>
+             </div>
+           </button>
+           
+           <button
+             onClick={() => navigate("/food/delivery/profile/documents")}
+             className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm flex items-center gap-3 active:bg-gray-50 transition-colors"
+           >
+             <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+               <FileText className="w-4 h-4" />
+             </div>
+             <div className="text-left">
+               <span className="text-xs font-semibold text-gray-800 block">Docs</span>
+               <span className="text-[10px] text-gray-400 font-medium">Manage</span>
+             </div>
+           </button>
+        </div>
+
+        {/* Share & Earn Banner (Compact) */}
+        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 shadow-sm flex items-center justify-between gap-3">
+          <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+            <Gift className="w-4 h-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-xs font-bold text-emerald-900 mb-0.5 truncate">
+               Refer & Earn{referralReward > 0 ? ` ₹${referralReward}` : ""}
+            </h3>
+            <p className="text-[10px] text-emerald-700 font-medium truncate">Share code, get rewards</p>
+          </div>
           <button
-            onClick={() => navigate("/food/delivery/history")}
-            className="bg-white rounded-xl p-4 flex flex-col items-center gap-2 border border-transparent active:bg-gray-50 transition-colors"
+            onClick={handleShareReferral}
+            className="shrink-0 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold active:bg-emerald-700 transition-colors"
           >
-            <div className="rounded-full bg-gray-50 p-3">
-              <Bike className="w-6 h-6 text-gray-700" />
-            </div>
-            <span className="text-sm font-bold text-gray-900">Trips history</span>
+            Share
           </button>
         </div>
 
-        {/* Sections */}
-        <div className="space-y-4">
-          {/* Share & Earn */}
-          <div className="bg-white rounded-xl p-4 flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <h3 className="text-base font-bold text-gray-900 mb-1">
-                Share & Earn{referralReward > 0 ? ` ₹${referralReward}` : ""}
-              </h3>
-              <p className="text-gray-500 text-xs font-medium">Invite friends to join the delivery partner fleet.</p>
-            </div>
-            <button
-              onClick={handleShareReferral}
-              className="shrink-0 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest shadow-md"
-              style={{ background: BRAND_THEME.colors.brand.primary }}
-            >
-              Share
-            </button>
-          </div>
-
-          {/* Support Section */}
-          <div>
-            <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-3 px-1">Support</h3>
+        {/* Settings List (Compact) */}
+        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
             <div 
               onClick={() => navigate("/food/delivery/help/tickets")}
-              className="bg-white rounded-xl p-4 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors"
+              className="px-4 py-3.5 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <Ticket className="w-5 h-5 text-gray-700" />
-                <span className="text-sm font-bold text-gray-900">Support tickets</span>
+                 <Ticket className="w-4 h-4 text-gray-500" />
+                 <span className="text-sm font-medium text-gray-800">Help & Support</span>
               </div>
-              <ArrowRight className="w-5 h-5 text-gray-300" />
+              <ChevronRight className="w-4 h-4 text-gray-400" />
             </div>
-          </div>
+            
+            <div 
+              onClick={() => navigate("/food/delivery/profile/terms")}
+              className="px-4 py-3.5 border-b border-gray-50 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                 <ShieldAlert className="w-4 h-4 text-gray-500" />
+                 <span className="text-sm font-medium text-gray-800">Terms & Conditions</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </div>
 
-          {/* Partner options Section */}
-          {/* Logout Section */}
-          <div className="pt-4">
             <div 
               onClick={() => setShowLogoutConfirm(true)}
-              className="bg-white rounded-xl p-4 flex items-center justify-between cursor-pointer border border-red-50 hover:bg-red-50/30 active:bg-red-50 transition-colors"
+              className="px-4 py-4 flex items-center justify-between cursor-pointer active:bg-red-50 hover:bg-red-50/50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <LogOut className="w-5 h-5 text-red-600" />
-                <span className="text-sm font-bold text-red-600">Log out</span>
+                 <LogOut className="w-4 h-4 text-red-500" />
+                 <span className="text-sm font-bold text-red-500">Log out</span>
               </div>
-              <ArrowRight className="w-5 h-5 text-red-100" />
             </div>
-          </div>
         </div>
       </div>
 
-      {/* Logout Confirm Popup */}
-      {showLogoutConfirm && (
-        <div 
-          className="fixed inset-0 bg-[#2979FB]/40 z-[1000] flex items-center justify-center px-4"
-          onClick={() => setShowLogoutConfirm(false)}
-        >
-          <div 
-            className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-base font-black text-gray-900 mb-2">Do you want to log out?</h3>
-            <p className="text-sm text-gray-500 mb-5">You will be signed out from your delivery account.</p>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 h-11 rounded-xl border border-gray-200 text-gray-700 font-bold"
-              >
-                No
-              </button>
-              <button
-                onClick={handleLogout}
-                disabled={logoutSubmitting}
-                className="flex-1 h-11 rounded-xl bg-red-600 text-white font-bold disabled:opacity-60"
-              >
-                {logoutSubmitting ? "Logging out..." : "Yes"}
-              </button>
-            </div>
+      {/* Basic Logout Confirm Modal */}
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center px-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+              onClick={() => setShowLogoutConfirm(false)}
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-sm bg-white rounded-2xl p-5 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-base font-bold text-gray-900 mb-1.5">Confirm Logout</h3>
+              <p className="text-sm text-gray-500 mb-6 font-medium">
+                Are you sure you want to log out from this account?
+              </p>
+              
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm active:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLogout}
+                  disabled={logoutSubmitting}
+                  className="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-semibold text-sm disabled:opacity-60 flex items-center justify-center gap-2 active:bg-red-700"
+                >
+                  {logoutSubmitting && <Loader2 className="w-3 h-3 animate-spin" />}
+                  {logoutSubmitting ? "Logging out..." : "Log out"}
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -248,9 +248,8 @@ export const HistoryV2 = () => {
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setSelectedDate(new Date()); }}
-            className={`py-3 text-sm font-semibold capitalize relative transition-colors ${
-              activeTab === tab ? 'text-gray-900' : 'text-gray-400'
-            }`}
+            className={`py-3 text-sm font-semibold capitalize relative transition-colors ${activeTab === tab ? 'text-gray-900' : 'text-gray-400'
+              }`}
           >
             {tab}
             {activeTab === tab && (
@@ -302,18 +301,6 @@ export const HistoryV2 = () => {
 
       {/* Dropdowns */}
       <AnimatePresence>
-        {(showDatePicker || showTripTypePicker) && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => {
-              setShowDatePicker(false);
-              setShowTripTypePicker(false);
-            }}
-            className="fixed inset-0 z-[190]"
-          />
-        )}
         {showDatePicker && (
           <motion.div
             initial={{ opacity: 0, y: -5 }}
@@ -325,11 +312,10 @@ export const HistoryV2 = () => {
               <button
                 key={idx}
                 onClick={() => { setSelectedDate(date); setShowDatePicker(false); }}
-                className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                  isSamePeriod(date, selectedDate)
+                className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors ${isSamePeriod(date, selectedDate)
                     ? 'font-bold text-white'
                     : 'text-gray-800 hover:bg-gray-50'
-                }`}
+                  }`}
                 style={isSamePeriod(date, selectedDate) ? { backgroundColor: BRAND_THEME.colors.brand.primary } : {}}
               >
                 {dateLabel(date)}
@@ -348,9 +334,8 @@ export const HistoryV2 = () => {
               <button
                 key={idx}
                 onClick={() => { setSelectedTripType(type); setShowTripTypePicker(false); }}
-                className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                  type === selectedTripType ? 'font-bold text-white' : 'text-gray-800 hover:bg-gray-50'
-                }`}
+                className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors ${type === selectedTripType ? 'font-bold text-white' : 'text-gray-800 hover:bg-gray-50'
+                  }`}
                 style={type === selectedTripType ? { backgroundColor: BRAND_THEME.colors.brand.primary } : {}}
               >
                 {type}
@@ -424,9 +409,8 @@ export const HistoryV2 = () => {
 
                   {/* Payment Badge */}
                   <div className="mb-3">
-                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                      isCOD ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'
-                    }`}>
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${isCOD ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'
+                      }`}>
                       {isCOD ? 'COD' : 'Online'}
                     </span>
                   </div>
@@ -538,6 +522,15 @@ export const HistoryV2 = () => {
         )}
       </AnimatePresence>
     </div>
+  );
+};
+
+export default HistoryV2;
+            </motion.div >
+          </div >
+        )}
+      </AnimatePresence >
+    </div >
   );
 };
 
