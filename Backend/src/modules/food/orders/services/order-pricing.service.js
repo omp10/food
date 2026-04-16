@@ -283,7 +283,7 @@ export async function calculateOrderPricing(userId, dto) {
             Math.min(subtotal, Math.floor(Number(offer.discountValue) || 0)),
           );
         }
-        appliedCoupon = { code: codeRaw, discount: couponDiscount };
+        appliedCoupon = { code: codeRaw, discount: couponDiscount, fundedBy: offer.fundedBy || 'platform' };
       }
     }
   }
@@ -318,6 +318,19 @@ export async function calculateOrderPricing(userId, dto) {
 
   discount = Math.max(0, Math.min(subtotal, couponDiscount + autoOfferDiscount));
 
+  // Calculate discount breakdown for reporting
+  let couponByAdmin = 0;
+  let couponByRestaurant = 0;
+  let offerByRestaurant = autoOfferDiscount;
+
+  if (appliedCoupon) {
+    if (appliedCoupon.fundedBy === 'restaurant') {
+      couponByRestaurant = couponDiscount;
+    } else {
+      couponByAdmin = couponDiscount;
+    }
+  }
+
   const total = Math.max(
     0,
     subtotal + packagingFee + deliveryFee + platformFee + tax - discount,
@@ -333,6 +346,9 @@ export async function calculateOrderPricing(userId, dto) {
       couponDiscount,
       autoOfferDiscount,
       discount,
+      couponByAdmin,
+      couponByRestaurant,
+      offerByRestaurant,
       total,
       currency: "INR",
       couponCode: appliedCoupon?.code || codeRaw || null,

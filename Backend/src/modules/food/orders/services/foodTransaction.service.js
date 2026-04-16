@@ -48,7 +48,19 @@ export function computeRestaurantCommissionAmount(baseAmount, rule) {
 }
 
 export async function getRestaurantCommissionSnapshot(orderDoc) {
-  const baseAmount = Number(orderDoc?.pricing?.subtotal ?? 0) || 0;
+  const subtotal = Number(orderDoc?.pricing?.subtotal ?? 0) || 0;
+  
+  // For Scenario 3 (item-level offers), commission is on discounted amount
+  // For Scenario 1 & 2 (coupons), commission is on original amount
+  const offerByRestaurant = Number(orderDoc?.pricing?.offerByRestaurant ?? 0) || 0;
+  
+  // Base amount for commission calculation
+  // If item-level offer exists, use discounted amount
+  // Otherwise, use original subtotal
+  const baseAmount = offerByRestaurant > 0 
+    ? Math.max(0, subtotal - offerByRestaurant)
+    : subtotal;
+  
   const restaurantIdRaw =
     orderDoc?.restaurantId?._id ?? orderDoc?.restaurantId ?? null;
 

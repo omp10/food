@@ -101,8 +101,11 @@ export default function RestaurantReport() {
       { key: "totalFood", label: "Total Food" },
       { key: "totalOrder", label: "Total Order" },
       { key: "totalOrderAmount", label: "Total Order Amount" },
-      { key: "totalDiscountGiven", label: "Total Discount Given" },
+      { key: "totalCouponByAdmin", label: "Coupon by Admin" },
+      { key: "totalCouponByRestaurant", label: "Coupon by Restaurant" },
+      { key: "totalOfferByRestaurant", label: "Offer by Restaurant" },
       { key: "totalAdminCommission", label: "Total Admin Commission" },
+      { key: "restaurantPayout", label: "Restaurant Payout" },
       { key: "totalVATTAX", label: "Total VAT/TAX" },
       { key: "averageRatings", label: "Average Ratings" },
     ]
@@ -120,13 +123,25 @@ export default function RestaurantReport() {
 
   const activeFiltersCount = (filters.zone !== "All Zones" ? 1 : 0) + (filters.all !== "All" ? 1 : 0) + (filters.type !== "All types" ? 1 : 0) + (filters.time !== "All Time" ? 1 : 0)
 
-  const renderStars = (rating, reviews) => {
-    if (rating === 0) {
-      return "?0"
+    const renderStars = (rating, reviews) => {
+    if (!rating || rating === 0) {
+      return (
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-medium text-slate-400">No Ratings</span>
+        </div>
+      )
     }
-    const fullStars = Math.floor(rating)
-    const hasHalfStar = rating % 1 !== 0
-    return "?".repeat(fullStars) + (hasHalfStar ? "½" : "") + "?".repeat(5 - Math.ceil(rating)) + ` (${reviews})`
+    return (
+      <div className="flex items-center gap-1.5">
+         <div className="flex items-center text-amber-500">
+           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+             <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+           </svg>
+         </div>
+         <span className="font-bold text-slate-800">{Number(rating).toFixed(1)}</span>
+         <span className="text-slate-500 text-xs font-semibold">({reviews || 0})</span>
+      </div>
+    )
   }
 
   if (loading) {
@@ -344,19 +359,37 @@ export default function RestaurantReport() {
                   </th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
                     <div className="flex items-center gap-1">
-                      <span>Total Discount Given</span>
+                      <span>Coupon by Admin</span>
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
                     <div className="flex items-center gap-1">
-                      <span>Total Admin Commission</span>
+                      <span>Coupon by Restaurant</span>
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
                   <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
                     <div className="flex items-center gap-1">
-                      <span>Total VAT/TAX</span>
+                      <span>Offer by Restaurant</span>
+                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <div className="flex items-center gap-1">
+                      <span>Admin Commission</span>
+                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <div className="flex items-center gap-1">
+                      <span>Restaurant Payout</span>
+                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <div className="flex items-center gap-1">
+                      <span>VAT/TAX</span>
                       <ArrowUpDown className="w-3 h-3 text-slate-400" />
                     </div>
                   </th>
@@ -371,7 +404,7 @@ export default function RestaurantReport() {
               <tbody className="bg-white divide-y divide-slate-100">
                 {filteredRestaurants.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-20 text-center">
+                    <td colSpan={12} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
                         <p className="text-sm text-slate-500">No restaurants match your search</p>
@@ -415,16 +448,19 @@ export default function RestaurantReport() {
                         <span className="text-sm font-medium text-slate-900">{restaurant.totalOrderAmount}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{restaurant.totalDiscountGiven}</span>
+                        <span className="text-sm font-medium text-green-600">{restaurant.totalCouponByAdmin}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-sm font-medium ${
-                          restaurant.totalAdminCommission.startsWith('?-') || restaurant.totalAdminCommission.startsWith('-?')
-                            ? 'text-red-600'
-                            : 'text-slate-900'
-                        }`}>
-                          {restaurant.totalAdminCommission}
-                        </span>
+                        <span className="text-sm font-medium text-orange-600">{restaurant.totalCouponByRestaurant}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-medium text-purple-600">{restaurant.totalOfferByRestaurant}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-semibold text-blue-600">{restaurant.totalAdminCommission}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-bold text-emerald-600">{restaurant.restaurantPayout}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-slate-700">{restaurant.totalVATTAX}</span>

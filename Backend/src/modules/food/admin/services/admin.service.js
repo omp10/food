@@ -989,6 +989,14 @@ export async function getRestaurantReport(query = {}) {
                     totalOrder: { $sum: 1 },
                     totalOrderAmount: { $sum: { $ifNull: ['$pricing.total', 0] } },
                     totalDiscountGiven: { $sum: { $ifNull: ['$pricing.discount', 0] } },
+                    // Discount breakdown
+                    totalCouponByAdmin: { $sum: { $ifNull: ['$pricing.couponByAdmin', 0] } },
+                    totalCouponByRestaurant: { $sum: { $ifNull: ['$pricing.couponByRestaurant', 0] } },
+                    totalOfferByRestaurant: { $sum: { $ifNull: ['$pricing.offerByRestaurant', 0] } },
+                    // Commission and payout
+                    totalAdminCommission: { $sum: { $ifNull: ['$pricing.restaurantCommission', 0] } },
+                    totalSubtotal: { $sum: { $ifNull: ['$pricing.subtotal', 0] } },
+                    totalPackagingFee: { $sum: { $ifNull: ['$pricing.packagingFee', 0] } },
                     totalVATTAX: { $sum: { $ifNull: ['$pricing.tax', 0] } },
                     totalAdminCommissionFromPlatformProfit: { $sum: { $ifNull: ['$platformProfit', 0] } },
                     totalAdminCommissionFromPlatformFee: { $sum: { $ifNull: ['$pricing.platformFee', 0] } }
@@ -999,19 +1007,36 @@ export async function getRestaurantReport(query = {}) {
 
     const foodMap = new Map(foodsAgg.map((x) => [String(x._id), Number(x.totalFood || 0)]));
     const orderMap = new Map(
-        ordersAgg.map((x) => [
-            String(x._id),
-            {
-                totalOrder: Number(x.totalOrder || 0),
-                totalOrderAmount: Number(x.totalOrderAmount || 0),
-                totalDiscountGiven: Number(x.totalDiscountGiven || 0),
-                totalVATTAX: Number(x.totalVATTAX || 0),
-                totalAdminCommission:
-                    Number(x.totalAdminCommissionFromPlatformProfit || 0) > 0
-                        ? Number(x.totalAdminCommissionFromPlatformProfit || 0)
-                        : Number(x.totalAdminCommissionFromPlatformFee || 0)
-            }
-        ])
+        ordersAgg.map((x) => {
+            const totalSubtotal = Number(x.totalSubtotal || 0);
+            const totalPackagingFee = Number(x.totalPackagingFee || 0);
+            const totalAdminCommission = Number(x.totalAdminCommission || 0);
+            const totalCouponByRestaurant = Number(x.totalCouponByRestaurant || 0);
+            const totalOfferByRestaurant = Number(x.totalOfferByRestaurant || 0);
+            
+            // Calculate restaurant payout
+            // Payout = Subtotal + Packaging - Commission - Restaurant-funded discounts
+            const restaurantPayout = totalSubtotal + totalPackagingFee - totalAdminCommission - totalCouponByRestaurant - totalOfferByRestaurant;
+            
+            return [
+                String(x._id),
+                {
+                    totalOrder: Number(x.totalOrder || 0),
+                    totalOrderAmount: Number(x.totalOrderAmount || 0),
+                    totalDiscountGiven: Number(x.totalDiscountGiven || 0),
+                    totalCouponByAdmin: Number(x.totalCouponByAdmin || 0),
+                    totalCouponByRestaurant,
+                    totalOfferByRestaurant,
+                    totalVATTAX: Number(x.totalVATTAX || 0),
+                    totalAdminCommission: totalAdminCommission > 0 
+                        ? totalAdminCommission 
+                        : (Number(x.totalAdminCommissionFromPlatformProfit || 0) > 0
+                            ? Number(x.totalAdminCommissionFromPlatformProfit || 0)
+                            : Number(x.totalAdminCommissionFromPlatformFee || 0)),
+                    restaurantPayout
+                }
+            ];
+        })
     );
 
     const restaurants = restaurantDocs.map((restaurant, index) => {
@@ -1020,8 +1045,12 @@ export async function getRestaurantReport(query = {}) {
             totalOrder: 0,
             totalOrderAmount: 0,
             totalDiscountGiven: 0,
+            totalCouponByAdmin: 0,
+            totalCouponByRestaurant: 0,
+            totalOfferByRestaurant: 0,
             totalVATTAX: 0,
-            totalAdminCommission: 0
+            totalAdminCommission: 0,
+            restaurantPayout: 0
         };
 
         return {
@@ -1033,7 +1062,11 @@ export async function getRestaurantReport(query = {}) {
             totalOrder: counts.totalOrder,
             totalOrderAmount: formatCurrency(counts.totalOrderAmount),
             totalDiscountGiven: formatCurrency(counts.totalDiscountGiven),
+            totalCouponByAdmin: formatCurrency(counts.totalCouponByAdmin),
+            totalCouponByRestaurant: formatCurrency(counts.totalCouponByRestaurant),
+            totalOfferByRestaurant: formatCurrency(counts.totalOfferByRestaurant),
             totalAdminCommission: formatCurrency(counts.totalAdminCommission),
+            restaurantPayout: formatCurrency(counts.restaurantPayout),
             totalVATTAX: formatCurrency(counts.totalVATTAX),
             averageRatings: Number(restaurant.rating || 0),
             reviews: Number(restaurant.totalRatings || 0),
