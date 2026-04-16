@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ArrowLeft,
   Loader2,
-  Clock
+  Clock,
+  ArrowRight
 } from 'lucide-react';
 import WeekSelector from '@delivery/components/WeekSelector';
 import { deliveryAPI } from '@food/api';
@@ -11,11 +12,6 @@ import { toast } from 'sonner';
 import useDeliveryBackNavigation from '../../hooks/useDeliveryBackNavigation';
 import BRAND_THEME from '@/config/brandTheme';
 
-/**
- * DeductionStatementV2 - 1:1 Match with Old DeductionStatement UI.
- * Background: #f6e9dc
- * Font: Poppins
- */
 export const DeductionStatementV2 = () => {
   const goBack = useDeliveryBackNavigation();
   const [loading, setLoading] = useState(true);
@@ -57,68 +53,56 @@ export const DeductionStatementV2 = () => {
   }, [weekRange]);
 
   return (
-    <div className="min-h-screen bg-white font-poppins pb-32">
-       {/* Header (Old Style) */}
-       <div className="bg-white border-b border-gray-200 px-4 py-4 safe-top flex items-center gap-4">
+    <div className="min-h-screen bg-gray-50 font-poppins pb-24">
+       {/* Header (Standard Compact Style) */}
+       <div className="bg-white border-b border-gray-100 flex items-center px-4 py-3 sticky top-0 z-30 shadow-sm gap-3">
           <button 
             onClick={goBack}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900 leading-none">Deduction statement</h1>
+          <h1 className="text-base font-bold text-gray-900">Deductions</h1>
        </div>
 
        {/* Main Content */}
-       <div className="px-4 py-6">
+       <div className="px-3 py-4">
           <WeekSelector onChange={setWeekRange} />
 
           {/* Transactions List */}
           {loading ? (
-             <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin mb-4" style={{ color: BRAND_THEME.colors.brand.primary }} />
-                <p className="text-gray-600 text-sm font-medium">Loading deductions...</p>
+             <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                <p className="text-gray-500 text-xs font-semibold">Loading records...</p>
              </div>
           ) : deductions.length === 0 ? (
-             <div className="flex flex-col items-center justify-center py-12">
-                {/* Classic Empty State Illustration */}
-                <div className="flex flex-col gap-2 mb-6">
-                   {[...Array(3)].map((_, i) => (
-                      <div key={i} className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 w-64 opacity-50">
-                         <div className="flex items-start gap-3">
-                            <div className={`w-2 h-2 rounded mt-1 ${i === 0 ? 'bg-green-500' : i === 1 ? 'bg-[#2979FB]' : 'bg-blue-500'}`}></div>
-                            <div className="flex-1 space-y-2">
-                               <div className="h-1.5 bg-gray-100 rounded w-3/4"></div>
-                               <div className="h-1.5 bg-gray-100 rounded w-1/2"></div>
-                            </div>
-                         </div>
-                      </div>
-                   ))}
+             <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-12 h-12 bg-white shadow-sm border border-gray-200 rounded-2xl flex items-center justify-center mb-4">
+                   <Clock className="w-5 h-5 text-gray-400" />
                 </div>
-                <p className="text-gray-600 text-base font-bold">No transactions</p>
-                <p className="text-gray-400 text-xs font-medium mt-1">Is hafton mein koi deduction nahi hui.</p>
+                <p className="text-gray-900 text-sm font-bold">No Deductions</p>
+                <p className="text-gray-500 text-[11px] font-medium mt-1">No penalties or charges this week.</p>
              </div>
           ) : (
-             <div className="space-y-3 mb-6">
+             <div className="space-y-2.5 mt-4 pb-10">
                 {deductions.map((item, index) => (
                    <div
                      key={item._id || index}
-                     className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 active:scale-[0.98] transition-all"
+                     className="bg-white rounded-xl p-3.5 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors"
                    >
-                      <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded ${ 
-                               index % 3 === 0 ? 'bg-green-500' : 
-                               index % 3 === 1 ? 'bg-[#2979FB]' : 'bg-blue-500'
-                            }`}></div>
+                      <div className="flex items-start justify-between">
+                         <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+                               <ArrowRight className="w-4 h-4 text-red-500 rotate-45" />
+                            </div>
                             <div>
-                               <p className="text-gray-900 text-sm font-bold leading-tight">{item.description || 'System Deduction'}</p>
-                               <p className="text-gray-400 text-[10px] font-bold mt-1 uppercase tracking-tight">
+                               <p className="text-gray-900 text-sm font-bold leading-tight line-clamp-2">{item.description || 'System Deduction'}</p>
+                               <p className="text-gray-400 text-[10px] font-semibold mt-1">
                                   {new Date(item.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                </p>
                             </div>
                          </div>
-                         <div className="text-red-600 text-base font-bold">
+                         <div className="text-red-600 text-sm font-black shrink-0 pl-2">
                             -{formatCurrency(item.amount)}
                          </div>
                       </div>

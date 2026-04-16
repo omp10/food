@@ -4,11 +4,9 @@ import {
   Loader2,
   Package,
   IndianRupee,
-  Gift,
-  Search,
-  ChevronRight,
+  Receipt,
   TrendingUp,
-  Receipt
+  Clock
 } from "lucide-react";
 import { formatCurrency } from "@food/utils/currency";
 import WeekSelector from "@delivery/components/WeekSelector";
@@ -100,117 +98,108 @@ export const PocketDetailsV2 = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12 font-poppins">
-      {/* ─── HEADER ─── */}
-      <div className="bg-white border-b border-gray-100 px-6 py-5 flex items-center justify-between sticky top-0 z-[100]">
-        <div className="flex items-center gap-4">
-          <button onClick={goBack} className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-900 border border-gray-100 active:scale-90 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-xl font-black text-gray-950 uppercase tracking-tighter">Pocket Details</h1>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Trips & Earnings History</p>
-          </div>
-        </div>
-        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
-          <Receipt className="w-5 h-5" />
-        </div>
+      {/* ─── HEADER (Standard Compact) ─── */}
+      <div className="bg-white border-b border-gray-100 flex items-center px-4 py-3 sticky top-0 z-30 shadow-sm gap-3">
+        <button
+          onClick={goBack}
+          className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <h1 className="text-base font-bold text-gray-900">Pocket Statement</h1>
       </div>
 
-      <div className="px-5 py-6 space-y-6">
-        {/* ─── WEEK SELECTOR (Matching V2 Aesthetics) ─── */}
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-           <WeekSelector 
-             onChange={setWeekRange}
-             weekStartsOn={0}
-           />
-        </div>
+      <div className="px-3 py-4 space-y-4">
+        {/* ─── WEEK SELECTOR ─── */}
+        <WeekSelector 
+          onChange={setWeekRange}
+          weekStartsOn={0}
+        />
 
-        {/* ─── SUMMARY CARD ─── */}
-        <div className="rounded-3xl p-6 shadow-2xl relative overflow-hidden group text-white" style={{ background: BRAND_THEME.gradients.primary }}>
-           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/10 transition-colors" />
+        {/* ─── SUMMARY CARD (Compact) ─── */}
+        <div className="rounded-xl p-4 shadow-sm relative overflow-hidden" style={{ background: BRAND_THEME.gradients.primary }}>
            <div className="relative z-10">
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-4">
                  <div>
-                    <p className="text-[10px] font-bold text-gray-100 uppercase tracking-[0.2em] mb-1">Total Payout</p>
-                    <h2 className="text-4xl font-black text-white tracking-tighter">{formatCurrency(summary.grandTotal)}</h2>
+                    <h2 className="text-2xl font-bold text-white leading-none">₹{summary.grandTotal.toFixed(0)}</h2>
+                    <p className="text-[10px] text-blue-100 mt-1 uppercase tracking-widest font-semibold">Total Payout</p>
                  </div>
-                 <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/5 backdrop-blur-md">
-                    <TrendingUp className="w-6 h-6" style={{ color: BRAND_THEME.colors.brand.primarySoft || "#EAF2FF" }} />
+                 <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center border border-white/10 backdrop-blur-sm">
+                    <TrendingUp className="w-5 h-5 text-white" />
                  </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                    <p className="text-[9px] font-bold text-gray-200 uppercase tracking-widest mb-1">Trip Earnings</p>
-                    <p className="text-lg font-black text-white">{formatCurrency(summary.totalEarning)}</p>
+              <div className="grid grid-cols-2 gap-3">
+                 <div className="bg-white/10 p-2.5 rounded-lg border border-white/5 backdrop-blur-sm relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-1 opacity-20"><Package className="w-8 h-8" /></div>
+                    <p className="text-[9px] font-semibold text-blue-100 uppercase tracking-widest mb-0.5">Trips</p>
+                    <p className="text-sm font-bold text-white relative z-10">₹{summary.totalEarning.toFixed(0)}</p>
                  </div>
-                 <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                    <p className="text-[9px] font-bold text-gray-200 uppercase tracking-widest mb-1">Weekly Bonus</p>
-                    <p className="text-lg font-black text-white">+{formatCurrency(summary.totalBonus)}</p>
+                 <div className="bg-white/10 p-2.5 rounded-lg border border-white/5 backdrop-blur-sm relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-1 opacity-20"><Receipt className="w-8 h-8" /></div>
+                    <p className="text-[9px] font-semibold text-blue-100 uppercase tracking-widest mb-0.5">Bonus</p>
+                    <p className="text-sm font-bold text-white relative z-10">₹{summary.totalBonus.toFixed(0)}</p>
                  </div>
               </div>
            </div>
         </div>
 
         {/* ─── ORDERS LIST ─── */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between px-1">
-             <h3 className="text-xs font-black text-gray-950 uppercase tracking-widest">Trips History</h3>
-             <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-[10px] font-bold">{orders.length} Orders</span>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1 border-b border-gray-200 pb-2">
+             <h3 className="text-sm font-bold text-gray-900">Trips History</h3>
+             <span className="text-[10px] font-bold text-gray-500">{orders.length} Trips</span>
           </div>
 
           {loading ? (
-            <div className="py-20 flex flex-col items-center">
-              <Loader2 className="w-10 h-10 animate-spin" style={{ color: BRAND_THEME.colors.brand.primary }} />
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-4">Syncing History...</p>
+            <div className="py-16 flex flex-col items-center gap-3">
+              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              <p className="text-xs font-semibold text-gray-500">Syncing history...</p>
             </div>
           ) : orders.length > 0 ? (
-            <div className="grid gap-3">
+            <div className="grid gap-2.5 pb-10">
               {orders.map((order, idx) => {
                 const oid = order.orderId || order._id || order.id;
                 const earning = getOrderEarning(oid);
                 const bonus = getOrderBonus(oid);
                 return (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
+                  <div 
                     key={oid}
-                    className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between active:scale-[0.98] transition-all"
+                    className="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between active:bg-gray-50 transition-all"
                   >
-                    <div className="flex items-center gap-4">
-                       <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-900 border border-gray-100">
-                          <Package className="w-6 h-6" />
+                    <div className="flex items-start gap-3">
+                       <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100 shrink-0">
+                          <Package className="w-5 h-5 text-blue-500" />
                        </div>
-                       <div>
-                          <div className="flex items-center gap-2 mb-0.5">
-                             <h4 className="text-sm font-black text-gray-950 uppercase tracking-tight">#{oid.toString().slice(-6)}</h4>
-                             <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">• {new Date(order.deliveredAt || order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                       <div className="pt-0.5">
+                          <div className="flex items-center gap-1.5 mb-1">
+                             <h4 className="text-sm font-bold text-gray-900 leading-none">#{oid.toString().slice(-6)}</h4>
+                             <span className="text-[10px] font-medium text-gray-400">• {new Date(order.deliveredAt || order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
                           </div>
-                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-tight truncate max-w-[140px]">
+                          <p className="text-[10px] text-gray-500 font-medium truncate max-w-[140px]">
                             {order.restaurantName || order.restaurantId?.name || "Premium Restaurant"}
                           </p>
                        </div>
                     </div>
-                    <div className="text-right">
-                       <p className="text-base font-black text-gray-950 leading-none mb-1">{formatCurrency(earning + bonus)}</p>
-                       <div className="flex items-center justify-end gap-1.5">
-                          {bonus > 0 && <span className="text-[9px] font-bold text-green-500 uppercase">+{formatCurrency(bonus)} BP</span>}
-                          <div className={`px-2 py-0.5 rounded-md ${order.paymentMethod?.toLowerCase() === 'cod' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-green-50 text-green-600 border border-green-100'} text-[8px] font-black uppercase`}>
-                             {order.paymentMethod || 'Online'}
+                    <div className="text-right flex flex-col justify-between pt-0.5 min-h-[40px]">
+                       <p className="text-sm font-black text-gray-900 leading-none mb-1">₹{(earning + bonus).toFixed(2)}</p>
+                       <div className="mt-auto flex items-center justify-end gap-1.5">
+                          {bonus > 0 && <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded">+{formatCurrency(bonus)} B</span>}
+                          <div className={`px-1.5 py-[2px] rounded text-[9px] font-bold uppercase ${order.paymentMethod?.toLowerCase() === 'cod' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
+                             {order.paymentMethod || 'Paid'}
                           </div>
                        </div>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
           ) : (
-            <div className="py-20 text-center bg-white rounded-[2rem] border-2 border-dashed border-gray-100">
-               <div className="w-16 h-16 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-4 text-gray-200">
-                  <Package className="w-8 h-8" />
+            <div className="py-16 text-center bg-white rounded-xl shadow-sm border border-gray-100 mt-2">
+               <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-gray-200">
+                  <Clock className="w-5 h-5 text-gray-400" />
                </div>
-               <h3 className="text-lg font-black text-gray-950 uppercase tracking-tight">No Trips Found</h3>
-               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Check another week Range</p>
+               <h3 className="text-sm font-bold text-gray-900 mb-1">No Trips</h3>
+               <p className="text-xs font-medium text-gray-500">Pick a different week range.</p>
             </div>
           )}
         </div>

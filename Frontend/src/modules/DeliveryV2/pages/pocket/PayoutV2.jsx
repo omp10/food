@@ -4,18 +4,14 @@ import {
   Loader2,
   CheckCircle2,
   Clock,
-  XCircle
+  XCircle,
+  IndianRupee
 } from 'lucide-react';
 import { deliveryAPI } from '@food/api';
 import { toast } from 'sonner';
 import useDeliveryBackNavigation from '../../hooks/useDeliveryBackNavigation';
 import BRAND_THEME from '@/config/brandTheme';
 
-/**
- * PayoutV2 - 1:1 Match with Old Payout UI.
- * Background: #f6e9dc (for consistency with Pocket) or gray-50 (original)
- * Font: Poppins
- */
 export const PayoutV2 = () => {
   const goBack = useDeliveryBackNavigation();
   const [loading, setLoading] = useState(true);
@@ -99,27 +95,27 @@ export const PayoutV2 = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-poppins pb-24">
-      {/* Header (Old Style) */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4 safe-top flex items-center gap-4">
+    <div className="min-h-screen bg-gray-50 font-poppins pb-24">
+      {/* Header (Standard Compact Style) */}
+      <div className="bg-white border-b border-gray-100 flex items-center px-4 py-3 sticky top-0 z-30 shadow-sm gap-3">
         <button
           onClick={goBack}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
         >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
+          <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-lg font-bold text-gray-900">Withdrawal History</h1>
+        <h1 className="text-base font-bold text-gray-900">Withdrawal History</h1>
       </div>
 
       {/* Main Content */}
-      <div className="px-4 py-6">
+      <div className="px-3 py-4">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin mb-4" style={{ color: BRAND_THEME.colors.brand.primary }} />
-            <p className="text-gray-600 text-base">Loading withdrawal history...</p>
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <p className="text-gray-500 text-xs font-semibold">Loading history...</p>
           </div>
         ) : withdrawals.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-2.5">
             {withdrawals.map((withdrawal, index) => {
               const statusInfo = getStatusInfo(withdrawal.status);
               const StatusIcon = statusInfo.icon;
@@ -127,32 +123,40 @@ export const PayoutV2 = () => {
               return (
                 <div
                   key={withdrawal.id || index}
-                  className={`bg-white rounded-xl p-4 shadow-sm border ${statusInfo.borderColor} transition-all hover:shadow-md`}
+                  className="bg-white rounded-xl p-3.5 shadow-sm border border-gray-100 transition-all hover:bg-gray-50"
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <StatusIcon className={`w-5 h-5 ${statusInfo.color}`} />
-                        <span className={`text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full ${statusInfo.bgColor} ${statusInfo.color}`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                       <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${statusInfo.bgColor} ${statusInfo.borderColor}`}>
+                          <IndianRupee className={`w-4 h-4 ${statusInfo.color}`} />
+                       </div>
+                       <div>
+                          <p className="text-gray-900 text-sm font-black mb-0.5">
+                            ₹{withdrawal.amount}
+                          </p>
+                          <p className="text-gray-400 text-[10px] font-semibold">
+                            Req: {withdrawal.date}
+                          </p>
+                          {withdrawal.processedAt && (
+                            <p className="text-gray-500 text-[10px] font-semibold mt-0.5">
+                              Proc: {withdrawal.processedAt}
+                            </p>
+                          )}
+                          {withdrawal.failureReason && (
+                            <p className="text-red-500 text-[10px] mt-1 font-bold bg-red-50 px-1.5 py-0.5 rounded leading-tight">
+                              Fail: {withdrawal.failureReason}
+                            </p>
+                          )}
+                       </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1.5 shrink-0 pt-0.5">
+                      <div className={`flex items-center gap-1.5 px-2 py-[3px] rounded-md border ${statusInfo.bgColor} ${statusInfo.borderColor}`}>
+                        <StatusIcon className={`w-3 h-3 ${statusInfo.color}`} />
+                        <span className={`text-[9px] uppercase tracking-wider font-bold ${statusInfo.color}`}>
                           {withdrawal.status}
                         </span>
                       </div>
-                      <p className="text-gray-900 text-xl font-bold mb-1">
-                        ₹{withdrawal.amount}
-                      </p>
-                      <p className="text-gray-500 text-[11px] font-medium">
-                        Requested: {withdrawal.date}
-                      </p>
-                      {withdrawal.processedAt && (
-                        <p className="text-gray-500 text-[11px] font-medium mt-1">
-                          Processed: {withdrawal.processedAt}
-                        </p>
-                      )}
-                      {withdrawal.failureReason && (
-                        <p className="text-red-600 text-[11px] mt-2 font-bold">
-                          Reason: {withdrawal.failureReason}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -161,12 +165,12 @@ export const PayoutV2 = () => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-6 shadow-sm">
-              <Clock className="w-8 h-8 text-gray-200" />
+            <div className="w-12 h-12 bg-white shadow-sm border border-gray-200 rounded-2xl flex items-center justify-center mb-4">
+              <Clock className="w-5 h-5 text-gray-400" />
             </div>
-            <p className="text-gray-900 text-lg font-bold mb-2">No withdrawal history</p>
-            <p className="text-gray-400 text-sm font-medium">
-              You haven't made any withdrawal requests yet. Your withdrawal history will appear here.
+            <p className="text-gray-900 text-sm font-bold mb-1">No withdrawals</p>
+            <p className="text-gray-500 text-[11px] font-medium leading-relaxed max-w-[200px]">
+              You haven't requested any payouts yet.
             </p>
           </div>
         )}

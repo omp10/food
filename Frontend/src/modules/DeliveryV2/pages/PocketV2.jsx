@@ -1,24 +1,18 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Wallet, IndianRupee, ArrowRight,
-  ShieldCheck, AlertTriangle, HelpCircle,
-  Receipt, FileText, LayoutGrid, X, ChevronRight,
-  Sparkles, Loader2
+  Wallet, IndianRupee, ChevronRight,
+  ShieldCheck, HelpCircle,
+  Receipt, FileText, LayoutGrid, X,
+  Loader2, CreditCard, PiggyBank, Target
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { deliveryAPI } from '@food/api';
 import { toast } from 'sonner';
-import { formatCurrency } from '@food/utils/currency';
 import { initRazorpayPayment } from "@food/utils/razorpay";
 import { getCompanyNameAsync } from "@food/utils/businessSettings";
 import BRAND_THEME from "@/config/brandTheme";
 
-/**
- * PocketV2 - 1:1 Match with Old PocketPage UI.
- * Background: #f6e9dc
- * Font: Poppins
- */
 export const PocketV2 = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -151,7 +145,6 @@ export const PocketV2 = () => {
               toast.success("Deposit successful");
               setShowDepositPopup(false);
               setDepositAmount("");
-              // Refresh data
               window.location.reload();
             }
           } catch (err) {
@@ -169,15 +162,15 @@ export const PocketV2 = () => {
     }
   };
 
-  const ordersProgress = activeOffer.targetOrders > 0 ? Math.min(activeOffer.currentOrders / activeOffer.targetOrders, 1) : 0;
-  const earningsProgress = activeOffer.targetAmount > 0 ? Math.min(activeOffer.currentEarnings / activeOffer.targetAmount, 1) : 0;
+  const ordersProgress = activeOffer.targetOrders > 0 ? Math.min(activeOffer.currentOrders / activeOffer.targetOrders, 1) * 100 : 0;
+  const earningsProgress = activeOffer.targetAmount > 0 ? Math.min(activeOffer.currentEarnings / activeOffer.targetAmount, 1) * 100 : 0;
   const hasActiveOffer = activeOffer.isLive && (activeOffer.targetAmount > 0 || activeOffer.targetOrders > 0);
 
   const formatOfferValidTill = (validTill) => {
     if (!validTill) return '';
     const parsed = new Date(validTill);
     if (Number.isNaN(parsed.getTime())) return String(validTill);
-    return parsed.toLocaleDateString('en-US', { weekday: 'long' });
+    return parsed.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
   };
 
   const getCurrentWeekRange = () => {
@@ -191,253 +184,251 @@ export const PocketV2 = () => {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center font-poppins">
-      <div className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin mb-4" style={{ borderColor: BRAND_THEME.colors.brand.primary }} />
-      <p className="text-xs font-semibold text-gray-500">Loading Pocket...</p>
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center font-poppins gap-3">
+      <Loader2 className="w-6 h-6 animate-spin text-gray-400" style={{ color: BRAND_THEME.colors.brand.primary }} />
+      <p className="text-xs font-medium text-gray-500">Loading Pocket...</p>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-white pb-32 font-poppins">
+    <div className="min-h-screen bg-gray-50 font-poppins pb-24">
+      
+      {/* 1. Header */}
+      <div className="bg-white px-4 py-3 border-b border-gray-100 sticky top-0 z-30 shadow-sm flex items-center justify-between">
+         <h1 className="text-base font-bold text-gray-900">Partner Pocket</h1>
+      </div>
 
-      {/* 1. BANK DETAILS BANNER */}
+      {/* 2. BANK DETAILS WARNING (COMPACT) */}
       {!walletState.bankDetailsFilled && (
-        <div className="px-4 py-3 flex items-center gap-3 border-b" style={{ background: BRAND_THEME.colors.brand.primary, borderColor: `${BRAND_THEME.colors.brand.primary}33` }}>
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center text-white shrink-0 shadow-lg" style={{ background: BRAND_THEME.colors.brand.primary }}>
-            <FileText className="w-7 h-7" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-bold text-white mb-0.5">Submit bank details</h3>
-            <p className="text-xs text-white/80 font-medium">PAN & bank details required for payouts</p>
+        <div className="bg-red-50 border-b border-red-100 px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="w-5 h-5 text-red-500 shrink-0" />
+            <div>
+              <p className="text-xs font-bold text-red-800">Add Bank Details</p>
+              <p className="text-[10px] text-red-600 font-medium">Required for payouts</p>
+            </div>
           </div>
           <button
             onClick={() => navigate('/food/delivery/profile/details')}
-            className="px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm text-white"
-            style={{ background: BRAND_THEME.colors.brand.primaryDark }}
+            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-red-600 border border-red-200 shadow-sm active:bg-gray-50"
           >
             Submit
           </button>
         </div>
       )}
 
-      <div className="px-4 py-6 bg-gray-100">
+      <div className="p-4 space-y-4">
 
-        {/* 2. WEEKLY EARNINGS CARD */}
-        <div
+        {/* 3. WEEKLY EARNINGS FLAT CARD */}
+        <div 
           onClick={() => navigate('/food/delivery/earnings')}
-          className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center mb-5 transition-all active:scale-[0.98]"
+          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer active:bg-gray-50 transition-colors"
         >
-          <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest mb-2">Earnings: {getCurrentWeekRange()}</p>
-          <h2 className="text-4xl font-black text-gray-900 tracking-tighter">
-            ₹{walletState.weeklyEarnings.toFixed(0)}
-          </h2>
+          <div>
+             <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-0.5">This Week • {getCurrentWeekRange()}</p>
+             <h2 className="text-2xl font-bold text-gray-900 leading-none">
+               ₹{walletState.weeklyEarnings.toFixed(0)}
+             </h2>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center shrink-0 border border-green-100">
+             <IndianRupee className="w-5 h-5 text-green-600" />
+          </div>
         </div>
 
-        {/* 3. EARNINGS GUARANTEE - API DRIVEN (NO STATIC VALUES) */}
+        {/* 4. EARNINGS GUARANTEE (LINEAR COMPACT) */}
         {hasActiveOffer && (
-          <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 mb-6">
-            <div className="p-4 flex items-center justify-between" style={{ background: BRAND_THEME.colors.brand.primary }}>
-              <div>
-                <h3 className="text-lg font-black text-white leading-none mb-1">Earnings Guarantee</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Valid till {formatOfferValidTill(activeOffer.validTill)}</span>
-                  {activeOffer.isLive && (
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                      <span className="text-[10px] font-bold text-green-500 uppercase">Live</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="bg-white/10 px-4 py-2 rounded-xl text-center border border-white/5">
-                <p className="text-lg font-black text-white leading-none mb-0.5">₹{activeOffer.targetAmount}</p>
-                <p className="text-[9px] font-bold text-gray-400 uppercase">{activeOffer.targetOrders} orders</p>
-              </div>
-            </div>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 relative overflow-hidden">
+             {activeOffer.isLive && (
+                <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: BRAND_THEME.colors.brand.primary }} />
+             )}
+             
+             <div className="flex items-center justify-between mb-3">
+               <div>
+                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                     <Target className="w-4 h-4 text-gray-500" />
+                     Earnings Guarantee
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5 font-medium">Valid until {formatOfferValidTill(activeOffer.validTill)}</p>
+               </div>
+               <div className="text-right">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">Target</p>
+                  <p className="text-sm font-black text-gray-800">₹{activeOffer.targetAmount}</p>
+               </div>
+             </div>
 
-            <div className="p-8 pb-10 flex items-center justify-around gap-8">
-              {/* Orders Circle */}
-              <div className="flex flex-col items-center">
-                <div className="relative w-28 h-28">
-                  <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="#f3f4f6" strokeWidth="8" />
-                    <motion.circle
-                      cx="50" cy="50" r="45" fill="none" stroke={BRAND_THEME.colors.brand.primary} strokeWidth="8" strokeLinecap="round"
-                      initial={{ pathLength: 0 }} animate={{ pathLength: ordersProgress }} transition={{ duration: 1.5, ease: "easeOut" }}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-xl font-black text-gray-900 leading-none">{activeOffer.currentOrders}</span>
-                    <span className="text-[9px] font-bold text-gray-400 uppercase mt-0.5">of {activeOffer.targetOrders}</span>
+             <div className="space-y-4 pt-1">
+               {/* Orders linear bar */}
+               <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                     <span className="font-semibold text-gray-700">Orders: {activeOffer.currentOrders} / {activeOffer.targetOrders}</span>
+                     <span className="font-bold text-gray-500">{Math.round(ordersProgress)}%</span>
                   </div>
-                </div>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-4">Orders Done</p>
-              </div>
+                  <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                     <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${ordersProgress}%`, backgroundColor: BRAND_THEME.colors.brand.primary }} />
+                  </div>
+               </div>
 
-              {/* Earnings Circle */}
-              <div className="flex flex-col items-center">
-                <div className="relative w-28 h-28">
-                  <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="#f3f4f6" strokeWidth="8" />
-                    <motion.circle
-                      cx="50" cy="50" r="45" fill="none" stroke={BRAND_THEME.colors.brand.primary} strokeWidth="8" strokeLinecap="round"
-                      initial={{ pathLength: 0 }} animate={{ pathLength: earningsProgress }} transition={{ duration: 1.5, ease: "easeOut" }}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
-                    <span className="text-base font-black text-gray-900 leading-none truncate">₹{activeOffer.currentEarnings}</span>
-                    <HelpCircle className="w-2.5 h-2.5 text-gray-300 mt-1 cursor-help" />
+               {/* Earnings linear bar */}
+               <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                     <span className="font-semibold text-gray-700">Earned: ₹{activeOffer.currentEarnings} / ₹{activeOffer.targetAmount}</span>
+                     <span className="font-bold text-gray-500">{Math.round(earningsProgress)}%</span>
                   </div>
-                </div>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-4">Earned Yet</p>
-              </div>
-            </div>
+                  <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                     <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${earningsProgress}%`, backgroundColor: BRAND_THEME.colors.brand.primaryDark || '#10b981' }} />
+                  </div>
+               </div>
+             </div>
           </div>
         )}
 
-        {/* 4. POCKET ACTION BUTTONS */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+        {/* 5. BALANCES & DEPOSITS */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          
           <button
             onClick={() => navigate('/food/delivery/pocket/balance')}
-            className="w-full p-5 border-b border-gray-50 flex items-center justify-between active:bg-gray-50"
+            className="w-full p-4 border-b border-gray-50 flex items-center justify-between active:bg-gray-50 cursor-pointer"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-900 border border-gray-100">
-                <Wallet className="w-6 h-6" />
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-purple-50 rounded-lg flex items-center justify-center shrink-0 border border-purple-100">
+                <Wallet className="w-4 h-4 text-purple-600" />
               </div>
-              <div>
-                <span className="text-sm font-bold text-gray-800 block">Pocket balance</span>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Withdrawal Hub</p>
+              <div className="text-left">
+                <span className="text-sm font-bold text-gray-900 block leading-tight">Pocket Balance</span>
+                <span className="text-[10px] text-gray-500 font-medium">To withdraw</span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-base font-black text-gray-900">₹{walletState.totalBalance.toFixed(2)}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg font-black text-gray-900 block">₹{walletState.totalBalance.toFixed(2)}</span>
               <ChevronRight className="w-4 h-4 text-gray-300" />
             </div>
           </button>
 
           <button
             onClick={() => navigate('/food/delivery/pocket/cash-limit')}
-            className="w-full p-5 border-b border-gray-50 flex items-center justify-between active:bg-gray-50"
+            className="w-full p-4 border-b border-gray-50 flex items-center justify-between active:bg-gray-50 cursor-pointer"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-gray-900 border border-gray-100">
-                <ShieldCheck className="w-6 h-6" />
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center shrink-0 border border-blue-100">
+                <ShieldCheck className="w-4 h-4 text-blue-600" />
               </div>
-              <div>
-                <span className="text-sm font-bold text-gray-800 block">Available cash limit</span>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Spend Control</p>
+              <div className="text-left">
+                <span className="text-sm font-bold text-gray-900 block leading-tight">Cash Limit</span>
+                <span className="text-[10px] text-gray-500 font-medium">Available to collect</span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-base font-black text-gray-900">₹{walletState.availableCashLimit.toFixed(2)}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg font-black text-gray-900 block">₹{walletState.availableCashLimit.toFixed(2)}</span>
               <ChevronRight className="w-4 h-4 text-gray-300" />
             </div>
           </button>
 
-          <div className="p-5">
+          <div className="p-3">
             <button
               onClick={() => setShowDepositPopup(true)}
-              className="w-full py-4 text-white rounded-xl font-bold text-sm active:scale-95 transition-all"
-              style={{ background: BRAND_THEME.colors.brand.primary, boxShadow: `0 12px 28px -18px ${BRAND_THEME.colors.brand.primaryDark}` }}
+              className="w-full py-2.5 bg-gray-900 text-white rounded-lg font-bold text-sm active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_2px_10px_rgba(0,0,0,0.15)]"
             >
-              Deposit Cash
+              <PiggyBank className="w-4 h-4" /> Deposit Collection
             </button>
           </div>
         </div>
 
-        {/* 5. MORE SERVICES - Vertical List */}
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div onClick={() => navigate('/food/delivery/pocket/payout')} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 active:bg-gray-50">
-              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 mb-4 border border-blue-100">
-                <IndianRupee className="w-5 h-5" />
-              </div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Last Payout</p>
-              <p className="text-xl font-black text-gray-900 leading-none mb-1">₹{walletState.payoutAmount}</p>
-              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight">Prev Week Info</p>
+        {/* 6. QUICK LINKS GRID */}
+        <div className="grid grid-cols-2 gap-3">
+          <div onClick={() => navigate('/food/delivery/pocket/payout')} className="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 active:bg-gray-50 cursor-pointer flex flex-col justify-between">
+            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 mb-2 border border-orange-100">
+               <Receipt className="w-4 h-4" />
             </div>
-
-            <div onClick={() => navigate('/food/delivery/pocket/limit-settlement')} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 active:bg-gray-50 flex flex-col justify-between">
-              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#2979FB] mb-4 border border-blue-100">
-                <Receipt className="w-5 h-5" />
-              </div>
-              <p className="text-sm font-bold text-gray-800 leading-tight">Limit Settlement</p>
-            </div>
+            <p className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">Last Payout</p>
+            <p className="font-bold text-gray-900 text-sm">₹{walletState.payoutAmount}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div onClick={() => navigate('/food/delivery/pocket/deductions')} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 active:bg-gray-50 flex flex-col justify-between">
-              <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-600 mb-4 border border-red-100">
-                <FileText className="w-5 h-5" />
-              </div>
-              <p className="text-sm font-bold text-gray-800 leading-tight">Deduction List</p>
+          <div onClick={() => navigate('/food/delivery/pocket/limit-settlement')} className="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 active:bg-gray-50 cursor-pointer flex flex-col justify-between">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 mb-2 border border-emerald-100">
+               <CreditCard className="w-4 h-4" />
             </div>
+            <p className="text-xs font-bold text-gray-800 leading-tight">Settle Limits</p>
+            <p className="text-[10px] text-gray-500 font-medium mt-0.5">Pay offline cash</p>
+          </div>
+        </div>
 
-            <div onClick={() => navigate('/food/delivery/pocket/details')} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 active:bg-gray-50 flex flex-col justify-between">
-              <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 mb-4 border border-purple-100">
-                <LayoutGrid className="w-5 h-5" />
-              </div>
-              <p className="text-sm font-bold text-gray-800 leading-tight">Pocket statement</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div onClick={() => navigate('/food/delivery/pocket/deductions')} className="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 active:bg-gray-50 cursor-pointer flex flex-col justify-between">
+            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-600 mb-2 border border-red-100">
+               <FileText className="w-4 h-4" />
             </div>
+            <p className="text-xs font-bold text-gray-800 leading-tight">Deductions</p>
+            <p className="text-[10px] text-gray-500 font-medium mt-0.5">Penalties info</p>
+          </div>
+
+          <div onClick={() => navigate('/food/delivery/pocket/details')} className="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 active:bg-gray-50 cursor-pointer flex flex-col justify-between">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 mb-2 border border-blue-100">
+               <LayoutGrid className="w-4 h-4" />
+            </div>
+            <p className="text-xs font-bold text-gray-800 leading-tight">Statement</p>
+            <p className="text-[10px] text-gray-500 font-medium mt-0.5">All transactions</p>
           </div>
         </div>
       </div>
 
-      {/* DEPOSIT MODAL - RESTORED 1:1 */}
+      {/* DEPOSIT MODAL (COMPACT) */}
       <AnimatePresence>
         {showDepositPopup && (
-          <div className="fixed inset-0 z-[1000] flex items-end">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDepositPopup(false)} className="absolute inset-0 bg-[#2979FB]/70 backdrop-blur-sm" />
-            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="relative w-full bg-white rounded-t-[2.5rem] p-8 pb-12 shadow-2xl">
-              <div className="w-16 h-1.5 bg-gray-100 rounded-full mx-auto mb-8" />
-
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-blue-100 text-[#2979FB]">
-                  <IndianRupee className="w-10 h-10" />
-                </div>
-                <h3 className="text-2xl font-black text-gray-900 mb-1">Deposit Cash</h3>
-                <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">Settle Hand Dues</p>
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center px-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDepositPopup(false)} className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative w-full max-w-sm bg-white rounded-2xl p-5 shadow-2xl">
+              
+              <div className="flex items-center justify-between mb-4">
+                 <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center border border-blue-100 text-blue-600">
+                      <IndianRupee className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900">Deposit Cash</h3>
+                      <p className="text-[10px] text-gray-500 font-medium">Settle outstanding hands</p>
+                    </div>
+                 </div>
+                 <button onClick={() => setShowDepositPopup(false)} className="p-1.5 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100">
+                    <X className="w-4 h-4" />
+                 </button>
               </div>
 
-              <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-xs font-bold text-gray-400 uppercase">Cash in your hand</span>
-                  <span className="text-base font-black text-gray-900">₹{walletState.cashInHand}</span>
+              <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-100">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-xs font-semibold text-gray-600">Cash in Hand</span>
+                  <span className="text-sm font-bold text-gray-900">₹{walletState.cashInHand}</span>
                 </div>
                 <div className="relative">
-                  <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="number" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)}
-                    placeholder="Enter amount to deposit"
-                    className="w-full bg-white border border-gray-200 rounded-xl py-4 pl-12 pr-4 text-xl font-bold outline-none transition-all"
-                    style={{ borderColor: BRAND_THEME.colors.brand.primary, boxShadow: `0 0 0 3px ${BRAND_THEME.colors.brand.primary}1A` }}
+                    placeholder="Deposit amount"
+                    className="w-full bg-white border border-gray-200 rounded-lg py-2.5 pl-9 pr-3 text-sm font-bold outline-none focus:border-gray-400 transition-colors"
                   />
                 </div>
-                <p className="text-[10px] font-bold text-gray-400 mt-3 text-center uppercase tracking-tight">Minimum deposit ₹1 • Instant limit update</p>
+                <p className="text-[10px] text-gray-400 mt-2 text-center font-medium">Min deposit ₹1 • Live update</p>
               </div>
 
-              <div className="space-y-3">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDepositPopup(false)}
+                  className="flex-1 py-2.5 rounded-lg border border-gray-200 font-bold text-gray-600 text-sm active:bg-gray-50"
+                >
+                  Cancel
+                </button>
                 <button
                   onClick={handleDeposit}
                   disabled={depositing}
-                  className="w-full py-5 text-white rounded-2xl font-black text-sm active:scale-95 transition-all flex items-center justify-center gap-3 disabled:bg-gray-300 disabled:shadow-none"
-                  style={{ background: BRAND_THEME.colors.brand.primary, boxShadow: `0 16px 38px -22px ${BRAND_THEME.colors.brand.primaryDark}` }}
+                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg font-bold text-sm active:scale-95 disabled:bg-gray-300 disabled:shadow-none flex items-center justify-center gap-2 transition-all shadow-[0_2px_10px_rgba(37,99,235,0.3)]"
                 >
-                  {depositing ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
-                  {depositing ? 'Securely Processing...' : 'Proceed to Pay'}
+                  {depositing && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {depositing ? 'Paying...' : 'Verify Pay'}
                 </button>
-                <button onClick={() => setShowDepositPopup(false)} className="w-full py-3 text-gray-400 font-bold text-xs uppercase tracking-widest">Maybe Later</button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-
-      {/* Icon Helper for Navigation Drawer */}
-      <div className="hidden">
-        <ChevronRight />
-      </div>
     </div>
   );
 };

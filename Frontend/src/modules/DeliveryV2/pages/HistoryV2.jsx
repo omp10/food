@@ -526,12 +526,3 @@ export const HistoryV2 = () => {
 };
 
 export default HistoryV2;
-            </motion.div >
-          </div >
-        )}
-      </AnimatePresence >
-    </div >
-  );
-};
-
-export default HistoryV2;

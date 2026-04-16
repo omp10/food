@@ -566,44 +566,46 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
 
   return (
     <div className="relative h-screen w-full bg-white text-gray-900 overflow-hidden flex flex-col">
-      {/* ─── 1. TOP HEADER (Premium Dark Gray) ─── */}
+      {/* ─── 1. TOP HEADER (Neat & Clean) ─── */}
       {currentTab !== 'history' && currentTab !== 'shop' && (
-        <div className="absolute top-0 inset-x-0 bg-white backdrop-blur-2xl shadow-2xl z-[200] safe-top pb-2 border-b border-gray-200">
-          <div className="flex items-center justify-between px-4 py-2">
-            <div className="flex items-center gap-4">
+        <div className="absolute top-0 inset-x-0 bg-white/95 backdrop-blur-md z-[200] safe-top border-b border-gray-100">
+          <div className="flex items-center justify-between px-4 py-2.5">
+            <div className="flex items-center gap-3">
               <div
                 onClick={() => navigate('/food/delivery/profile')}
-                className="w-10 h-10 rounded-full border border-blue-100 p-0.5 shadow-xl overflow-hidden bg-white cursor-pointer active:scale-95 transition-all"
+                className="w-10 h-10 rounded-full border border-gray-200 overflow-hidden bg-gray-50 cursor-pointer active:bg-gray-100 transition-colors shrink-0"
               >
-                <img src={profileImage || "https://i.ibb.co/3m2Yh7r/Appzeto-Brand-Image.png"} alt="Profile" className="w-full h-full object-cover rounded-full" />
+                <img src={profileImage || "https://i.ibb.co/3m2Yh7r/Appzeto-Brand-Image.png"} alt="Profile" className="w-full h-full object-cover" />
               </div>
               <button
                 onClick={async () => {
                   const nextState = !isOnline;
-                  toggleOnline(); // Store action
+                  toggleOnline(); 
                   if (nextState) {
-                    // Try to get location and sync immediately so we are visible for dispatch right away
                     navigator.geolocation.getCurrentPosition((pos) => {
                       deliveryAPI.updateLocation(pos.coords.latitude, pos.coords.longitude, true).catch(() => { });
-                    }, (err) => console.warn('Online sync position failed:', err), { enableHighAccuracy: true });
+                    }, (err) => console.warn('Online sync pos failed', err), { enableHighAccuracy: true });
                   } else {
                     deliveryAPI.updateOnlineStatus(false).catch(() => { });
                   }
                 }}
-                className={`relative w-[92px] h-8 rounded-full p-1 transition-all duration-500 flex items-center shadow-lg`}
-                style={{ backgroundColor: isOnline ? BRAND_THEME.colors.semantic.success : '#D1D5DB' }}
+                className={`relative w-[86px] h-8 rounded-full p-1 transition-all duration-300 flex items-center shadow-sm border ${isOnline ? 'border-green-500 bg-green-500' : 'border-gray-200 bg-gray-100'}`}
               >
-                <div className={`flex items-center justify-between w-full px-2 text-[8.5px] font-black uppercase tracking-widest ${isOnline ? 'text-white' : 'text-gray-700'}`}>
-                  <span>{isOnline ? 'Online' : ''}</span>
-                  <span>{!isOnline ? 'Offline' : ''}</span>
+                <div className={`flex items-center justify-between w-full px-2 text-[9px] font-bold uppercase tracking-wider ${isOnline ? 'text-white' : 'text-gray-500'}`}>
+                  <span>{isOnline ? 'On' : ''}</span>
+                  <span>{!isOnline ? 'Off' : ''}</span>
                 </div>
-                <motion.div animate={{ x: isOnline ? 59 : 0 }} className="absolute left-1 w-6 h-6 bg-white rounded-full shadow-sm" />
+                <motion.div animate={{ x: isOnline ? 54 : 0 }} className="absolute left-1 w-6 h-6 bg-white rounded-full shadow-sm" />
               </button>
             </div>
-            <div className="flex items-center gap-3">
-              <button onClick={() => setShowEmergencyPopup(true)} className="w-9 h-9 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20 active:scale-95 transition-all shadow-lg"><AlertTriangle className="w-4 h-4" /></button>
-              <button onClick={() => navigate('/food/delivery/help/id-card')} className="w-9 h-9 rounded-full flex items-center justify-center border active:scale-95 transition-all shadow-lg" style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft, color: BRAND_THEME.colors.brand.primary, borderColor: BRAND_THEME.colors.brand.primary + '22' }}><Contact className="w-4 h-4" /></button>
-              <button onClick={() => navigate('/food/delivery/notifications')} className="relative w-9 h-9 rounded-full flex items-center justify-center border active:scale-95 transition-all shadow-lg" style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft, color: BRAND_THEME.colors.brand.primary, borderColor: BRAND_THEME.colors.brand.primary + '22' }}><Bell className="w-4 h-4" />{notificationUnreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-400 border border-white" />}</button>
+            
+            <div className="flex items-center gap-2">
+              <button onClick={() => setShowEmergencyPopup(true)} className="w-[38px] h-[38px] rounded-full bg-red-50 flex items-center justify-center text-red-500 active:bg-red-100 transition-colors border border-red-100"><AlertTriangle className="w-[18px] h-[18px]" /></button>
+              <button onClick={() => navigate('/food/delivery/help/id-card')} className="w-[38px] h-[38px] rounded-full bg-blue-50 flex items-center justify-center text-blue-600 active:bg-blue-100 transition-colors border border-blue-100"><Contact className="w-[18px] h-[18px]" /></button>
+              <button onClick={() => navigate('/food/delivery/notifications')} className="relative w-[38px] h-[38px] rounded-full bg-blue-50 flex items-center justify-center text-blue-600 active:bg-blue-100 transition-colors border border-blue-100">
+                 <Bell className="w-[18px] h-[18px]" />
+                 {notificationUnreadCount > 0 && <span className="absolute top-1 right-1 border-2 border-white w-2 h-2 rounded-full bg-red-500" />}
+              </button>
             </div>
           </div>
 
@@ -676,7 +678,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       )}
 
       {/* ─── 2. MAIN CONTENT ─── */}
-      <div className={`flex-1 relative overflow-y-auto ${(currentTab === 'history' || currentTab === 'shop') ? 'pt-0' : 'pt-[120px]'}`}>
+      <div className={`flex-1 relative overflow-y-auto ${currentTab === 'feed' ? 'pt-[120px]' : (currentTab === 'history' || currentTab === 'shop') ? 'pt-0' : 'pt-[64px]'}`}>
         {currentTab === 'feed' ? (
           <div className="absolute inset-0 top-[-120px]">
             <LiveMap
@@ -923,22 +925,22 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
         </motion.div>
       )}
 
-      {/* ─── 3. BOTTOM NAV (Fixed - Compact Pro) ─── */}
-      <div className="bg-white border-t border-gray-100 px-8 py-3 pb-6 flex justify-between items-center z-[200] shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-        <button onClick={() => navigate('/food/delivery/feed')} className={`flex flex-col items-center gap-1 transition-all ${currentTab === 'feed' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-          <LayoutGrid className="w-6 h-6" /><span className="text-[11px] font-medium font-sans">Feed</span>
+      {/* ─── 3. BOTTOM NAV (Clean & Uniform) ─── */}
+      <div className="bg-white border-t border-gray-100 flex justify-between items-center z-[200] safe-bottom shadow-sm">
+        <button onClick={() => navigate('/food/delivery/feed')} className={`flex flex-col items-center justify-center gap-1 pt-3 pb-2 transition-all flex-1 ${currentTab === 'feed' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
+          <LayoutGrid className="w-5 h-5" /><span className="text-[10px] font-semibold">Feed</span>
         </button>
-        <button onClick={() => navigate('/food/delivery/pocket')} className={`flex flex-col items-center gap-1 transition-all ${currentTab === 'pocket' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-          <Wallet className="w-6 h-6" /><span className="text-[11px] font-medium font-sans">Pocket</span>
+        <button onClick={() => navigate('/food/delivery/pocket')} className={`flex flex-col items-center justify-center gap-1 pt-3 pb-2 transition-all flex-1 ${currentTab === 'pocket' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
+          <Wallet className="w-5 h-5" /><span className="text-[10px] font-semibold">Pocket</span>
         </button>
-        <button onClick={() => navigate('/food/delivery/history')} className={`flex flex-col items-center gap-1 transition-all ${currentTab === 'history' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-          <History className="w-6 h-6" /><span className="text-[11px] font-medium font-sans">Trip History</span>
+        <button onClick={() => navigate('/food/delivery/history')} className={`flex flex-col items-center justify-center gap-1 pt-3 pb-2 transition-all flex-1 ${currentTab === 'history' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
+          <History className="w-5 h-5" /><span className="text-[10px] font-semibold">History</span>
         </button>
-        <button onClick={() => navigate('/food/delivery/shop')} className={`flex flex-col items-center gap-1 transition-all ${currentTab === 'shop' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-          <Store className="w-6 h-6" /><span className="text-[11px] font-medium font-sans">Shop</span>
+        <button onClick={() => navigate('/food/delivery/shop')} className={`flex flex-col items-center justify-center gap-1 pt-3 pb-2 transition-all flex-1 ${currentTab === 'shop' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
+          <Store className="w-5 h-5" /><span className="text-[10px] font-semibold">Shop</span>
         </button>
-        <button onClick={() => navigate('/food/delivery/profile')} className={`flex flex-col items-center gap-1 transition-all ${currentTab === 'profile' ? 'text-gray-950 scale-110' : 'text-gray-400 opacity-70'}`}>
-          <UserIcon className="w-6 h-6" /><span className="text-[11px] font-medium font-sans">Profile</span>
+        <button onClick={() => navigate('/food/delivery/profile')} className={`flex flex-col items-center justify-center gap-1 pt-3 pb-2 transition-all flex-1 ${currentTab === 'profile' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
+          <UserIcon className="w-5 h-5" /><span className="text-[10px] font-semibold">Profile</span>
         </button>
       </div>
     </div>

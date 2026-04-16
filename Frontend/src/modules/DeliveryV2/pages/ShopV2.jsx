@@ -27,15 +27,15 @@ function ProductCard({ product, onOrder }) {
 
   return (
     <div
-      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden active:bg-gray-50 transition-colors cursor-pointer flex flex-col"
+      className="bg-white rounded-2xl shadow-[0px_4px_16px_rgba(0,0,0,0.06)] border border-gray-200 overflow-hidden active:bg-gray-50 transition-colors cursor-pointer flex flex-col"
       onClick={() => onOrder(product)}
     >
-      <div className="relative h-28 bg-gray-50 border-b border-gray-100 shrink-0">
+      <div className="relative h-28 bg-blue-50/50 border-b border-gray-100 shrink-0">
         {product.image ? (
-          <img src={product.image} alt={product.name} className="w-full h-full object-cover" onError={e => e.target.style.display = 'none'} />
+          <img src={product.image} alt={product.name} className="w-full h-full object-cover mix-blend-multiply" onError={e => e.target.style.display = 'none'} />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Package className="w-6 h-6 text-gray-300" />
+            <Package className="w-6 h-6 text-blue-200" />
           </div>
         )}
         {!hasStock && (
@@ -44,21 +44,21 @@ function ProductCard({ product, onOrder }) {
           </div>
         )}
         {product.category && (
-          <span className="absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-white border border-gray-100 text-gray-600 shadow-sm">
+          <span className="absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-white border border-gray-100 text-blue-800 shadow-sm">
             {product.category}
           </span>
         )}
       </div>
-      <div className="p-2.5 flex-1 flex flex-col justify-between">
-        <h3 className="font-semibold text-gray-800 text-xs leading-snug line-clamp-2 mb-2">{product.name}</h3>
+      <div className="p-3 flex-1 flex flex-col justify-between">
+        <h3 className="font-bold text-gray-900 text-xs leading-snug line-clamp-2 mb-2">{product.name}</h3>
         <div className="flex items-center justify-between gap-1 mt-auto">
           <div className="min-w-0 pr-1">
             {(product.variants || []).length > 0 ? (
-              <p className="text-sm font-bold text-gray-900 truncate">
+              <p className="text-sm font-black text-gray-900 truncate">
                 {RUPEE}{(product.variants[0]?.price) || 0}
               </p>
             ) : (
-              <p className="text-sm font-bold text-gray-900 truncate">
+              <p className="text-sm font-black text-gray-900 truncate">
                 {RUPEE}{Number(product.price) || 0}
               </p>
             )}
@@ -67,7 +67,7 @@ function ProductCard({ product, onOrder }) {
             onClick={(e) => { e.stopPropagation(); onOrder(product); }}
             disabled={!hasStock}
             className={`shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-colors ${
-              hasStock ? 'bg-blue-50 text-blue-600 active:bg-blue-100' : 'bg-gray-100 text-gray-400'
+              hasStock ? 'bg-blue-600 text-white shadow-sm active:bg-blue-700' : 'bg-gray-100 text-gray-400'
             }`}
           >
             <ShoppingCart className="w-3.5 h-3.5" />
@@ -252,20 +252,20 @@ function OrderHistoryItem({ order }) {
   const isStandard = order.variantName === "Standard";
   
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-3 flex flex-col gap-2">
-      <div className="flex gap-2.5 items-start">
-        <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center shrink-0 border border-orange-100 overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-[0px_2px_10px_rgba(0,0,0,0.04)] p-3 flex flex-col gap-2 mb-3">
+      <div className="flex gap-3 items-start">
+        <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center shrink-0 border border-orange-100 overflow-hidden">
            {order.productImage ? (
-             <img src={order.productImage} alt={order.productName} className="w-full h-full object-cover" />
+             <img src={order.productImage} alt={order.productName} className="w-full h-full object-cover mix-blend-multiply" />
            ) : (
-             <Package className="w-4 h-4 text-orange-500" />
+             <Package className="w-5 h-5 text-orange-500" />
            )}
         </div>
         
-        <div className="flex-1 min-w-0 pr-1">
-          <p className="font-bold text-gray-900 text-[13px] leading-tight truncate">{order.productName || 'Store Item'}</p>
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${statusColor(order.orderStatus)}`}>
+        <div className="flex-1 min-w-0 pr-1 pt-0.5">
+          <p className="font-bold text-gray-900 text-sm leading-tight truncate">{order.productName || 'Store Item'}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${statusColor(order.orderStatus)}`}>
               {order.orderStatus}
             </span>
             <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap">
@@ -274,15 +274,15 @@ function OrderHistoryItem({ order }) {
           </div>
         </div>
         
-        <div className="text-right shrink-0">
-           <p className="font-bold text-gray-900 text-sm">{RUPEE}{order.totalAmount}</p>
+        <div className="text-right shrink-0 pt-0.5">
+           <p className="font-black text-gray-900 text-[15px]">{RUPEE}{order.totalAmount}</p>
         </div>
       </div>
       
-      <div className="bg-gray-50 rounded pl-12 pr-2 py-1.5">
-        <p className="text-[11px] text-gray-500 flex items-center justify-between">
-           <span>Variant: <span className="font-semibold text-gray-700">{order.variantName}</span></span>
-           <span>Qty: <span className="font-semibold text-gray-700">{order.quantity}</span></span>
+      <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 mt-1">
+        <p className="text-xs text-gray-500 flex items-center justify-between">
+           <span>Variant: <span className="font-semibold text-gray-800">{order.variantName}</span></span>
+           <span>Qty: <span className="font-semibold text-gray-800">{order.quantity}</span></span>
         </p>
       </div>
     </div>
