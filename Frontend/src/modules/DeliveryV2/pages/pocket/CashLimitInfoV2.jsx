@@ -30,21 +30,15 @@ export const CashLimitInfoV2 = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const profileRes = await deliveryAPI.getProfile();
-        const profile = profileRes?.data?.data?.profile || {};
-        
-        const totalLimit = profile.totalCashLimit || 0;
-        const cashInHand = profile.cashInHand || 0;
-        const deductions = profile.deductions || 0;
-        const withdrawals = profile.totalWithdrawn || 0;
-        const available = profile.availableCashLimit || 0;
+        const res = await deliveryAPI.getWallet();
+        const w = res?.data?.data?.wallet || res?.data?.data || res?.data || {};
 
         setWalletState({
-           totalCashLimit: totalLimit,
-           cashInHand: cashInHand,
-           deductions: deductions,
-           pocketWithdrawals: withdrawals,
-           availableCashLimit: available
+           totalCashLimit:     Number(w.totalCashLimit)     || 0,
+           cashInHand:         Number(w.cashInHand)         || 0,
+           deductions:         Number(w.deductions)         || 0,
+           pocketWithdrawals:  Number(w.totalWithdrawn)     || 0,
+           availableCashLimit: Number(w.availableCashLimit) || 0,
         });
       } catch (err) {
         toast.error('Failed to load cash limit details');

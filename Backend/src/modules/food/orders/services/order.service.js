@@ -1634,6 +1634,8 @@ export async function listOrdersRestaurant(restaurantId, query) {
     $or: [
       { "payment.method": { $in: ["cash", "wallet"] } },
       { "payment.status": { $in: ["paid", "authorized", "captured", "settled", "refunded"] } },
+      // Include cancelled orders regardless of payment status
+      { orderStatus: { $in: ["cancelled_by_user", "cancelled_by_restaurant", "cancelled_by_admin"] } },
     ],
   };
   const [docs, total] = await Promise.all([

@@ -676,7 +676,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       )}
 
       {/* ─── 2. MAIN CONTENT ─── */}
-      <div className={`flex-1 relative overflow-y-auto ${(currentTab === 'history' || currentTab === 'shop') ? 'pt-0' : 'pt-[120px]'}`}>
+      <div className={`flex-1 relative overflow-y-auto ${(currentTab === 'history' || currentTab === 'shop') ? 'pt-0' : currentTab === 'feed' ? 'pt-[120px]' : 'pt-[70px]'}`}>
          {currentTab === 'feed' ? (
            <div className="absolute inset-0 top-[-120px]">
              <LiveMap 

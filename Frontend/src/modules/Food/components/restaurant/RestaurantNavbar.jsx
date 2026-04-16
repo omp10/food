@@ -324,20 +324,14 @@ export default function RestaurantNavbar({
     <div className="w-full bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
       {/* Left Side - Restaurant Info */}
       <div className="flex-1 min-w-0 pr-4 flex items-center gap-3">
-        {logoUrl && (
-          <img src={logoUrl} alt="Logo" className="h-10 w-10 object-contain rounded-lg" />
-        )}
+
         <div className="min-w-0">
           {/* Restaurant Name & Company */}
           <div className="flex items-baseline gap-1.5 min-w-0">
             <h1 className="text-[15px] font-bold text-gray-900 truncate">
               {loading ? "Loading..." : (restaurantName || "Restaurant")}
             </h1>
-            {companyName && !loading && (
-              <span className="text-[9px] text-gray-500 font-bold uppercase tracking-tight shrink-0">
-                {companyName}
-              </span>
-            )}
+
           </div>
           {!loading && location && location.trim() !== "" && (
             <div className="flex items-center gap-1 mt-0.5 opacity-80">
