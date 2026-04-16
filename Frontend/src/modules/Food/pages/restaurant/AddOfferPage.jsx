@@ -116,11 +116,11 @@ export default function AddOfferPage() {
     }
     if (form.maxOfferQuantityPerOrder !== "") {
       const limit = Number(form.maxOfferQuantityPerOrder)
-      if (!Number.isFinite(limit) || limit < 0) return setError("Max items per order must be 0 or greater")
+      if (!Number.isFinite(limit) || limit < 1) return setError("Max items per order must be at least 1")
     }
     if (form.perUserLimit !== "") {
       const limit = Number(form.perUserLimit)
-      if (!Number.isFinite(limit) || limit < 0) return setError("Per user redeem limit must be 0 or greater")
+      if (!Number.isFinite(limit) || limit < 1) return setError("Per user redeem limit must be at least 1")
     }
     try {
       setSaving(true)
@@ -130,8 +130,8 @@ export default function AddOfferPage() {
           productId: form.productIds[0],
           discountValue: dv,
           maxDiscount: form.discountType === "percentage" ? Number(form.maxDiscount) : undefined,
-          maxOfferQuantityPerOrder: form.maxOfferQuantityPerOrder === "" ? 0 : Number(form.maxOfferQuantityPerOrder),
-          perUserLimit: form.perUserLimit === "" ? 0 : Number(form.perUserLimit)
+          maxOfferQuantityPerOrder: form.maxOfferQuantityPerOrder === "" ? undefined : Number(form.maxOfferQuantityPerOrder),
+          perUserLimit: form.perUserLimit === "" ? undefined : Number(form.perUserLimit)
         })
       } else {
         await restaurantAPI.createRestaurantOffer({
@@ -139,8 +139,8 @@ export default function AddOfferPage() {
           productId: form.productIds[0],
           discountValue: dv,
           maxDiscount: form.discountType === "percentage" ? Number(form.maxDiscount) : undefined,
-          maxOfferQuantityPerOrder: form.maxOfferQuantityPerOrder === "" ? 0 : Number(form.maxOfferQuantityPerOrder),
-          perUserLimit: form.perUserLimit === "" ? 0 : Number(form.perUserLimit)
+          maxOfferQuantityPerOrder: form.maxOfferQuantityPerOrder === "" ? undefined : Number(form.maxOfferQuantityPerOrder),
+          perUserLimit: form.perUserLimit === "" ? undefined : Number(form.perUserLimit)
         })
       }
       navigate("/restaurant/offers")
@@ -170,8 +170,8 @@ export default function AddOfferPage() {
             discountType: found.discountType || "percentage",
             discountValue: found.discountValue != null ? String(found.discountValue) : "",
             maxDiscount: found.maxDiscount != null ? String(found.maxDiscount) : "",
-            maxOfferQuantityPerOrder: found.maxOfferQuantityPerOrder != null ? String(found.maxOfferQuantityPerOrder) : "",
-            perUserLimit: found.perUserLimit != null ? String(found.perUserLimit) : "",
+            maxOfferQuantityPerOrder: found.maxOfferQuantityPerOrder != null && Number(found.maxOfferQuantityPerOrder) > 0 ? String(found.maxOfferQuantityPerOrder) : "",
+            perUserLimit: found.perUserLimit != null && Number(found.perUserLimit) > 0 ? String(found.perUserLimit) : "",
             startDate: found.startDate ? new Date(found.startDate).toISOString().slice(0, 10) : "",
             endDate: found.endDate ? new Date(found.endDate).toISOString().slice(0, 10) : ""
           })
@@ -279,23 +279,23 @@ export default function AddOfferPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Max Items Per Order</label>
                 <Input
                   type="number"
-                  min="0"
+                  min="1"
                   value={form.maxOfferQuantityPerOrder}
                   onChange={(e) => updateField("maxOfferQuantityPerOrder", e.target.value)}
                   placeholder="e.g. 5"
                 />
-                <p className="mt-1 text-xs text-gray-500">Leave empty for unlimited. If cart items exceed this count, offer will not apply.</p>
+                <p className="mt-1 text-xs text-gray-500">Leave empty for unlimited. Minimum 1 if set.</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Per User Redeem Limit</label>
                 <Input
                   type="number"
-                  min="0"
+                  min="1"
                   value={form.perUserLimit}
                   onChange={(e) => updateField("perUserLimit", e.target.value)}
                   placeholder="e.g. 2"
                 />
-                <p className="mt-1 text-xs text-gray-500">Leave empty for unlimited total redemptions per user.</p>
+                <p className="mt-1 text-xs text-gray-500">Leave empty for unlimited. Minimum 1 if set.</p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -50,7 +50,7 @@ const pricingSchema = z.object({
         autoApplied: z.boolean().optional(),
         eligibleSubtotal: z.number().optional(),
         maxOfferQuantityPerOrder: z.number().nullable().optional()
-    }).optional()
+    }).nullable().optional()
 });
 
 export function validateCalculateOrderDto(body) {
@@ -85,7 +85,7 @@ export function validateCreateOrderDto(body) {
     const schema = z.object({
         orderType: z.enum(['food', 'quick']).optional().default('food'),
         items: z.array(orderItemSchema).min(1, 'At least one item required'),
-        address: addressSchema.optional(),
+        address: addressSchema.nullable().optional(),
         restaurantId: z.string().optional(),
         restaurantName: z.string().optional(),
         customerName: z.string().optional(),

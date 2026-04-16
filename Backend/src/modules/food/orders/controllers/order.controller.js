@@ -15,10 +15,16 @@ import {
 export async function calculateOrderController(req, res, next) {
     try {
         const userId = req.user?.userId;
-        const dto = validateCalculateOrderDto(req.body);
+        const body = req.body || {};
+        const dto = validateCalculateOrderDto(body);
+
         const result = await orderService.calculateOrder(userId, dto);
         return sendResponse(res, 200, 'Pricing calculated', result);
     } catch (err) {
+        if (err.name === 'ValidationError') {
+            const requestId = req.requestId || '-';
+            console.warn(`[${requestId}] CalculateOrder validation failed:`, err.message, 'Body:', JSON.stringify(req.body));
+        }
         next(err);
     }
 }
@@ -26,10 +32,16 @@ export async function calculateOrderController(req, res, next) {
 export async function createOrderController(req, res, next) {
     try {
         const userId = req.user?.userId;
-        const dto = validateCreateOrderDto(req.body);
+        const body = req.body || {};
+        const dto = validateCreateOrderDto(body);
+
         const result = await orderService.createOrder(userId, dto);
         return sendResponse(res, 201, 'Order placed successfully', result);
     } catch (err) {
+        if (err.name === 'ValidationError') {
+            const requestId = req.requestId || '-';
+            console.warn(`[${requestId}] CreateOrder validation failed:`, err.message, 'Body:', JSON.stringify(req.body));
+        }
         next(err);
     }
 }

@@ -102,8 +102,8 @@ export async function listPublicRestaurantProductOffers(restaurantId, authUser =
     const rid = ensureObjectId(restaurantId, 'restaurant id');
     const now = new Date();
     const list = await RestaurantOffer.find({ restaurantId: rid })
-        .populate({ path: 'productId', select: 'name image coverImage photos price discountedPrice foodType preparationTime description' })
-        .populate({ path: 'productIds', select: 'name image coverImage photos price discountedPrice foodType preparationTime description' })
+        .populate({ path: 'productId', select: 'name image coverImage photos price discountedPrice foodType preparationTime description approvalStatus isAvailable' })
+        .populate({ path: 'productIds', select: 'name image coverImage photos price discountedPrice foodType preparationTime description approvalStatus isAvailable' })
         .sort({ createdAt: -1 })
         .lean();
     const filtered = [];

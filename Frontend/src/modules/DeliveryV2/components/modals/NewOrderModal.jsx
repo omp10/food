@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, MapPin, FastForward, Clock, Phone, ChefHat, ChevronDown } from 'lucide-react';
+import { User, MapPin, FastForward, Clock, Phone, ChefHat, ChevronDown, ShoppingBag } from 'lucide-react';
 import { ActionSlider } from '@/modules/DeliveryV2/components/ui/ActionSlider';
 import { useDeliveryStore } from '@/modules/DeliveryV2/store/useDeliveryStore';
 import { getHaversineDistance, calculateETA } from '@/modules/DeliveryV2/utils/geo';
@@ -168,8 +168,8 @@ export const NewOrderModal = ({ order, onAccept, onReject, onMinimize }) => {
                   <ChefHat className="w-4 h-4" />
                   <span>Restaurant Pickup</span>
                 </div>
-                <p className="text-gray-950 font-extrabold text-lg leading-tight">{restaurantName}</p>
-                <p className="text-gray-500 text-xs font-medium leading-relaxed">{restaurantAddress}</p>
+                <p className="text-gray-950 font-extrabold text-xl leading-tight">{restaurantName}</p>
+                <p className="text-gray-500 text-sm font-medium leading-relaxed">{restaurantAddress}</p>
               </div>
               <div>
                 <div 
@@ -179,8 +179,8 @@ export const NewOrderModal = ({ order, onAccept, onReject, onMinimize }) => {
                   <MapPin className="w-4 h-4" />
                   <span>Customer Drop</span>
                 </div>
-                <p className="text-gray-950 font-extrabold text-lg leading-tight">Customer Location</p>
-                <p className="text-gray-500 text-xs font-medium line-clamp-2">{customerAddress}</p>
+                <p className="text-gray-950 font-extrabold text-xl leading-tight">Customer Location</p>
+                <p className="text-gray-500 text-sm font-medium line-clamp-2">{customerAddress}</p>
                 {mapsLink && (
                   <a
                     href={mapsLink}
@@ -195,6 +195,36 @@ export const NewOrderModal = ({ order, onAccept, onReject, onMinimize }) => {
               </div>
             </div>
           </div>
+          
+          {/* Order Items Section - Refined for Neat & Clean Look */}
+          {order.items && order.items.length > 0 && (
+            <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100/50">
+              <div 
+                className="flex items-center gap-2 mb-3 font-bold text-[10px] uppercase tracking-widest"
+                style={{ color: BRAND_THEME.colors.brand.primary }}
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>Order Items ({order.items.length})</span>
+              </div>
+              
+              <div className="space-y-3 max-h-[140px] overflow-y-auto pr-1 custom-scrollbar">
+                {order.items.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center py-0.5">
+                    <div className="flex items-center gap-3">
+                      {item.isVeg !== undefined && (
+                        <div className={`w-3.5 h-3.5 border ${item.isVeg ? "border-green-600" : "border-red-600"} flex items-center justify-center p-[1px]`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${item.isVeg ? "bg-green-600" : "bg-red-600"}`} />
+                        </div>
+                      )}
+                      <span className="text-sm font-bold text-gray-800">
+                        {item.quantity || item.qty || 1} <span className="text-gray-400 mx-1">×</span> {item.name || item.foodName}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
              <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-3">

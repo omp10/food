@@ -1056,6 +1056,8 @@ export async function createOrder(userId, dto) {
     const offer = await FoodOffer.findOne({ couponCode }).lean();
     if (offer) {
       await FoodOffer.updateOne({ _id: offer._id }, { $inc: { usedCount: 1 } });
+      // Store coupon offer ID on order for reversal on cancellation
+      await FoodOrder.updateOne({ _id: order._id }, { $set: { appliedCouponOfferId: offer._id } });
       if (userId) {
         await FoodOfferUsage.updateOne(
           { offerId: offer._id, userId: new mongoose.Types.ObjectId(userId) },
@@ -1078,6 +1080,8 @@ export async function createOrder(userId, dto) {
       { _id: new mongoose.Types.ObjectId(restaurantAutoOfferId) },
       { $inc: { usedCount: 1 } },
     );
+    // Store restaurant offer ID on order for reversal on cancellation
+    await FoodOrder.updateOne({ _id: order._id }, { $set: { appliedRestaurantOfferId: new mongoose.Types.ObjectId(restaurantAutoOfferId) } });
     if (userId) {
       await RestaurantOfferUsage.updateOne(
         {
@@ -1458,6 +1462,40 @@ export async function cancelOrder(orderId, userId, reason) {
 
   await order.save();
 
+  // Reverse offer usage counts on cancellation
+  try {
+    const cancelledOrder = order.toObject ? order.toObject() : order;
+    const cancelUserId = cancelledOrder.userId ? String(cancelledOrder.userId) : null;
+
+    if (cancelledOrder.appliedRestaurantOfferId) {
+      await RestaurantOffer.updateOne(
+        { _id: cancelledOrder.appliedRestaurantOfferId },
+        { $inc: { usedCount: -1 } }
+      );
+      if (cancelUserId && mongoose.Types.ObjectId.isValid(cancelUserId)) {
+        await RestaurantOfferUsage.updateOne(
+          { offerId: cancelledOrder.appliedRestaurantOfferId, userId: new mongoose.Types.ObjectId(cancelUserId) },
+          { $inc: { count: -1 } }
+        );
+      }
+    }
+
+    if (cancelledOrder.appliedCouponOfferId) {
+      await FoodOffer.updateOne(
+        { _id: cancelledOrder.appliedCouponOfferId },
+        { $inc: { usedCount: -1 } }
+      );
+      if (cancelUserId && mongoose.Types.ObjectId.isValid(cancelUserId)) {
+        await FoodOfferUsage.updateOne(
+          { offerId: cancelledOrder.appliedCouponOfferId, userId: new mongoose.Types.ObjectId(cancelUserId) },
+          { $inc: { count: -1 } }
+        );
+      }
+    }
+  } catch (offerReverseErr) {
+    logger.warn(`cancelOrder offer usage reversal failed: ${offerReverseErr?.message || offerReverseErr}`);
+  }
+
   enqueueOrderEvent("order_cancelled_by_user", {
     orderMongoId: order._id?.toString?.(),
     orderId: order.orderId,
@@ -1629,6 +1667,42 @@ export async function updateOrderStatusRestaurant(
     to: orderStatus,
   });
   await order.save();
+
+  // Reverse offer usage counts when restaurant cancels
+  if (String(orderStatus).includes("cancel")) {
+    try {
+      const cancelledOrder = order.toObject ? order.toObject() : order;
+      const cancelUserId = cancelledOrder.userId ? String(cancelledOrder.userId) : null;
+
+      if (cancelledOrder.appliedRestaurantOfferId) {
+        await RestaurantOffer.updateOne(
+          { _id: cancelledOrder.appliedRestaurantOfferId },
+          { $inc: { usedCount: -1 } }
+        );
+        if (cancelUserId && mongoose.Types.ObjectId.isValid(cancelUserId)) {
+          await RestaurantOfferUsage.updateOne(
+            { offerId: cancelledOrder.appliedRestaurantOfferId, userId: new mongoose.Types.ObjectId(cancelUserId) },
+            { $inc: { count: -1 } }
+          );
+        }
+      }
+
+      if (cancelledOrder.appliedCouponOfferId) {
+        await FoodOffer.updateOne(
+          { _id: cancelledOrder.appliedCouponOfferId },
+          { $inc: { usedCount: -1 } }
+        );
+        if (cancelUserId && mongoose.Types.ObjectId.isValid(cancelUserId)) {
+          await FoodOfferUsage.updateOne(
+            { offerId: cancelledOrder.appliedCouponOfferId, userId: new mongoose.Types.ObjectId(cancelUserId) },
+            { $inc: { count: -1 } }
+          );
+        }
+      }
+    } catch (offerReverseErr) {
+      logger.warn(`updateOrderStatusRestaurant offer usage reversal failed: ${offerReverseErr?.message || offerReverseErr}`);
+    }
+  }
 
     let title = `Order ${order.orderId} updated`;
     let body = `Status changed to ${String(orderStatus).replace(/_/g, " ")}`;
@@ -1942,16 +2016,7 @@ export async function resendDeliveryNotificationRestaurant(orderId, restaurantId
         if (io) {
             const restaurant = await FoodRestaurant.findById(order.restaurantId).select('restaurantName location addressLine1 area city state').lean();
             
-            const payload = {
-                orderMongoId: order._id?.toString?.(),
-                orderId: order.orderId,
-                status: order.orderStatus,
-                pickupAddress: restaurant?.addressLine1 || restaurant?.area || "Restaurant Address",
-                dropAddress: order.deliveryAddress?.addressLine1 || "Customer Address",
-                distanceKm: order.dispatch?.distanceKm || 0,
-                estimatedEarnings: order.dispatch?.deliveryFee || 0,
-                restaurantName: restaurant?.restaurantName
-            };
+            const payload = buildDeliverySocketPayload(order, restaurant);
 
             const { partners } = await listNearbyOnlineDeliveryPartners(order.restaurantId, { maxKm: 30, limit: 30 });
             notifiedCount = partners.length;
