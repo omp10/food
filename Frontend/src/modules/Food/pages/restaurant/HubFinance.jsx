@@ -818,6 +818,145 @@ export default function HubFinance() {
               </div>
             </div>
 
+            {/* Discount Breakdown */}
+            {!loading && financeData?.currentCycle && (
+              <div>
+                <h2 className="text-base font-bold text-gray-900 mb-3">Discount breakdown</h2>
+                <div className="bg-white rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600">Platform Coupons</span>
+                    <span className="text-sm font-semibold text-green-600">
+                      ₹{(() => {
+                        const total = (financeData.currentCycle.orders || []).reduce((sum, order) => {
+                          return sum + (order.pricing?.couponByAdmin || 0)
+                        }, 0)
+                        return total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                      })()}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600">Your Coupons</span>
+                    <span className="text-sm font-semibold text-orange-600">
+                      -₹{(() => {
+                        const total = (financeData.currentCycle.orders || []).reduce((sum, order) => {
+                          return sum + (order.pricing?.couponByRestaurant || 0)
+                        }, 0)
+                        return total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                      })()}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600">Your Offers</span>
+                    <span className="text-sm font-semibold text-purple-600">
+                      -₹{(() => {
+                        const total = (financeData.currentCycle.orders || []).reduce((sum, order) => {
+                          return sum + (order.pricing?.offerByRestaurant || 0)
+                        }, 0)
+                        return total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                      })()}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-sm text-gray-600">Commission Paid</span>
+                    <span className="text-sm font-semibold text-blue-600">
+                      -₹{(() => {
+                        const total = (financeData.currentCycle.orders || []).reduce((sum, order) => {
+                          return sum + (order.commission || order.pricing?.restaurantCommission || 0)
+                        }, 0)
+                        return total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                      })()}
+                    </span>
+                  </div>
+                  
+                  <div className="bg-blue-50 rounded-lg p-3 mt-3">
+                    <p className="text-xs text-blue-800">
+                      💡 Platform coupons don't affect your payout. Only your coupons and offers are deducted from your earnings.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Payout Calculation */}
+            {!loading && financeData?.currentCycle && (
+              <div>
+                <h2 className="text-base font-bold text-gray-900 mb-3">Payout calculation</h2>
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">Subtotal</span>
+                      <span className="font-medium text-gray-900">
+                        ₹{(() => {
+                          const total = (financeData.currentCycle.orders || []).reduce((sum, order) => {
+                            return sum + (order.pricing?.subtotal || order.totalAmount || 0)
+                          }, 0)
+                          return total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        })()}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">+ Packaging Fee</span>
+                      <span className="font-medium text-green-600">
+                        +₹{(() => {
+                          const total = (financeData.currentCycle.orders || []).reduce((sum, order) => {
+                            return sum + (order.pricing?.packagingFee || 0)
+                          }, 0)
+                          return total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        })()}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">- Commission</span>
+                      <span className="font-medium text-red-600">
+                        -₹{(() => {
+                          const total = (financeData.currentCycle.orders || []).reduce((sum, order) => {
+                            return sum + (order.commission || order.pricing?.restaurantCommission || 0)
+                          }, 0)
+                          return total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        })()}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">- Your Coupons</span>
+                      <span className="font-medium text-red-600">
+                        -₹{(() => {
+                          const total = (financeData.currentCycle.orders || []).reduce((sum, order) => {
+                            return sum + (order.pricing?.couponByRestaurant || 0)
+                          }, 0)
+                          return total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        })()}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">- Your Offers</span>
+                      <span className="font-medium text-red-600">
+                        -₹{(() => {
+                          const total = (financeData.currentCycle.orders || []).reduce((sum, order) => {
+                            return sum + (order.pricing?.offerByRestaurant || 0)
+                          }, 0)
+                          return total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        })()}
+                      </span>
+                    </div>
+                    
+                    <div className="border-t-2 border-emerald-300 pt-2 mt-2 flex justify-between">
+                      <span className="font-bold text-base text-gray-900">Your Payout</span>
+                      <span className="font-bold text-base text-emerald-600">
+                        ₹{(financeData.currentCycle.estimatedPayout || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Withdrawal Requests */}
             <div>
               <h2 className="text-base font-bold text-gray-900 mb-3">Withdrawal requests</h2>

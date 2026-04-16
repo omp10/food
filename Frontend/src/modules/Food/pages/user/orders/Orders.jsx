@@ -896,6 +896,12 @@ Order again from this restaurant in the ${companyName} app.`
                         <span className="text-gray-800 font-medium">{"\u20B9"}{order.tax.toFixed(2)}</span>
                       </div>
                     )}
+                    {order.pricing?.platformFee > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">Platform Fee</span>
+                        <span className="text-gray-800 font-medium">{"\u20B9"}{order.pricing.platformFee.toFixed(2)}</span>
+                      </div>
+                    )}
                     {order.pricing?.discount > 0 && (
                       <div className="flex justify-between text-xs">
                         <span className="text-green-600">Discount</span>
