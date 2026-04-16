@@ -37,7 +37,7 @@ export default function OrdersPage() {
   const showOrdersSkeleton = useDelayedLoading(loading, { delay: 120, minDuration: 360 })
 
   // Restaurant notifications hook
-  const { newOrder, clearNewOrder, isConnected } = useRestaurantNotifications()
+  const { newOrder, clearNewOrder, cancelledOrderId, clearCancelledOrderId, isConnected } = useRestaurantNotifications()
 
   const notificationOrder = newOrder
     ? {
@@ -47,6 +47,16 @@ export default function OrdersPage() {
         customerAddress: newOrder.customerAddress || newOrder.deliveryAddress || newOrder.address,
       }
     : null
+
+  // Real-time: dismiss notification if the shown order gets cancelled by user
+  useEffect(() => {
+    if (!cancelledOrderId || !newOrder) return
+    const shownId = String(newOrder.orderMongoId || newOrder.orderId || newOrder._id || newOrder.id || "").trim()
+    if (shownId && String(cancelledOrderId).trim() === shownId) {
+      clearNewOrder()
+      clearCancelledOrderId()
+    }
+  }, [cancelledOrderId])
 
   // Lenis smooth scrolling
   useEffect(() => {

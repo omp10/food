@@ -56,9 +56,7 @@ const allOrdersStatusPriority = {
   ready: 3,
   out_for_delivery: 4,
   scheduled: 5,
-  delivered: 6,
-  completed: 6,
-  cancelled: 7,
+  // delivered, completed, cancelled — no fixed priority, sorted by date only
 };
 
 const getAllOrdersTimestamp = (order) =>
@@ -68,6 +66,35 @@ const getAllOrdersTimestamp = (order) =>
   order?.createdAt ||
   new Date().toISOString();
 
+const formatOrderDateTime = (dateInput) => {
+  if (!dateInput) return "";
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return "";
+  const now = new Date();
+  const isToday =
+    d.getDate() === now.getDate() &&
+    d.getMonth() === now.getMonth() &&
+    d.getFullYear() === now.getFullYear();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday =
+    d.getDate() === yesterday.getDate() &&
+    d.getMonth() === yesterday.getMonth() &&
+    d.getFullYear() === yesterday.getFullYear();
+  const timeStr = d.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+  if (isToday) return `Today, ${timeStr}`;
+  if (isYesterday) return `Yesterday, ${timeStr}`;
+  return d.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: d.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+  }) + `, ${timeStr}`;
+};
+
 const transformOrderForList = (order) => ({
   orderId: order.orderId || order._id,
   mongoId: order._id,
@@ -75,15 +102,7 @@ const transformOrderForList = (order) => ({
   customerName: order.userId?.name || order.customerName || "Customer",
   type: "Home Delivery",
   tableOrToken: null,
-  timePlaced: new Date(getAllOrdersTimestamp(order)).toLocaleDateString(
-    "en-US",
-    {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    },
-  ),
+  timePlaced: formatOrderDateTime(order.createdAt),
   eta: null,
   itemsSummary:
     order.items?.map((item) => `${item.quantity}x ${item.name}`).join(", ") ||
@@ -97,7 +116,7 @@ const transformOrderForList = (order) => ({
     ? new Date(order.tracking.preparing.timestamp)
     : new Date(order.createdAt || Date.now()),
   initialETA: order.estimatedDeliveryTime || 30,
-  sortTimestamp: new Date(getAllOrdersTimestamp(order)).getTime(),
+  sortTimestamp: new Date(order.createdAt || Date.now()).getTime(),
 });
 
 // Completed Orders List Component
@@ -127,10 +146,7 @@ function CompletedOrders({ onSelectOrder, refreshToken = 0 }) {
             customerName: order.userId?.name || order.customerName || "Customer",
             type: "Home Delivery",
             tableOrToken: null,
-            timePlaced: new Date(order.createdAt).toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
+            timePlaced: formatOrderDateTime(order.createdAt),
             deliveredAt:
               order.deliveredAt || order.updatedAt || order.createdAt,
             itemsSummary:
@@ -333,10 +349,7 @@ function CancelledOrders({ onSelectOrder, refreshToken = 0 }) {
             customerName: order.userId?.name || order.customerName || "Customer",
             type: "Home Delivery",
             tableOrToken: null,
-            timePlaced: new Date(order.createdAt).toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
+            timePlaced: formatOrderDateTime(order.createdAt),
             cancelledAt:
               order.cancelledAt || order.updatedAt || order.createdAt,
             cancelledBy: order.cancelledBy || "unknown",
@@ -802,7 +815,7 @@ export default function OrdersMain() {
   };
 
   // Restaurant notifications hook for real-time orders
-  const { newOrder, clearNewOrder, isConnected } = useRestaurantNotifications();
+  const { newOrder, clearNewOrder, cancelledOrderId, clearCancelledOrderId, isConnected } = useRestaurantNotifications();
 
   const rejectReasons = [
     "Restaurant is too busy",
@@ -993,6 +1006,29 @@ export default function OrdersMain() {
   useEffect(() => {
     newOrderRef.current = newOrder;
   }, [newOrder]);
+
+  // Real-time: close popup if the order currently shown gets cancelled by user
+  useEffect(() => {
+    if (!cancelledOrderId || !showNewOrderPopup) return;
+
+    const popupId = popupOrder?.orderMongoId || popupOrder?.orderId || popupOrder?._id || popupOrder?.id || "";
+    const newOrderId = newOrder?.orderMongoId || newOrder?.orderId || newOrder?._id || newOrder?.id || "";
+    const matchId = String(popupId || newOrderId).trim();
+
+    if (matchId && String(cancelledOrderId).trim() === matchId) {
+      // Stop audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      setShowNewOrderPopup(false);
+      setPopupOrder(null);
+      clearNewOrder();
+      clearCancelledOrderId();
+      requestOrdersRefresh();
+      toast.error("Order was cancelled by the customer.");
+    }
+  }, [cancelledOrderId]);
 
   // Best-effort unlock for popup buzzer so it can keep playing when tab is backgrounded.
   useEffect(() => {
@@ -2851,10 +2887,7 @@ function PreparingOrders({
                   ? "Home Delivery"
                   : "Express Delivery",
               tableOrToken: null,
-              timePlaced: new Date(order.createdAt).toLocaleTimeString(
-                "en-US",
-                { hour: "2-digit", minute: "2-digit" },
-              ),
+              timePlaced: formatOrderDateTime(order.createdAt),
               initialETA, // Store initial ETA in minutes
               preparingTimestamp, // Store when order started preparing
               itemsSummary:
@@ -3159,10 +3192,7 @@ function ReadyOrders({ onSelectOrder, refreshToken = 0 }) {
                 ? "Home Delivery"
                 : "Express Delivery",
             tableOrToken: null,
-            timePlaced: new Date(order.createdAt).toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
+            timePlaced: formatOrderDateTime(order.createdAt),
             eta: null, // Don't show ETA for ready orders
             itemsSummary:
               order.items
@@ -3277,10 +3307,7 @@ const OutForDeliveryOrders = ({ onSelectOrder, refreshToken = 0 }) => {
                 ? "Home Delivery"
                 : "Express Delivery",
             tableOrToken: null,
-            timePlaced: new Date(order.createdAt).toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
+            timePlaced: formatOrderDateTime(order.createdAt),
             eta: null,
             itemsSummary:
               order.items

@@ -82,6 +82,7 @@ const triggerWebViewNativeNotification = async (orderData = {}) => {
 export const useRestaurantNotifications = () => {
   const socketRef = useRef(null);
   const [newOrder, setNewOrder] = useState(null);
+  const [cancelledOrderId, setCancelledOrderId] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const audioRef = useRef(null);
   const activeOrderRef = useRef(null);
@@ -619,7 +620,13 @@ export const useRestaurantNotifications = () => {
     // Listen for order status updates
     socketRef.current.on('order_status_update', (data) => {
       debugLog('?? Order status update:', data);
-      // You can handle status updates here if needed
+      const status = String(data?.orderStatus || data?.status || '').toLowerCase();
+      if (status.includes('cancel')) {
+        const orderId = String(
+          data?.orderMongoId || data?.orderId || data?.order_mongo_id || data?.order_id || ''
+        ).trim();
+        if (orderId) setCancelledOrderId(orderId);
+      }
     });
 
     socketRef.current.on('admin_notification', (payload) => {
@@ -740,9 +747,13 @@ export const useRestaurantNotifications = () => {
     setNewOrder(null);
   };
 
+  const clearCancelledOrderId = () => setCancelledOrderId(null);
+
   return {
     newOrder,
     clearNewOrder,
+    cancelledOrderId,
+    clearCancelledOrderId,
     isConnected,
     playNotificationSound
   };
