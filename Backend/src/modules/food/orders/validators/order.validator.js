@@ -42,6 +42,9 @@ const pricingSchema = z.object({
     total: z.number().min(0),
     currency: z.string().optional(),
     couponCode: z.string().nullable().optional(),
+    couponByAdmin: z.number().min(0).optional(),
+    couponByRestaurant: z.number().min(0).optional(),
+    offerByRestaurant: z.number().min(0).optional(),
     autoAppliedOffer: z.object({
         offerId: z.string().optional(),
         title: z.string().optional(),

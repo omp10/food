@@ -1514,15 +1514,26 @@ export default function Cart() {
       debugLog("?? Applied coupon:", displayedAppliedCoupon?.code || displayedAppliedCoupon?.title || "None")
       debugLog("?? Delivery address:", defaultAddress?.label || defaultAddress?.city)
 
-      // Ensure couponCode is included in pricing
+      // Ensure couponCode is included in pricing.
+      // If `pricing` state (from calculateOrder API) is available, use it directly — it has the full
+      // discount breakdown (offerByRestaurant, couponByRestaurant, couponByAdmin).
+      // If `pricing` is null (calculateOrder failed / not called), build a fallback that still sends
+      // the correct breakdown fields so backend records them in FoodOrder.pricing.
+      const _isAutoOffer = displayedAppliedCoupon?.type === "restaurant-auto-offer" || appliedCoupon?.type === "restaurant-auto-offer";
+      const _autoOfferAmt = _isAutoOffer ? Number(appliedCoupon?.discount || displayedAppliedCoupon?.discount || 0) : 0;
+      const _couponAmt = !_isAutoOffer ? Number(appliedCoupon?.discount || 0) : 0;
+      const _isCouponByRestaurant = !_isAutoOffer && appliedCoupon?.fundedBy === "restaurant";
       const orderPricing = pricing || {
         subtotal,
         deliveryFee,
         tax: gstCharges,
         platformFee,
         discount,
+        offerByRestaurant: _autoOfferAmt,                              // Scenario 3: item-level auto offer
+        couponByRestaurant: _isCouponByRestaurant ? _couponAmt : 0,   // Scenario 1: restaurant-funded coupon
+        couponByAdmin: !_isCouponByRestaurant ? _couponAmt : 0,       // Scenario 2: platform-funded coupon
         total,
-        couponCode: displayedAppliedCoupon?.type === "restaurant-auto-offer" ? null : appliedCoupon?.code || null
+        couponCode: _isAutoOffer ? null : appliedCoupon?.code || null
       };
 
       // Add couponCode if not present but coupon is applied

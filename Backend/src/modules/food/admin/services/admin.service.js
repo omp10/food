@@ -794,8 +794,11 @@ export async function getTransactionReport(query = {}) {
             restaurant: tx.restaurantId?.restaurantName || 'N/A',
             customerName: tx.userId?.name || 'Guest',
             totalItemAmount: subtotal,
-            itemDiscount: pricing.discount || 0,
-            couponDiscount: 0, // Placeholder if you add coupon logic
+            itemDiscount: pricing.offerByRestaurant || 0,
+            couponDiscount: (pricing.couponByAdmin || 0) + (pricing.couponByRestaurant || 0),
+            couponByAdmin: pricing.couponByAdmin || 0,
+            couponByRestaurant: pricing.couponByRestaurant || 0,
+            offerByRestaurant: pricing.offerByRestaurant || 0,
             referralDiscount: 0, // Placeholder
             discountedAmount: Math.max(0, (pricing.subtotal || 0) - (pricing.discount || 0)),
             vatTax: tx.amounts?.taxAmount || pricing.tax || 0,

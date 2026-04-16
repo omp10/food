@@ -108,8 +108,22 @@ export async function createInitialTransaction(order) {
         Number.isFinite(restaurantCommissionFromOrder) && restaurantCommissionFromOrder > 0
             ? restaurantCommissionFromOrder
             : (commissionAmount || 0);
-    const restaurantNet = (order.pricing?.subtotal || 0) + (order.pricing?.packagingFee || 0) - restaurantCommission;
-    const platformNetProfit = (order.pricing?.platformFee || 0) + (order.pricing?.deliveryFee || 0) + restaurantCommission - riderShare;
+    // Scenario 1 (restaurant coupon) & Scenario 3 (item offer): deduct restaurant-funded discounts
+    // from restaurantNet so the stored restaurantShare reflects the restaurant's true payout.
+    const couponByRestaurant = Number(order.pricing?.couponByRestaurant || 0);
+    const offerByRestaurant  = Number(order.pricing?.offerByRestaurant  || 0);
+    const restaurantNet = (order.pricing?.subtotal || 0) + (order.pricing?.packagingFee || 0)
+        - restaurantCommission
+        - couponByRestaurant   // Scenario 1: restaurant-funded coupon deducted from payout
+        - offerByRestaurant;   // Scenario 3: item-level offer deducted from payout
+
+    // Scenario 2 (platform coupon): deduct couponByAdmin so platform net profit reflects
+    // the true cost of funding the discount.
+    const couponByAdmin = Number(order.pricing?.couponByAdmin || 0);
+    const platformNetProfit = (order.pricing?.platformFee || 0) + (order.pricing?.deliveryFee || 0)
+        + restaurantCommission
+        - riderShare
+        - couponByAdmin;       // Scenario 2: platform bears the cost of platform-funded coupons
 
     const transaction = new FoodTransaction({
         orderId: order._id,
@@ -145,6 +159,9 @@ export async function createInitialTransaction(order) {
             platformFee: Number(order.pricing?.platformFee || 0) || 0,
             restaurantCommission,
             discount: Number(order.pricing?.discount || 0) || 0,
+            couponByAdmin: Number(order.pricing?.couponByAdmin || 0) || 0,
+            couponByRestaurant: Number(order.pricing?.couponByRestaurant || 0) || 0,
+            offerByRestaurant: Number(order.pricing?.offerByRestaurant || 0) || 0,
             total: Number(order.pricing?.total || 0) || 0,
             currency: String(order.pricing?.currency || order.currency || 'INR'),
         },

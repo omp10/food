@@ -884,6 +884,9 @@ export async function createOrder(userId, dto) {
     deliveryFee: Number(dto.pricing?.deliveryFee ?? 0),
     platformFee: Number(dto.pricing?.platformFee ?? 0),
     discount: Number(dto.pricing?.discount ?? 0),
+    couponByAdmin: Number(dto.pricing?.couponByAdmin ?? 0),
+    couponByRestaurant: Number(dto.pricing?.couponByRestaurant ?? 0),
+    offerByRestaurant: Number(dto.pricing?.offerByRestaurant ?? 0),
     total: Number(dto.pricing?.total ?? 0),
     currency: String(dto.pricing?.currency || "INR"),
   };
