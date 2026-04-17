@@ -10,3 +10,109 @@
 [2026-04-17T07:28:01.736Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
 
 [2026-04-17T07:28:02.005Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T07:35:44.024Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T07:35:44.298Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T08:09:55.825Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T08:09:55.962Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T08:09:56.040Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T08:09:56.232Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:13:05.284Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:13:05.362Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:13:13.371Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:13:13.551Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:13:43.651Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:13:43.854Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:22:41.514Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:22:41.818Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:26:28.128Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:26:31.321Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:33:56.692Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:33:56.801Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:06.559Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:06.777Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:07.640Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:07.779Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:07.877Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:07.967Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:08.101Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:08.214Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:08.312Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:09.135Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:09.275Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:09.383Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:09.493Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:09.606Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:11.076Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:11.216Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:11.324Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:11.417Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:11.520Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:11.637Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:37.222Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:37.376Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:37.520Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:37.630Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:37.744Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:37.859Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:37.980Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:45.979Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:49.150Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:34:49.273Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:36:59.741Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:37:00.041Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:37:00.156Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:37:00.255Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T09:37:01.255Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c

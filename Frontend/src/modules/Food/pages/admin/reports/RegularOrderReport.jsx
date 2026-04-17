@@ -165,6 +165,11 @@ export default function RegularOrderReport() {
             // Admin commission
             const adminCommission = Number(pricing.restaurantCommission || 0)
             
+            // Earnings
+            const packagingFee = Number(pricing.packagingFee || 0)
+            const restaurantEarning = Math.max(0, subtotal + packagingFee - adminCommission - couponByRestaurant - offerByRestaurant)
+            const deliveryBoyEarning = Number(order.riderEarning || 0)
+            
             const computedTotal =
               subtotal + deliveryCharge + platformFee + vatTax - totalDiscount
 
@@ -207,7 +212,9 @@ export default function RegularOrderReport() {
               couponByAdmin,
               couponByRestaurant,
               offerByRestaurant,
+              restaurantEarning,
               adminCommission,
+              deliveryBoyEarning,
               vatTax,
               deliveryCharge,
               platformFee,
@@ -255,7 +262,9 @@ export default function RegularOrderReport() {
       { key: "couponByAdmin", label: "Coupon by Admin" },
       { key: "couponByRestaurant", label: "Coupon by Restaurant" },
       { key: "offerByRestaurant", label: "Offer by Restaurant" },
+      { key: "restaurantEarning", label: "Restaurant Earning" },
       { key: "adminCommission", label: "Admin Commission" },
+      { key: "deliveryBoyEarning", label: "Delivery Boy Earning" },
       { key: "vatTax", label: "VAT/Tax" },
       { key: "deliveryCharge", label: "Delivery Charge" },
       { key: "platformFee", label: "Platform Fee" },
@@ -554,49 +563,55 @@ export default function RegularOrderReport() {
 
           {/* Table */}
           <div className="overflow-x-auto scrollbar-hide">
-            <table className="w-full" style={{ tableLayout: "fixed", width: "100%" }}>
+            <table className="w-full min-w-[1400px]">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "3%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[3%]">
                     SI
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "7%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[7%]">
                     Order Id
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "10%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[8%]">
                     Restaurant
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "9%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[8%]">
                     Customer Name
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "7%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[7%]">
                     Total Item Amount
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "6%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[6%]">
                     Coupon by Admin
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "6%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[6%]">
                     Coupon by Restaurant
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "6%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[6%]">
                     Offer by Restaurant
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "6%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[7%]">
+                    Restaurant Earning
+                  </th>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[6%]">
                     Admin Commission
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "5%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[6%]">
+                    Delivery Boy Earning
+                  </th>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[5%]">
                     Vat/Tax
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "6%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[6%]">
                     Delivery Charge
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "6%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[6%]">
                     Platform Fee
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "7%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[7%]">
                     Order Amount
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "5%" }}>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider w-[5%]">
                     Status
                   </th>
                 </tr>
@@ -641,7 +656,13 @@ export default function RegularOrderReport() {
                         <span className="text-[10px] text-purple-600 font-medium">{formatAmount(order.offerByRestaurant)}</span>
                       </td>
                       <td className="px-1.5 py-1">
+                        <span className="text-[10px] text-emerald-600 font-semibold">{formatAmount(order.restaurantEarning)}</span>
+                      </td>
+                      <td className="px-1.5 py-1">
                         <span className="text-[10px] text-blue-600 font-semibold">{formatAmount(order.adminCommission)}</span>
+                      </td>
+                      <td className="px-1.5 py-1">
+                        <span className="text-[10px] text-amber-600 font-semibold">{formatAmount(order.deliveryBoyEarning)}</span>
                       </td>
                       <td className="px-1.5 py-1">
                         <span className="text-[10px] text-slate-700">{formatAmount(order.vatTax)}</span>

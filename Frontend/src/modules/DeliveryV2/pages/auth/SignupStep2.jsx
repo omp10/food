@@ -116,18 +116,17 @@ export default function SignupStep2() {
     sessionStorage.setItem("deliverySignupDocs", JSON.stringify(uploadedDocs))
   }, [uploadedDocs])
 
+  const previewUrlsRefs = useRef({});
+
   useEffect(() => {
     return () => {
-      Object.values(documents).forEach((file) => {
-        if (file instanceof File) {
-          const previewUrl = file.previewUrl || file._previewUrl
-          if (previewUrl) {
-            URL.revokeObjectURL(previewUrl)
-          }
+      Object.values(previewUrlsRefs.current).forEach((url) => {
+        if (url) {
+          URL.revokeObjectURL(url)
         }
       })
     }
-  }, [documents])
+  }, [])
 
   const getPreviewSrc = (docType) => {
     const uploaded = uploadedDocs[docType]
@@ -138,6 +137,7 @@ export default function SignupStep2() {
     if (localFile instanceof File) {
       if (!localFile._previewUrl) {
         localFile._previewUrl = URL.createObjectURL(localFile)
+        previewUrlsRefs.current[docType] = localFile._previewUrl
       }
       return localFile._previewUrl
     }
@@ -177,6 +177,10 @@ export default function SignupStep2() {
   }
 
   const handleRemove = (docType) => {
+    if (previewUrlsRefs.current[docType]) {
+      URL.revokeObjectURL(previewUrlsRefs.current[docType])
+      delete previewUrlsRefs.current[docType]
+    }
     setDocuments(prev => ({
       ...prev,
       [docType]: null
