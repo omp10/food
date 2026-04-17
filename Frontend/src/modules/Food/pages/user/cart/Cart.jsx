@@ -1106,6 +1106,15 @@ export default function Cart() {
         : appliedCoupon?.type === "restaurant-auto-offer"
           ? appliedCoupon
           : null
+  
+  // Hide offer if it's already been used (check feedback from backend)
+  // If backend returns null for autoAppliedOffer, it means the offer was filtered out (e.g., already used)
+  const shouldShowRestaurantOffer = autoAppliedRestaurantOffer && 
+    !pricing?.autoOfferFeedback?.reason?.includes('used') &&
+    !pricing?.autoOfferFeedback?.reason?.includes('limit') &&
+    !pricing?.autoOfferFeedback?.reason?.includes('per_user')
+  
+  const displayedRestaurantOffer = shouldShowRestaurantOffer ? autoAppliedRestaurantOffer : null
   const totalBeforeDiscount = subtotal + deliveryFee + platformFee + gstCharges
   
   // Calculate effective discount based on mutual exclusivity
@@ -2285,19 +2294,19 @@ export default function Cart() {
                   </div>
                 )}
 
-                {autoAppliedRestaurantOffer ? (
+                {displayedRestaurantOffer ? (
                   <div className="px-4 py-3 md:px-6 md:py-4 flex items-center justify-between border-b border-dashed border-gray-200 dark:border-gray-800">
                     <div className="flex items-start gap-3 flex-1">
                       <Percent className="h-5 w-5 mt-0.5" style={{ color: BRAND_THEME.colors.brand.primary }} />
                       <div className="flex-1">
                         <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                           {displayedAppliedCoupon 
-                            ? `'${autoAppliedRestaurantOffer.title || "Offer"}' available`
-                            : `'${autoAppliedRestaurantOffer.title || "Offer"}' auto-applied`}
+                            ? `'${displayedRestaurantOffer.title || "Offer"}' available`
+                            : `'${displayedRestaurantOffer.title || "Offer"}' auto-applied`}
                         </p>
                         <p className="text-xs font-medium mt-0.5" style={{ color: BRAND_THEME.colors.brand.primary }}>
                           {displayedAppliedCoupon 
-                            ? `Apply to save ${RUPEE_SYMBOL}${autoAppliedRestaurantOffer.discount || autoAppliedRestaurantOffer.amount || 0}`
+                            ? `Apply to save ${RUPEE_SYMBOL}${displayedRestaurantOffer.discount || displayedRestaurantOffer.amount || 0}`
                             : `You saved ${RUPEE_SYMBOL}${autoOfferDiscount}`}
                         </p>
                       </div>

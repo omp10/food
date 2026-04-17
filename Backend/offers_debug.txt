@@ -1,0 +1,12 @@
+
+[2026-04-17T07:26:56.547Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T07:26:56.777Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T07:27:47.308Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T07:27:47.603Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T07:28:01.736Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c
+
+[2026-04-17T07:28:02.005Z] auth header: Present, req.user: {"userId":"69c1264e755c891e06f5379c","role":"USER"}, userId: 69c1264e755c891e06f5379c

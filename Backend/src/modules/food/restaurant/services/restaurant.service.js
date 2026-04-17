@@ -4,6 +4,7 @@ import { ValidationError } from '../../../../core/auth/errors.js';
 import mongoose from 'mongoose';
 import { FoodZone } from '../../admin/models/zone.model.js';
 import { FoodOffer } from '../../admin/models/offer.model.js';
+import { FoodOfferUsage } from '../../admin/models/offerUsage.model.js';
 
 const normalizeName = (value) =>
     String(value || '')
@@ -1276,7 +1277,7 @@ export const getApprovedRestaurantByIdOrSlug = async (idOrSlug) => {
     };
 };
 
-export const listPublicOffers = async () => {
+export const listPublicOffers = async (query = {}, userId = null) => {
     const now = new Date();
     const filter = {
         status: 'active',
@@ -1288,10 +1289,36 @@ export const listPublicOffers = async () => {
         showInCart: { $ne: false }
     };
 
-    const list = await FoodOffer.find(filter)
+    let list = await FoodOffer.find(filter)
         .sort({ createdAt: -1 })
         .populate({ path: 'restaurantId', select: 'restaurantName restaurantNameNormalized profileImage estimatedDeliveryTime rating' })
         .lean();
+
+    // 1. Filter globally exhausted coupons
+    list = list.filter(o => {
+        if (!o.usageLimit) return true; // null, 0, or missing means unlimited
+        const used = o.usedCount || 0;
+        return used < o.usageLimit;
+    });
+
+    // 2. If userId is provided, filter based on personal usage limits
+    if (userId && list.length > 0) {
+        const offerIds = list.map((o) => o._id);
+        const usages = await FoodOfferUsage.find({
+            userId: new mongoose.Types.ObjectId(String(userId)),
+            offerId: { $in: offerIds }
+        }).lean();
+
+        const usageMap = new Map(usages.map((u) => [String(u.offerId), u.count]));
+
+        list = list.filter((o) => {
+            if (o.perUserLimit != null && o.perUserLimit > 0) {
+                const userCount = usageMap.get(String(o._id)) || 0;
+                return userCount < o.perUserLimit;
+            }
+            return true;
+        });
+    }
 
     const allOffers = list.map((o) => {
         const restaurant = o.restaurantId && typeof o.restaurantId === 'object' ? o.restaurantId : null;

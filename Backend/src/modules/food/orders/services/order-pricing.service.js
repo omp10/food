@@ -30,6 +30,13 @@ const calculateRestaurantOfferDiscount = (offer, eligibleSubtotal) => {
 };
 
 const findApplicableRestaurantAutoOffer = async (restaurantId, items = [], userId = null) => {
+  console.log('🔍 Finding restaurant offer:', {
+    restaurantId,
+    itemCount: items.length,
+    userId: userId || 'NOT PROVIDED',
+    userIdType: typeof userId
+  });
+  
   const normalizedRestaurantId = String(restaurantId || '').trim();
   if (
     !normalizedRestaurantId ||
@@ -80,8 +87,20 @@ const findApplicableRestaurantAutoOffer = async (restaurantId, items = [], userI
         offerId: offer._id,
         userId,
       }).lean();
+      
+      console.log('🔍 Checking offer usage:', {
+        offerTitle: offer.title,
+        offerId: offer._id,
+        userId,
+        perUserLimit: offer.perUserLimit,
+        currentUsage: usage?.count || 0,
+        shouldSkip: usage && Number(usage.count) >= Number(offer.perUserLimit)
+      });
+      
       if (usage && Number(usage.count) >= Number(offer.perUserLimit)) {
-        continue;
+        console.log('⏭️  Skipping offer - user already used it');
+        // Don't show this offer at all - return null immediately
+        return null;
       }
     }
 
