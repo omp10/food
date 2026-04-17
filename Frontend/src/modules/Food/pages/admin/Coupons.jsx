@@ -142,6 +142,9 @@ export default function Coupons() {
     if (pct && f.maxDiscount !== "" && Number(f.maxDiscount) <= 0) e.maxDiscount = "Max discount must be greater than 0"
     if (f.usageLimit !== "" && Number(f.usageLimit) < 1) e.usageLimit = "Usage limit must be at least 1"
     if (f.perUserLimit !== "" && Number(f.perUserLimit) < 1) e.perUserLimit = "Per user limit must be at least 1"
+    if (f.usageLimit !== "" && f.perUserLimit !== "" && Number(f.usageLimit) < Number(f.perUserLimit)) {
+      e.usageLimit = "Usage limit cannot be less than per user limit"
+    }
     const start = f.startDate ? new Date(`${f.startDate}T00:00:00`) : null
     const end = f.endDate ? new Date(`${f.endDate}T00:00:00`) : null
     const now = new Date()
@@ -1105,4 +1108,3 @@ export default function Coupons() {
     </div>
   )
 }
-
