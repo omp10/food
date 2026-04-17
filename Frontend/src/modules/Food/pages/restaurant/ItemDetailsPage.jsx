@@ -1197,7 +1197,8 @@ export default function ItemDetailsPage() {
               <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-bold text-gray-900">Select category</h2>
                 <div className="flex items-center gap-2">
-                  <button
+                  {/* COMMENTED OUT: Only admins can create categories now */}
+                  {/* <button
                     onClick={() => {
                       setIsCategoryPopupOpen(false)
                       navigate('/restaurant/menu-categories')
@@ -1208,7 +1209,7 @@ export default function ItemDetailsPage() {
                   >
                     <Plus className="w-4 h-4" />
                     <span className="text-sm font-medium">Add</span>
-                  </button>
+                  </button> */}
                   <button
                     onClick={() => setIsCategoryPopupOpen(false)}
                     className="p-1 rounded-full hover:bg-gray-100"

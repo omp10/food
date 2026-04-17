@@ -445,7 +445,8 @@ export default function Category() {
                 <th className="w-[15%] px-4 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-600">Zone</th>
                 <th className="w-[10%] px-4 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-slate-600">Diet</th>
                 <th className="w-[10%] px-4 py-4 text-center text-[11px] font-bold uppercase tracking-wider text-slate-600">Status</th>
-                <th className="w-[13%] px-4 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-600">Approval</th>
+                {/* COMMENTED OUT: Approval column removed - categories are auto-approved */}
+                {/* <th className="w-[13%] px-4 py-4 text-left text-[11px] font-bold uppercase tracking-wider text-slate-600">Approval</th> */}
                 <th className="w-[20%] px-5 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-slate-600">Actions</th>
               </tr>
             </thead>
@@ -529,7 +530,8 @@ export default function Category() {
                           <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${category?.status ? "translate-x-6" : "translate-x-1"}`} />
                         </button>
                       </td>
-                      <td className="px-4 py-5">
+                      {/* COMMENTED OUT: Approval column removed - categories are auto-approved */}
+                      {/* <td className="px-4 py-5">
                         <div className="space-y-2">
                           <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${approvalBadgeClass(approvalStatus)}`}>
                             {approvalStatus === "approved" && <BadgeCheck className="mr-1 h-3.5 w-3.5" />}
@@ -539,11 +541,12 @@ export default function Category() {
                             <p className="max-w-[180px] text-xs leading-5 text-rose-600">{category.rejectionReason}</p>
                           )}
                         </div>
-                      </td>
+                      </td> */}
                       <td className="px-5 py-5">
                         <div className="flex flex-col items-end gap-2">
                           <div className="flex flex-wrap justify-end gap-2">
-                            {approvalStatus !== "approved" && (
+                            {/* COMMENTED OUT: Categories are auto-approved now */}
+                            {/* {approvalStatus !== "approved" && (
                               <button
                                 onClick={() => handleApprove(category.id)}
                                 className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm"
@@ -558,7 +561,7 @@ export default function Category() {
                               >
                                 Reject
                               </button>
-                            )}
+                            )} */}
                             {isRestaurantCategory && !category?.isGlobal && approvalStatus === "approved" && (
                               <button
                                 onClick={() => handleMakeGlobal(category)}

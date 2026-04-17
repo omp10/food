@@ -398,8 +398,9 @@ export default function EditFoodPage() {
     )
 
     if (!matchedCategory?.id) {
-      toast.error("Please select a valid menu category first")
-      navigate("/restaurant/menu-categories")
+      toast.error("Please select a valid category from the dropdown")
+      // COMMENTED OUT: Restaurant can't create categories anymore
+      // navigate("/restaurant/menu-categories")
       return
     }
 

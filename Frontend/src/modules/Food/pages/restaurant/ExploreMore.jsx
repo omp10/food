@@ -738,7 +738,8 @@ export default function ExploreMore() {
   const manageOutletItems = [
     { id: 1, label: "Outlet info", icon: Info, route: "/restaurant/outlet-info" },
     { id: 2, label: "Outlet timings", icon: Clock, route: "/restaurant/outlet-timings" },
-    { id: 3, label: "Menu categories", icon: Settings, route: "/restaurant/menu-categories" },
+    // COMMENTED OUT: Only admins can manage categories now
+    // { id: 3, label: "Menu categories", icon: Settings, route: "/restaurant/menu-categories" },
     { id: 4, label: "Coupons", icon: TicketPercent, route: "/restaurant/coupon" },
     { id: 5, label: "Offers", icon: Gift, route: "/restaurant/offers" },
   ]
