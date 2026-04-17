@@ -41,8 +41,15 @@ const scopeBadgeClass = (scope) => {
   return "bg-slate-100 text-slate-700 border-slate-200"
 }
 
-const zoneLabel = (zone) => {
-  if (!zone) return "Global"
+const zoneLabel = (zone, zones = []) => {
+  if (!zone || zone === "global") return "Global (all zones)"
+  
+  const zoneId = typeof zone === "string" ? zone : (zone?._id || zone?.id)
+  if (zoneId && Array.isArray(zones)) {
+    const found = zones.find(z => String(z?._id || z?.id) === String(zoneId))
+    if (found) return found.name || found.zoneName || found.serviceLocation || "Zone"
+  }
+
   if (typeof zone === "string") {
     const value = zone.trim()
     if (/^[a-f0-9]{24}$/i.test(value)) return `Zone ID ${value.slice(-6)}`
@@ -296,7 +303,7 @@ export default function Category() {
         category?.name || "N/A",
         category?.foodTypeScope || "Both",
         category?.isGlobal ? "Global" : "Private",
-        zoneLabel(category?.zoneId),
+        zoneLabel(category?.zoneId, zones),
         category?.approvalStatus || "pending",
       ])
 
@@ -462,7 +469,7 @@ export default function Category() {
                   const creatorName = category?.createdByRestaurant?.name || category?.restaurant?.name || "Admin"
                   const approvalStatus = category?.approvalStatus || "pending"
                   const isRestaurantCategory = Boolean(category?.createdByRestaurantId || category?.restaurantId)
-                  const zoneText = zoneLabel(category?.zoneId)
+                  const zoneText = zoneLabel(category?.zoneId, zones)
 
                   return (
                     <tr key={category.id} className="align-top hover:bg-slate-50/80">

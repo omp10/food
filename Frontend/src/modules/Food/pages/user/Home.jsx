@@ -744,10 +744,18 @@ export default function Home() {
   }, [landingCategories, normalizeImageUrl, slugifyCategory]);
 
   const displayCategories = useMemo(() => {
-    if (realCategories.length > 0) return realCategories;
-    if (menuCategories.length > 0) return menuCategories;
-    return normalizedLandingCategories;
-  }, [menuCategories, realCategories, normalizedLandingCategories]);
+    let source = [];
+    if (realCategories.length > 0) source = realCategories;
+    else if (menuCategories.length > 0) source = menuCategories;
+    else source = normalizedLandingCategories;
+
+    if (vegMode) {
+      return source.filter(
+        (cat) => cat.foodTypeScope === "Veg"
+      );
+    }
+    return source;
+  }, [menuCategories, realCategories, normalizedLandingCategories, vegMode]);
 
   // Swipe functionality for hero banner carousel
   const touchStartX = useRef(0);
@@ -1175,6 +1183,7 @@ export default function Home() {
                   foodImages[idx % foodImages.length] ||
                   foodImages[0],
                 type: cat?.type || "",
+                foodTypeScope: cat?.foodTypeScope || "Both",
               }))
             : []
 
