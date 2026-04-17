@@ -1087,8 +1087,9 @@ export default function Cart() {
   const platformFee = pricing?.platformFee || feeSettings.platformFee
   const gstCharges = pricing?.tax || Math.round(subtotal * (feeSettings.gstRate / 100))
   const discount = pricing?.discount || (appliedCoupon ? Math.min(appliedCoupon.discount, subtotal * 0.5) : 0)
-  const couponDiscount = pricing?.couponDiscount || (appliedCoupon?.type !== "restaurant-auto-offer" ? (appliedCoupon?.discount || 0) : 0)
-  const autoOfferDiscount = pricing?.autoOfferDiscount || (
+  const displayedAppliedCoupon = appliedCoupon?.type !== "restaurant-auto-offer" ? appliedCoupon : null
+  const couponDiscount = pricing?.couponDiscount || (displayedAppliedCoupon ? (appliedCoupon?.discount || 0) : 0)
+  const autoOfferDiscount = displayedAppliedCoupon ? 0 : (pricing?.autoOfferDiscount || (
     pricing?.autoAppliedOffer?.type === "restaurant-auto-offer"
       ? pricing.autoAppliedOffer.discount || 0
       : pricing?.appliedCoupon?.type === "restaurant-auto-offer"
@@ -1096,7 +1097,7 @@ export default function Cart() {
         : appliedCoupon?.type === "restaurant-auto-offer"
           ? appliedCoupon.discount || 0
           : 0
-  )
+  ))
   const autoAppliedRestaurantOffer =
     pricing?.autoAppliedOffer?.type === "restaurant-auto-offer"
       ? pricing.autoAppliedOffer
@@ -1105,10 +1106,16 @@ export default function Cart() {
         : appliedCoupon?.type === "restaurant-auto-offer"
           ? appliedCoupon
           : null
-  const displayedAppliedCoupon = appliedCoupon?.type !== "restaurant-auto-offer" ? appliedCoupon : null
   const totalBeforeDiscount = subtotal + deliveryFee + platformFee + gstCharges
-  const total = pricing?.total || (totalBeforeDiscount - discount)
-  const savings = pricing?.savings ?? Math.max(0, totalBeforeDiscount - total)
+  
+  // Calculate effective discount based on mutual exclusivity
+  const effectiveDiscount = displayedAppliedCoupon ? couponDiscount : autoOfferDiscount
+  
+  const total = displayedAppliedCoupon 
+    ? (pricing?.total ? (Number(pricing.total) + Number(pricing.autoOfferDiscount || 0)) : totalBeforeDiscount - effectiveDiscount)
+    : (pricing?.total || totalBeforeDiscount - effectiveDiscount)
+    
+  const savings = displayedAppliedCoupon ? couponDiscount : (pricing?.savings ?? Math.max(0, totalBeforeDiscount - total))
   const selectedPaymentLabel =
     selectedPaymentMethod === "wallet"
       ? "Wallet"
@@ -2280,17 +2287,30 @@ export default function Cart() {
 
                 {autoAppliedRestaurantOffer ? (
                   <div className="px-4 py-3 md:px-6 md:py-4 flex items-center justify-between border-b border-dashed border-gray-200 dark:border-gray-800">
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-3 flex-1">
                       <Percent className="h-5 w-5 mt-0.5" style={{ color: BRAND_THEME.colors.brand.primary }} />
-                      <div>
+                      <div className="flex-1">
                         <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                          '{autoAppliedRestaurantOffer.title || "Offer"}' auto-applied
+                          {displayedAppliedCoupon 
+                            ? `'${autoAppliedRestaurantOffer.title || "Offer"}' available`
+                            : `'${autoAppliedRestaurantOffer.title || "Offer"}' auto-applied`}
                         </p>
                         <p className="text-xs font-medium mt-0.5" style={{ color: BRAND_THEME.colors.brand.primary }}>
-                          You saved {RUPEE_SYMBOL}{autoOfferDiscount}
+                          {displayedAppliedCoupon 
+                            ? `Apply to save ${RUPEE_SYMBOL}${autoAppliedRestaurantOffer.discount || autoAppliedRestaurantOffer.amount || 0}`
+                            : `You saved ${RUPEE_SYMBOL}${autoOfferDiscount}`}
                         </p>
                       </div>
                     </div>
+                    {displayedAppliedCoupon && (
+                      <button
+                        onClick={handleRemoveCoupon}
+                        className="border rounded px-3 py-1.5 text-xs font-semibold uppercase tracking-wider shadow-sm ml-2"
+                        style={{ borderColor: BRAND_THEME.colors.brand.primary, color: BRAND_THEME.colors.brand.primary }}
+                      >
+                        APPLY
+                      </button>
+                    )}
                   </div>
                 ) : null}
 

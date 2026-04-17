@@ -117,7 +117,8 @@ export const uploadRestaurantMenuImagesController = async (req, res, next) => {
 
 export const listPublicOffersController = async (req, res, next) => {
     try {
-        const data = await listPublicOffers(req.query || {});
+        const userId = req.user?.userId;
+        const data = await listPublicOffers(req.query || {}, userId);
         return sendResponse(res, 200, 'Offers fetched successfully', data);
     } catch (error) {
         next(error);

@@ -290,7 +290,11 @@ export async function calculateOrderPricing(userId, dto) {
 
   const autoOfferMatch = await findApplicableRestaurantAutoOffer(dto.restaurantId, items, userId);
   let autoOfferFeedback = null;
-  if (autoOfferMatch?.offer && !autoOfferMatch?.invalidReason) {
+  
+  // If user has applied a coupon, don't apply auto-offer (one discount at a time)
+  const hasCouponApplied = codeRaw && appliedCoupon;
+  
+  if (!hasCouponApplied && autoOfferMatch?.offer && !autoOfferMatch?.invalidReason) {
     autoOfferDiscount = autoOfferMatch.discount;
     autoAppliedOffer = {
       code: null,
@@ -313,6 +317,16 @@ export async function calculateOrderPricing(userId, dto) {
       message: Number(autoOfferMatch.maxOfferQuantityPerOrder) > 0
         ? `Only ${Number(autoOfferMatch.maxOfferQuantityPerOrder)} item${Number(autoOfferMatch.maxOfferQuantityPerOrder) > 1 ? 's are' : ' is'} allowed for this offer in one order.`
         : 'This restaurant offer is no longer applicable.',
+    };
+  } else if (hasCouponApplied && autoOfferMatch?.offer) {
+    // Coupon applied, so offer is suppressed
+    autoOfferFeedback = {
+      type: 'restaurant-auto-offer',
+      reason: 'coupon_applied',
+      title: autoOfferMatch.offer?.title || 'Restaurant offer',
+      offerId: String(autoOfferMatch.offer?._id || ''),
+      discount: autoOfferMatch.discount || 0,
+      message: 'Remove coupon to use restaurant offer',
     };
   }
 
