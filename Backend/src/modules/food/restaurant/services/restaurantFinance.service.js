@@ -108,7 +108,20 @@ export async function getRestaurantFinance(restaurantId, query = {}) {
             commission: tx.amounts?.restaurantCommission || 0,
             paymentMethod: tx.paymentMethod || order?.payment?.method,
             orderStatus: order?.orderStatus || order?.deliveryState?.currentPhase || order?.deliveryState?.status,
-            status: tx.status
+            status: tx.status,
+            // Add pricing breakdown for discount display
+            pricing: {
+                subtotal: order?.pricing?.subtotal || 0,
+                packagingFee: order?.pricing?.packagingFee || 0,
+                couponByAdmin: order?.pricing?.couponByAdmin || 0,
+                couponByRestaurant: order?.pricing?.couponByRestaurant || 0,
+                offerByRestaurant: order?.pricing?.offerByRestaurant || 0,
+                tax: order?.pricing?.tax || 0,
+                deliveryFee: order?.pricing?.deliveryFee || 0,
+                platformFee: order?.pricing?.platformFee || 0,
+                total: order?.pricing?.total || 0,
+                restaurantCommission: tx.amounts?.restaurantCommission || 0
+            }
         };
     });
 
@@ -199,7 +212,20 @@ export async function getRestaurantFinance(restaurantId, query = {}) {
                 commission: tx.amounts?.restaurantCommission || 0,
                 paymentMethod: tx.paymentMethod || order?.payment?.method,
                 orderStatus: order?.orderStatus || order?.deliveryState?.currentPhase || order?.deliveryState?.status,
-                status: tx.status
+                status: tx.status,
+                // Add pricing breakdown for discount display
+                pricing: {
+                    subtotal: order?.pricing?.subtotal || 0,
+                    packagingFee: order?.pricing?.packagingFee || 0,
+                    couponByAdmin: order?.pricing?.couponByAdmin || 0,
+                    couponByRestaurant: order?.pricing?.couponByRestaurant || 0,
+                    offerByRestaurant: order?.pricing?.offerByRestaurant || 0,
+                    tax: order?.pricing?.tax || 0,
+                    deliveryFee: order?.pricing?.deliveryFee || 0,
+                    platformFee: order?.pricing?.platformFee || 0,
+                    total: order?.pricing?.total || 0,
+                    restaurantCommission: tx.amounts?.restaurantCommission || 0
+                }
             };
         });
 
