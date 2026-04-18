@@ -29,11 +29,27 @@ export default function AddOfferPage() {
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [loadingExisting, setLoadingExisting] = useState(false)
   const [showProductsModal, setShowProductsModal] = useState(false)
+  const [allOffers, setAllOffers] = useState([])
 
   const selectedProducts = useMemo(
     () => products.filter((product) => form.productIds.includes(String(product.id))),
     [products, form.productIds]
   )
+
+  const occupiedProductIds = useMemo(() => {
+    const ids = new Set()
+    allOffers.forEach((off) => {
+      // Skip the current offer being edited
+      if (isEditMode && String(off._id || off.id) === String(offerId)) return
+
+      if (Array.isArray(off.productIds)) {
+        off.productIds.forEach((pid) => ids.add(String(pid)))
+      } else if (off.productId) {
+        ids.add(String(off.productId))
+      }
+    })
+    return ids
+  }, [allOffers, isEditMode, offerId])
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -80,6 +96,11 @@ export default function AddOfferPage() {
         }
 
         setProducts(flattened)
+
+        // Also fetch all existing offers to know which products are occupied
+        const offersRes = await restaurantAPI.getRestaurantOffers()
+        const list = offersRes?.data?.data?.offers || offersRes?.data?.offers || []
+        setAllOffers(list)
       } catch (err) {
         setProducts([])
       } finally {
@@ -361,7 +382,9 @@ export default function AddOfferPage() {
                 <div className="py-8 text-center text-sm text-gray-500">No products found</div>
               ) : (
                 <div className="space-y-2">
-                  {products.map((product) => {
+                  {products
+                    .filter((product) => !occupiedProductIds.has(String(product.id)))
+                    .map((product) => {
                     const checked = form.productIds.includes(String(product.id))
                     return (
                       <label
