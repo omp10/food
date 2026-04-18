@@ -1805,6 +1805,34 @@ function RestaurantDetailsContent() {
     return false;
   }
 
+  const injectOffer = (item) => {
+    if (!publicRestaurantOffers || !Array.isArray(publicRestaurantOffers) || publicRestaurantOffers.length === 0) return item;
+    
+    let productOffer = null;
+    for (const offer of publicRestaurantOffers) {
+      if (Array.isArray(offer.products)) {
+        const found = offer.products.find(p => String(p._id || p.id || "") === String(item.id));
+        if (found) {
+          productOffer = offer;
+          break;
+        }
+      } else if (String(offer.productId || "") === String(item.id)) {
+        productOffer = offer;
+        break;
+      }
+    }
+
+    if (productOffer) {
+      return {
+        ...item,
+        originalPrice: item.price,
+        discountAmount: productOffer.discountValue || 0,
+        discountType: productOffer.discountType === "flat-price" ? "Fixed" : "Percent",
+      };
+    }
+    return item;
+  };
+
   // Build renderable sections from the current filter state so section/subsection visibility
   // stays in sync with the actual filtered items shown on screen.
   const getFilteredSections = () => {
@@ -1814,7 +1842,9 @@ function RestaurantDetailsContent() {
       .map((section, index) => {
         const filteredItems = sortMenuItems(
           filterMenuItems(
-            toRenderableArray(section?.items).filter((item) => item?.isAvailable !== false)
+            toRenderableArray(section?.items)
+              .filter((item) => item?.isAvailable !== false)
+              .map(injectOffer)
           )
         )
 
@@ -1823,7 +1853,9 @@ function RestaurantDetailsContent() {
             ...subsection,
             items: sortMenuItems(
               filterMenuItems(
-                toRenderableArray(subsection?.items).filter((item) => item?.isAvailable !== false)
+                toRenderableArray(subsection?.items)
+                  .filter((item) => item?.isAvailable !== false)
+                  .map(injectOffer)
               )
             ),
           }))
@@ -1882,7 +1914,7 @@ function RestaurantDetailsContent() {
 
   const filteredSections = useMemo(
     () => getFilteredSections(),
-    [restaurant?.menuSections, activeUnderPriceLimit, searchQuery, vegMode, filters, selectedMenuCategory]
+    [restaurant?.menuSections, activeUnderPriceLimit, searchQuery, vegMode, filters, selectedMenuCategory, publicRestaurantOffers]
   )
 
   useEffect(() => {
