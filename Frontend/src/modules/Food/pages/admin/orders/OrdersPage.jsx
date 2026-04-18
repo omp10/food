@@ -442,8 +442,10 @@ export default function OrdersPage({ statusKey = "all" }) {
       let displayStatus = order.orderStatus
       if (!backendStatus || backendStatus === "created" || backendStatus === "confirmed") {
         displayStatus = "Pending"
-      } else if (backendStatus === "preparing" || backendStatus === "ready_for_pickup") {
+      } else if (backendStatus === "preparing") {
         displayStatus = "Processing"
+      } else if (backendStatus === "ready_for_pickup") {
+        displayStatus = "Ready"
       } else if (backendStatus === "picked_up") {
         displayStatus = "Food On The Way"
       } else if (backendStatus === "delivered") {
