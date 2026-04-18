@@ -483,7 +483,7 @@ export default function Coupons() {
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4">
             <h1 className="text-2xl font-bold text-slate-900">
-              {isOffersOnly ? "Restaurant Offers" : "Restaurant Offers & Coupons"}
+              {isOffersOnly ? "Restaurant Offers" : "Coupons"}
             </h1>
             {!isOffersOnly && (
               <button

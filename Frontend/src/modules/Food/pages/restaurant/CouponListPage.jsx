@@ -157,9 +157,7 @@ export default function CouponListPage() {
                               >
                                 <button
                                   className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                  disabled={isFinalized}
                                   onClick={() => {
-                                    if (isFinalized) return
                                     setOpenMenuId(null)
                                     navigate(`/restaurant/coupon/${id}/edit`)
                                   }}

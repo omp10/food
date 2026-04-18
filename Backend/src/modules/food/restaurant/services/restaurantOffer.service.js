@@ -29,14 +29,18 @@ const normalizeCouponPayload = (body = {}) => {
         maxDiscount = maxDiscountRaw;
     }
 
-    const usageLimit = body.usageLimit !== undefined ? Number(body.usageLimit) : null;
-    if (usageLimit !== null && (!Number.isFinite(usageLimit) || usageLimit < 0)) {
-        throw new ValidationError('Usage limit must be 0 or greater');
+    const usageLimit = body.usageLimit !== undefined && body.usageLimit !== '' ? Number(body.usageLimit) : null;
+    if (usageLimit !== null && (!Number.isFinite(usageLimit) || usageLimit <= 0)) {
+        throw new ValidationError('Usage limit must be greater than 0');
     }
 
-    const perUserLimit = body.perUserLimit !== undefined ? Number(body.perUserLimit) : null;
-    if (perUserLimit !== null && (!Number.isFinite(perUserLimit) || perUserLimit < 0)) {
-        throw new ValidationError('Per user limit must be 0 or greater');
+    const perUserLimit = body.perUserLimit !== undefined && body.perUserLimit !== '' ? Number(body.perUserLimit) : null;
+    if (perUserLimit !== null && (!Number.isFinite(perUserLimit) || perUserLimit <= 0)) {
+        throw new ValidationError('Per user limit must be greater than 0');
+    }
+
+    if (usageLimit !== null && perUserLimit !== null && usageLimit <= perUserLimit) {
+        throw new ValidationError('Total usage limit must be greater than per-user limit');
     }
 
     const startDate = body.startDate ? new Date(body.startDate) : null;
@@ -167,9 +171,6 @@ export async function updateRestaurantOffer(restaurantId, offerId, body = {}) {
         createdByRestaurantId: restaurantId
     }).lean();
     if (!existing) return null;
-    if (existing.approvalStatus === 'approved') {
-        throw new ValidationError('Approved coupons cannot be edited');
-    }
 
     const payload = normalizeCouponPayload(body);
     // Prevent duplicate coupon codes (excluding current)

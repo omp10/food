@@ -108,8 +108,15 @@ export default function AddCouponPage(props) {
       if (!Number.isFinite(max) || max <= 0) return "Max discount is required for percentage coupons"
     }
     if (form.minOrderValue && Number(form.minOrderValue) < 0) return "Min order cannot be negative"
-    if (form.usageLimit && Number(form.usageLimit) < 0) return "Usage limit must be 0 or more"
-    if (form.perUserLimit && Number(form.perUserLimit) < 0) return "Per user limit must be 0 or more"
+    if (form.usageLimit) {
+      if (Number(form.usageLimit) <= 0) return "Global usage limit must be greater than 0"
+    }
+    if (form.perUserLimit) {
+      if (Number(form.perUserLimit) <= 0) return "Per user limit must be greater than 0"
+    }
+    if (form.usageLimit && form.perUserLimit) {
+      if (Number(form.usageLimit) <= Number(form.perUserLimit)) return "Total usage limit must be greater than per-user limit"
+    }
     if (form.startDate && form.endDate && new Date(form.endDate) <= new Date(form.startDate)) {
       return "End date must be after start date"
     }
@@ -371,7 +378,7 @@ export default function AddCouponPage(props) {
         </Card>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 z-50 md:relative md:border-t-0 md:px-4 md:py-4 md:mt-6">
+      <div className="relative mt-6 z-40 px-4 md:px-0">
         <Button
           onClick={handleSubmit}
           disabled={saving || loading}
