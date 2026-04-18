@@ -2261,7 +2261,12 @@ function RestaurantDetailsContent() {
                       {(() => {
                         const offerProducts =
                           Array.isArray(offer?.products) && offer.products.length > 0
-                            ? offer.products
+                            ? offer.products.map(p => ({
+                                ...p,
+                                originalPrice: p.price,
+                                discountAmount: offer?.discountValue ?? 0,
+                                discountType: offer?.discountType === "flat-price" ? "Fixed" : "Percent",
+                              }))
                             : [
                                 {
                                   id: offer?.productId?._id || offer?.productId || `${idx}-product`,
@@ -2272,6 +2277,9 @@ function RestaurantDetailsContent() {
                                   description: offer?.productId?.description || "",
                                   price: offer?.productId?.price ?? null,
                                   discountedPrice: offer?.productId?.discountedPrice ?? null,
+                                  originalPrice: offer?.productId?.price ?? null,
+                                  discountAmount: offer?.discountValue ?? 0,
+                                  discountType: offer?.discountType === "flat-price" ? "Fixed" : "Percent",
                                 },
                               ]
 
@@ -3389,16 +3397,55 @@ function RestaurantDetailsContent() {
                       >
                         <span>Add item</span>
                         <div className="flex items-center gap-1">
-                          {selectedItem.originalPrice && selectedItem.originalPrice > selectedItem.price && (
-                            <span className="text-sm line-through text-blue-200">
-                              {RUPEE_SYMBOL}{Math.round(selectedItem.originalPrice)}
-                            </span>
-                          )}
-                          <span className="text-base font-bold">
-                            {hasFoodVariants(selectedItem)
-                              ? `${getVariantForDish(selectedItem, selectedVariantId)?.name || "Default"} · ${RUPEE_SYMBOL}${Math.round(getVariantForDish(selectedItem, selectedVariantId)?.price || selectedItem.price)}`
-                              : `${RUPEE_SYMBOL}${Math.round(selectedItem.price)}`}
-                          </span>
+                          {(() => {
+                            let original = null;
+                            let final = null;
+
+                            if (selectedItem?.discountedPrice != null && selectedItem?.price != null && selectedItem.discountedPrice < selectedItem.price) {
+                              original = selectedItem.price;
+                              final = selectedItem.discountedPrice;
+                            } else if (selectedItem?.originalPrice && selectedItem?.discountAmount && selectedItem?.discountAmount > 0) {
+                              original = selectedItem.originalPrice;
+                              let calculatedPrice = selectedItem.originalPrice;
+                              if (selectedItem.discountType === "Percent") {
+                                calculatedPrice = selectedItem.originalPrice - (selectedItem.originalPrice * selectedItem.discountAmount) / 100;
+                              } else if (selectedItem.discountType === "Fixed") {
+                                calculatedPrice = selectedItem.originalPrice - selectedItem.discountAmount;
+                              }
+                              final = Math.max(0, calculatedPrice);
+                            } else if (selectedItem?.originalPrice && selectedItem?.price && selectedItem.originalPrice > selectedItem.price) {
+                              original = selectedItem.originalPrice;
+                              final = selectedItem.price;
+                            }
+
+                            if (hasFoodVariants(selectedItem)) {
+                              const variant = getVariantForDish(selectedItem, selectedVariantId);
+                              return (
+                                <span className="text-base font-bold">
+                                  {variant?.name || "Default"} · {RUPEE_SYMBOL}{Math.round(variant?.price || selectedItem.price)}
+                                </span>
+                              );
+                            }
+
+                            if (original !== null && final !== null && original > final) {
+                              return (
+                                <>
+                                  <span className="text-sm line-through opacity-75">
+                                    {RUPEE_SYMBOL}{Math.round(original)}
+                                  </span>
+                                  <span className="text-base font-bold text-green-200">
+                                    Get at {RUPEE_SYMBOL}{Math.round(final)}
+                                  </span>
+                                </>
+                              );
+                            }
+
+                            return (
+                              <span className="text-base font-bold">
+                                {RUPEE_SYMBOL}{Math.round(selectedItem.price)}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </Button>
                     </div>

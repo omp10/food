@@ -58,8 +58,46 @@ export default function RestaurantFoodCard({
           </div>
         )}
 
-        <div className="flex items-center gap-3 mt-1">
-          {formattedPrice ? <p className="font-semibold text-gray-900 dark:text-white">{formattedPrice}</p> : null}
+        <div className="flex items-center gap-3 mt-1 flex-wrap">
+          {(() => {
+            let original = null;
+            let final = null;
+            const prefix = typeof formattedPrice === "string" && formattedPrice.includes("Starting from") ? "Starting from " : "";
+
+            if (item?.discountedPrice != null && item?.price != null && item.discountedPrice < item.price) {
+              original = item.price;
+              final = item.discountedPrice;
+            } else if (item?.originalPrice && item?.discountAmount && item?.discountAmount > 0) {
+              original = item.originalPrice;
+              let calculatedPrice = item.originalPrice;
+              if (item.discountType === "Percent") {
+                calculatedPrice = item.originalPrice - (item.originalPrice * item.discountAmount) / 100;
+              } else if (item.discountType === "Fixed") {
+                calculatedPrice = item.originalPrice - item.discountAmount;
+              }
+              final = Math.max(0, calculatedPrice);
+            } else if (item?.originalPrice && item?.price && item.originalPrice > item.price) {
+              original = item.originalPrice;
+              final = item.price;
+            }
+
+            if (original !== null && final !== null && original > final) {
+              return (
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-500 line-through text-sm">
+                    {prefix}₹{Math.round(original)}
+                  </p>
+                  <p className="font-bold text-green-600 dark:text-green-500">
+                    Get at ₹{Math.round(final)}
+                  </p>
+                </div>
+              );
+            }
+
+            return formattedPrice ? (
+              <p className="font-semibold text-gray-900 dark:text-white">{formattedPrice}</p>
+            ) : null;
+          })()}
           {item?.preparationTime && String(item.preparationTime).trim() && (
             <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
               <Clock size={12} className="text-gray-500" />
