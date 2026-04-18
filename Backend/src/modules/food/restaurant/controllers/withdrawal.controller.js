@@ -5,10 +5,16 @@ import { getRestaurantFinance } from '../services/restaurantFinance.service.js';
 
 export const createWithdrawalRequestController = async (req, res, next) => {
     try {
-        const restaurantId = req.user?.userId;
+        const ownerId = req.user?.userId;
         const { amount, bankDetails } = req.body;
 
-        if (!restaurantId) return sendError(res, 401, 'Restaurant authentication required');
+        if (!ownerId) return sendError(res, 401, 'Restaurant authentication required');
+
+        // Resolve actual FoodRestaurant ID
+        const restaurantProfile = await FoodRestaurant.findOne({ _id: ownerId }).select('_id').lean();
+        const restaurantId = restaurantProfile?._id;
+
+        if (!restaurantId) return sendError(res, 404, 'Restaurant profile not found');
         if (!amount || amount <= 0) return sendError(res, 400, 'Invalid withdrawal amount');
 
         // Check if restaurant has enough balance
@@ -37,8 +43,16 @@ export const createWithdrawalRequestController = async (req, res, next) => {
 
 export const listMyWithdrawalsController = async (req, res, next) => {
     try {
-        const restaurantId = req.user?.userId;
-        if (!restaurantId) return sendError(res, 401, 'Restaurant authentication required');
+        const ownerId = req.user?.userId;
+        if (!ownerId) return sendError(res, 401, 'Restaurant authentication required');
+
+        // Resolve actual FoodRestaurant ID
+        const restaurantProfile = await FoodRestaurant.findOne({ _id: ownerId }).select('_id').lean();
+        const restaurantId = restaurantProfile?._id;
+
+        if (!restaurantId) {
+            return sendResponse(res, 200, 'Withdrawals fetched successfully', []);
+        }
 
         const withdrawals = await FoodRestaurantWithdrawal.find({ restaurantId })
             .sort({ createdAt: -1 })

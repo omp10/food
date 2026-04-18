@@ -12,6 +12,20 @@ import {
   ShoppingBag,
   Store,
   Menu,
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useNavigate } from "react-router-dom"
+import Lenis from "lenis"
+import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
+import { 
+  Wallet, 
+  DollarSign, 
+  Hand, 
+  SlidersHorizontal,
+  Home,
+  ShoppingBag,
+  Store,
+  Menu,
   Clock,
   CheckCircle,
   TrendingUp,
@@ -21,14 +35,7 @@ import {
 import { Button } from "@food/components/ui/button"
 import { Card, CardContent } from "@food/components/ui/card"
 import { Input } from "@food/components/ui/input"
-import { 
-  getWalletState, 
-  calculateBalances, 
-  createWithdrawRequest,
-  setBalanceAdjusted,
-  getBalanceAdjusted,
-  getTransactionsByType
-} from "@food/utils/walletState"
+import { restaurantAPI } from "@food/api"
 import { formatCurrency } from "@food/utils/currency"
 import BRAND_THEME from "@/config/brandTheme"
 
@@ -36,41 +43,84 @@ export default function WalletPage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState("withdraw")
   const [showAdjustModal, setShowAdjustModal] = useState(false)
-  const [isBalanceAdjusted, setIsBalanceAdjusted] = useState(getBalanceAdjusted())
+  const [isBalanceAdjusted, setIsBalanceAdjusted] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [withdrawAmount, setWithdrawAmount] = useState("")
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("")
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Bank Transfer")
   const [showPaymentDropdown, setShowPaymentDropdown] = useState(false)
   const [showFilterModal, setShowFilterModal] = useState(false)
   const [filterStatus, setFilterStatus] = useState("all")
   
-  // Get wallet state and calculate balances
-  const [walletState, setWalletState] = useState(() => getWalletState())
-  const balances = calculateBalances(walletState)
-  
+  // Real data state
+  const [financeData, setFinanceData] = useState(null)
+  const [withdrawals, setWithdrawals] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+
   const paymentMethods = [
     "Bank Transfer",
-    "PayPal",
-    "Stripe",
-    "Credit Card",
-    "Debit Card"
+    "UPI",
+    "Payout Wallet"
   ]
+
+  // Fetch real data
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const [finRes, withRes] = await Promise.all([
+        restaurantAPI.getFinance(),
+        restaurantAPI.getWithdrawalHistory()
+      ])
+
+      if (finRes.data?.success) setFinanceData(finRes.data.data)
+      
+      const history = withRes?.data?.data || []
+      setWithdrawals(history)
+    } catch (error) {
+      console.error("Error fetching wallet data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  // Derived balances from real data
+  const balances = {
+    withdrawalBalance: financeData?.currentCycle?.estimatedPayout || 0,
+    totalEarning: financeData?.currentCycle?.totalEarnings || 0,
+    pendingWithdraw: withdrawals
+      .filter(w => String(w.status).toLowerCase() === 'pending')
+      .reduce((sum, w) => sum + (w.amount || 0), 0),
+    alreadyWithdraw: withdrawals
+      .filter(w => String(w.status).toLowerCase() === 'approved')
+      .reduce((sum, w) => sum + (w.amount || 0), 0),
+    cashInHand: 0, // Not explicitly tracked in simple restaurant finance yet
+    balanceUnadjusted: 0
+  }
   
   // Get transactions based on active tab and filters
   const getFilteredTransactions = () => {
-    let filtered = activeTab === "withdraw" 
-      ? getTransactionsByType("withdrawal")
-      : getTransactionsByType("payment")
+    let filtered = [...withdrawals]
     
     // Apply status filter
     if (filterStatus !== "all") {
-      filtered = filtered.filter(t => t.status === filterStatus)
+      filtered = filtered.filter(t => {
+        const s = String(t.status).toLowerCase()
+        if (filterStatus === 'Pending') return s === 'pending'
+        if (filterStatus === 'Completed') return s === 'approved'
+        if (filterStatus === 'Failed') return s === 'rejected'
+        return true
+      })
     }
     
     return filtered
   }
   
   const transactions = getFilteredTransactions()
+
 
   // Lenis smooth scrolling
   useEffect(() => {
@@ -92,21 +142,8 @@ export default function WalletPage() {
     }
   }, [])
 
-  // Refresh wallet state when it updates
-  useEffect(() => {
-    const refreshWalletState = () => {
-      setWalletState(getWalletState())
-    }
+  // No longer needed: refreshWalletState listener
 
-    refreshWalletState()
-
-    // Listen for wallet state updates
-    window.addEventListener('walletStateUpdated', refreshWalletState)
-
-    return () => {
-      window.removeEventListener('walletStateUpdated', refreshWalletState)
-    }
-  }, [])
 
   // Close payment dropdown when clicking outside
   useEffect(() => {
@@ -442,12 +479,16 @@ export default function WalletPage() {
 
             {/* Transaction List */}
             <div className="space-y-4">
-              {transactions.map((transaction, index) => (
+              {loading ? (
+                <div className="py-12 text-center text-gray-500">Loading transactions...</div>
+              ) : transactions.length === 0 ? (
+                <div className="py-12 text-center text-gray-500">No transactions found</div>
+              ) : transactions.map((transaction, index) => (
                 <motion.div
-                  key={transaction.id}
+                  key={transaction._id || index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.4 + index * 0.1 }}
+                  transition={{ duration: 0.3, delay: 0.4 + index * 0.05 }}
                   className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
                 >
                   <div className="flex-1">
@@ -455,26 +496,27 @@ export default function WalletPage() {
                       {formatCurrency(transaction.amount)}
                     </p>
                     <p className="text-gray-600 text-sm md:text-base">
-                      {transaction.description}
+                      {transaction.description || `Withdrawal request`}
                     </p>
                   </div>
                   <div className="text-right">
                     <span className={`inline-block text-xs md:text-sm font-medium px-3 py-1 rounded-full mb-2 ${
-                      transaction.status === "Pending" 
+                      String(transaction.status).toLowerCase() === "pending" 
                         ? "bg-blue-100 text-blue-700"
-                        : transaction.status === "Completed"
+                        : String(transaction.status).toLowerCase() === "approved"
                         ? "bg-green-100 text-green-700"
                         : "bg-red-100 text-red-700"
                     }`}>
-                      {transaction.status}
+                      {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                     </span>
                     <p className="text-gray-500 text-xs md:text-sm">
-                      {transaction.date}
+                      {transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
                     </p>
                   </div>
                 </motion.div>
               ))}
             </div>
+
           </div>
         </motion.div>
       </div>
@@ -590,32 +632,10 @@ export default function WalletPage() {
                 <Button
                   className="w-full text-white font-semibold py-3 rounded-lg text-base md:text-lg"
                   style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
-                  onClick={() => {
-                    if (withdrawAmount && selectedPaymentMethod) {
+                  onClick={async () => {
+                    if (withdrawAmount && !submitting) {
                       const amount = parseFloat(withdrawAmount)
                       if (amount > 0 && amount <= balances.withdrawalBalance) {
-                        // Create withdraw request
-                        createWithdrawRequest(amount, selectedPaymentMethod)
-                        setShowWithdrawModal(false)
-                        // Reset form
-                        setWithdrawAmount("")
-                        setSelectedPaymentMethod("")
-                        // Refresh wallet state
-                        setWalletState(getWalletState())
-                      }
-                    }
-                  }}
-                  disabled={!withdrawAmount || !selectedPaymentMethod}
-                >
-                  Send Request
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Cash Adjustment Modal */}
       <AnimatePresence>
         {showAdjustModal && (
           <motion.div
@@ -654,7 +674,6 @@ export default function WalletPage() {
                   style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
                   onClick={() => {
                     setIsBalanceAdjusted(true)
-                    setBalanceAdjusted(true)
                     setShowAdjustModal(false)
                   }}
                 >

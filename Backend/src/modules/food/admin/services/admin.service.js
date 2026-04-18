@@ -5067,8 +5067,9 @@ export async function getWithdrawals(query = {}) {
 export async function updateWithdrawalStatus(id, { status, adminNote, rejectionReason, transactionId }) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) throw new ValidationError('Invalid withdrawal ID');
     
+    const normalizedStatus = String(status).toLowerCase();
     const update = {
-        status: String(status).toLowerCase(),
+        status: normalizedStatus,
         adminNote,
         rejectionReason,
         transactionId,
@@ -5082,6 +5083,35 @@ export async function updateWithdrawalStatus(id, { status, adminNote, rejectionR
     ).populate('restaurantId', 'restaurantName').lean();
 
     if (!updated) throw new ValidationError('Withdrawal request not found');
+
+    // If approved, mark restaurant transactions as settled so they don't reappear in balance
+    if (normalizedStatus === 'approved') {
+        const restaurantId = updated.restaurantId?._id || updated.restaurantId;
+        if (restaurantId) {
+            await FoodTransaction.updateMany(
+                { 
+                    restaurantId, 
+                    'settlement.isRestaurantSettled': { $ne: true },
+                    status: { $in: ['captured', 'authorized'] }
+                },
+                { 
+                    $set: { 
+                        'settlement.isRestaurantSettled': true,
+                        'settlement.restaurantSettledAt': new Date()
+                    },
+                    $push: {
+                        history: {
+                            kind: 'settled',
+                            amount: 0,
+                            at: new Date(),
+                            note: `Settled via withdrawal ${id}`
+                        }
+                    }
+                }
+            );
+        }
+    }
+
     return updated;
 }
 
