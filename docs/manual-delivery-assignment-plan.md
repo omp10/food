@@ -9,11 +9,13 @@ Current requirement:
 3. Restaurant accepts order.
 4. Restaurant prepares food.
 5. Restaurant clicks `Mark as Ready`.
-6. After `Mark as Ready`, order should go to admin for delivery-boy assignment.
+6. Only after `Ready` status, order should appear in admin `Assign Delivery Partner` table.
 7. Delivery boy must **not** be auto-assigned.
-8. Admin should manually choose which delivery boy gets the order.
-9. The selected delivery boy should receive the assignment request.
-10. Admin side should also have a `Resend` button similar to the restaurant resend action.
+8. Restaurant `Accept` step must **not** send any request to delivery boy.
+9. Admin should manually choose which delivery boy gets the order from a modal list.
+10. The selected delivery boy should receive the assignment request only after admin clicks assign.
+11. Admin side should also have a `Resend` button similar to the restaurant resend action.
+12. Assign modal should show only delivery boys from the same zone.
 
 ## Expected Final Flow
 
@@ -34,6 +36,7 @@ Current requirement:
   - no delivery partner broadcast
   - no auto-assign
   - no rider notification
+  - no request should go to delivery boy
 - Order remains only in restaurant processing flow.
 
 ### Stage 3: Restaurant Marks Ready
@@ -43,15 +46,18 @@ Current requirement:
 - Backend should create/admin-trigger a manual dispatch request state.
 - Admin should receive:
   - notification
-  - order visible in admin manual-assignment queue
+  - order visible in admin `Assign Delivery Partner` table
 - Still:
   - no rider auto assignment
   - no public rider broadcast
 
 ### Stage 4: Admin Assigns Delivery Boy
 
-- Admin opens pending ready orders.
-- Admin selects one delivery boy manually.
+- Admin opens pending ready orders from `Assign Delivery Partner` table.
+- Admin clicks assign action.
+- A modal opens with delivery partner list.
+- Modal should show only same-zone delivery boys.
+- Admin selects one delivery boy manually from the modal.
 - Backend updates:
   - `dispatch.status = assigned`
   - `dispatch.deliveryPartnerId = selected rider id`
@@ -78,6 +84,7 @@ Current requirement:
 - Auto search for nearby riders on `confirmed` / `preparing`.
 - Auto broadcast to delivery partners before admin action.
 - Any forced global dispatch mode returning `auto`.
+- Any rider request on restaurant `accept`.
 
 ### Keep
 
@@ -90,7 +97,7 @@ Current requirement:
 ### Order lifecycle rules
 
 - `created` -> restaurant sees order
-- `preparing` -> restaurant working, dispatch still pending manual admin action
+- `preparing` -> restaurant working, no delivery request yet
 - `ready_for_pickup` -> admin assignment required
 - `assigned` -> selected delivery boy notified
 - `accepted` -> delivery boy accepted assignment
@@ -104,6 +111,8 @@ Recommended meaning:
 - admin queue filter should mainly show:
   - `orderStatus = ready_for_pickup`
   - `dispatch.status = unassigned`
+- this queue should power the admin `Assign Delivery Partner` table
+- delivery partner modal should be filtered by order `zoneId`
 
 Optional extra field if needed for clarity:
 
@@ -156,6 +165,7 @@ Admin should have a page/table for:
 - ready orders waiting for delivery assignment
 - assigned orders
 - resend action
+- assign action that opens delivery partner modal
 
 Recommended statuses for UI:
 
@@ -166,8 +176,11 @@ Recommended statuses for UI:
 ### Admin actions needed
 
 - view order
+- click `Assign Delivery Partner`
+- open modal with delivery partner list
+- modal should only show delivery boys from the same zone
 - choose delivery boy
-- assign
+- confirm assign
 - resend
 
 ## Frontend Files Likely Affected
@@ -183,6 +196,7 @@ Recommended statuses for UI:
 
 - Show orders that are `ready_for_pickup` and unassigned.
 - Add clear status for pending admin action.
+- This can become or feed the `Assign Delivery Partner` table.
 
 ### 3. `Frontend/src/modules/Food/components/admin/orders/OrderDetectDeliveryTable.jsx`
 
@@ -190,11 +204,31 @@ Recommended statuses for UI:
   - `Assign`
   - `Resend`
   - `View`
+- `Assign` should open modal, not assign directly.
 
 ### 4. `Frontend/src/modules/Food/components/admin/orders/ViewOrderDetectDeliveryDialog.jsx`
 
 - Add rider assignment UI or connect to a separate assign modal.
 - Show current dispatch info.
+
+### 5. New admin assign modal
+
+Recommended modal behavior:
+
+- open on `Assign` click
+- fetch/list available delivery partners
+- pass order zone id while fetching
+- show only delivery partners from the same zone
+- show name, phone, status, maybe online/offline
+- select one rider
+- click confirm assign
+
+### Zone Rule
+
+- If order belongs to `zoneId = X`, modal should show only delivery boys of `zoneId = X`
+- Delivery boys from other zones should not appear
+- If no delivery boy exists in that zone, modal should show empty state
+- Out-of-zone riders should not be shown as fallback
 
 ### 5. Delivery partner UI
 
@@ -229,6 +263,8 @@ Recommended statuses for UI:
 ### Admin side
 
 - `Get ready orders pending assignment`
+- `Open assign-delivery-partner modal`
+- `Fetch same-zone delivery partners`
 - `Assign delivery boy`
 - `Resend assignment notification`
 
@@ -242,6 +278,7 @@ Recommended statuses for UI:
 
 - Order stays in admin pending queue.
 - No rider sees it.
+- It should remain visible in `Assign Delivery Partner` table until assigned.
 
 ### If admin assigns wrong rider
 
@@ -258,10 +295,10 @@ Recommended statuses for UI:
 
 1. Fix backend flow so no rider auto notification happens on restaurant accept.
 2. Trigger admin notification when restaurant clicks ready.
-3. Complete admin manual assign API.
-4. Add admin resend API.
-5. Update admin UI to show `ready_for_pickup` waiting orders.
-6. Add assign and resend buttons in admin UI.
+3. Ensure ready orders enter admin `Assign Delivery Partner` table.
+4. Complete admin manual assign API.
+5. Add admin assign modal with same-zone delivery partner list.
+6. Add admin resend API.
 7. Verify selected rider alone receives assignment.
 
 ## Success Criteria
@@ -269,8 +306,8 @@ Recommended statuses for UI:
 This feature is complete when:
 
 1. Restaurant accept does not assign or notify riders automatically.
-2. Restaurant `Mark as Ready` sends the order to admin queue.
-3. Admin can manually choose one delivery boy.
+2. Restaurant `Mark as Ready` sends the order to admin `Assign Delivery Partner` table.
+3. Admin can open modal and see only same-zone delivery boys.
 4. Only selected delivery boy gets the order request.
 5. Admin can resend the assignment request.
 6. No auto assignment happens anywhere in the flow.

@@ -95,6 +95,10 @@ const formatOrderDateTime = (dateInput) => {
   }) + `, ${timeStr}`;
 };
 
+const isDispatchAccepted = (orderLike) =>
+  String(orderLike?.dispatch?.status || orderLike?.dispatchStatus || "")
+    .toLowerCase() === "accepted" || Boolean(orderLike?.dispatch?.acceptedAt);
+
 const transformOrderForList = (order) => ({
   orderId: order.orderId || order._id,
   mongoId: order._id,
@@ -110,7 +114,9 @@ const transformOrderForList = (order) => ({
   photoUrl: order.items?.[0]?.image || null,
   photoAlt: order.items?.[0]?.name || "Order",
   paymentMethod: order.paymentMethod || order.payment?.method || null,
-  deliveryPartnerId: order.deliveryPartnerId || null,
+  deliveryPartnerId: isDispatchAccepted(order)
+    ? (order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null)
+    : null,
   dispatchStatus: order.dispatch?.status || null,
   preparingTimestamp: order.tracking?.preparing?.timestamp
     ? new Date(order.tracking.preparing.timestamp)
@@ -2691,6 +2697,7 @@ function OrderCard({
   isMarkingReady = false,
 }) {
   const normalizedStatus = String(status || "").toLowerCase();
+  const isDeliveryAccepted = String(dispatchStatus || "").toLowerCase() === "accepted";
   const isReady = normalizedStatus === "ready";
   const isPreparing = normalizedStatus === "preparing";
   const statusLabel = String(status || "")
@@ -2792,16 +2799,16 @@ function OrderCard({
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span
                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                      deliveryPartnerId
+                      isDeliveryAccepted
                         ? "bg-green-100 text-green-700 border border-green-300"
                         : "bg-orange-100 text-orange-700 border border-orange-300"
                     }`}>
                     <span
                       className={`h-1.5 w-1.5 rounded-full ${
-                        deliveryPartnerId ? "bg-green-500" : "bg-orange-500"
+                        isDeliveryAccepted ? "bg-green-500" : "bg-orange-500"
                       }`}
                     />
-                    {deliveryPartnerId ? "Assigned" : "Not Assigned"}
+                    {isDeliveryAccepted ? "Assigned" : "Not Assigned"}
                   </span>
                   {dispatchStatus !== "accepted" && (
                     <ResendNotificationButton
@@ -2896,7 +2903,9 @@ function PreparingOrders({
                   .join(", ") || "No items",
               photoUrl: order.items?.[0]?.image || null,
               photoAlt: order.items?.[0]?.name || "Order",
-              deliveryPartnerId: order.deliveryPartnerId || null,
+              deliveryPartnerId: isDispatchAccepted(order)
+                ? (order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null)
+                : null,
               dispatchStatus: order.dispatch?.status || null,
               paymentMethod:
                 order.paymentMethod || order.payment?.method || null,
@@ -3201,7 +3210,9 @@ function ReadyOrders({ onSelectOrder, refreshToken = 0 }) {
             photoUrl: order.items?.[0]?.image || null,
             photoAlt: order.items?.[0]?.name || "Order",
             paymentMethod: order.paymentMethod || order.payment?.method || null,
-            deliveryPartnerId: order.deliveryPartnerId || null,
+            deliveryPartnerId: isDispatchAccepted(order)
+              ? (order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null)
+              : null,
             dispatchStatus: order.dispatch?.status || null,
           }));
 
@@ -3316,7 +3327,9 @@ const OutForDeliveryOrders = ({ onSelectOrder, refreshToken = 0 }) => {
             photoUrl: order.items?.[0]?.image || null,
             photoAlt: order.items?.[0]?.name || "Order",
             paymentMethod: order.paymentMethod || order.payment?.method || null,
-            deliveryPartnerId: order.deliveryPartnerId || null,
+            deliveryPartnerId: isDispatchAccepted(order)
+              ? (order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null)
+              : null,
             dispatchStatus: order.dispatch?.status || null,
           }));
 

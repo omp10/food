@@ -247,6 +247,7 @@ router.get('/delivery/support-tickets', adminController.getSupportTickets);
 router.patch('/delivery/support-tickets/:id', adminController.updateSupportTicket);
 router.get('/delivery/partners', adminController.getDeliveryPartners);
 router.get('/delivery/:id', adminController.getDeliveryPartnerById);
+router.patch('/delivery/:id/zone', adminController.updateDeliveryPartnerZone);
 router.patch('/delivery/:id/approve', adminController.approveDeliveryPartner);
 router.patch('/delivery/:id/reject', adminController.rejectDeliveryPartner);
 
@@ -260,6 +261,8 @@ router.delete('/zones/:id', adminController.deleteZone);
 // ----- Orders -----
 router.get('/orders', orderController.listOrdersAdminController);
 router.get('/orders/:orderId', orderController.getOrderByIdAdminController);
+router.post('/orders/:orderId/assign-delivery', orderController.assignDeliveryPartnerController);
+router.post('/orders/:orderId/resend-delivery-notification', orderController.resendAssignedDeliveryNotificationAdminController);
 router.delete('/orders/:orderId', orderController.deleteOrderAdminController);
 
 // ----- CMS Pages (About + legal) -----

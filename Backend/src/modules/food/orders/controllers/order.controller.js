@@ -215,7 +215,8 @@ export async function rejectOrderDeliveryController(req, res, next) {
     try {
         const deliveryPartnerId = req.user?.userId;
         const orderId = req.params.orderId;
-        const order = await orderService.rejectOrderDelivery(orderId, deliveryPartnerId);
+        const reasonType = String(req.body?.reasonType || '').trim().toLowerCase();
+        const order = await orderService.rejectOrderDelivery(orderId, deliveryPartnerId, reasonType);
         return sendResponse(res, 200, 'Order rejected', { order });
     } catch (err) {
         next(err);
@@ -359,8 +360,19 @@ export async function assignDeliveryPartnerController(req, res, next) {
         const adminId = req.user?.userId;
         const orderId = req.params.orderId;
         const dto = validateAssignDeliveryDto(req.body);
-        const order = await orderService.assignDeliveryPartnerAdmin(orderId, dto.deliveryPartnerId, adminId);
+        const order = await orderService.assignDeliveryPartnerAdmin(orderId, dto.deliveryPartnerId, adminId, req.adminAuth || {});
         return sendResponse(res, 200, 'Delivery partner assigned', { order });
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function resendAssignedDeliveryNotificationAdminController(req, res, next) {
+    try {
+        const adminId = req.user?.userId;
+        const orderId = req.params.orderId;
+        const result = await orderService.resendAssignedDeliveryNotificationAdmin(orderId, adminId, req.adminAuth || {});
+        return sendResponse(res, 200, 'Delivery partner notification resent', result);
     } catch (err) {
         next(err);
     }

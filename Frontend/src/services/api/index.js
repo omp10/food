@@ -339,6 +339,12 @@ export const adminAPI = {
     }),
   getDeliveryPartnerById: (id) =>
     apiClient.get(`/food/admin/delivery/${id}`, { contextModule: "admin" }),
+  updateDeliveryPartnerZone: (id, zoneId) =>
+    apiClient.patch(
+      `/food/admin/delivery/${String(id)}/zone`,
+      { zoneId: String(zoneId || "").trim() },
+      { contextModule: "admin" },
+    ),
   approveDeliveryPartner: (id) =>
     apiClient.patch(
       `/food/admin/delivery/${String(id)}/approve`,
@@ -529,6 +535,18 @@ export const adminAPI = {
     apiClient.get(`/food/admin/orders/${String(orderId)}`, {
       contextModule: "admin",
     }),
+  assignDeliveryPartner: (orderId, deliveryPartnerId) =>
+    apiClient.post(
+      `/food/admin/orders/${String(orderId)}/assign-delivery`,
+      { deliveryPartnerId: String(deliveryPartnerId) },
+      { contextModule: "admin" },
+    ),
+  resendDeliveryPartnerNotification: (orderId) =>
+    apiClient.post(
+      `/food/admin/orders/${String(orderId)}/resend-delivery-notification`,
+      {},
+      { contextModule: "admin" },
+    ),
   deleteOrder: (orderId) =>
     apiClient.delete(`/food/admin/orders/${String(orderId)}`, {
       contextModule: "admin",

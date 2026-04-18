@@ -64,7 +64,7 @@ export function subscribeAllDeliveryLocations(onChange, onError) {
   if (typeof onChange !== 'function') return () => {};
   const firebaseApp = ensureFirebaseInitialized({ enableAuth: false, enableRealtimeDb: true });
   if (!firebaseApp || !firebaseRealtimeDb) return () => {};
-  const path = 'delivery';
+  const path = 'delivery_boys';
   const unsub = onValue(
     ref(firebaseRealtimeDb, path),
     (snapshot) => {

@@ -134,6 +134,7 @@ export const adminSidebarMenu = [
     type: "section",
     label: "DELIVERYMAN MANAGEMENT",
     items: [
+      { type: "link", label: "Delivery Boy Heatmap", path: "/admin/food/zone-setup/delivery-boy-view", icon: "MapPin" },
       { type: "link", label: "Delivery Cash Limit", path: "/admin/food/delivery-cash-limit", icon: "IndianRupee" },
       { type: "link", label: "Delivery & Platform Fee", path: "/admin/food/fee-settings", icon: "DollarSign" },
       { type: "link", label: "Cash limit settlement", path: "/admin/food/cash-limit-settlement", icon: "Receipt" },

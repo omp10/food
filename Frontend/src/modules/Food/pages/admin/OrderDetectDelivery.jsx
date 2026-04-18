@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState, useEffect, useRef } from "react"
 import { Package, Truck, CheckCircle, Clock, XCircle, Loader2 } from "lucide-react"
 import { adminAPI } from "@food/api"
 import { toast } from "sonner"
@@ -6,11 +6,38 @@ import BRAND_THEME from "@/config/brandTheme"
 import OrdersTopbar from "@food/components/admin/orders/OrdersTopbar"
 import OrderDetectDeliveryTable from "@food/components/admin/orders/OrderDetectDeliveryTable"
 import ViewOrderDetectDeliveryDialog from "@food/components/admin/orders/ViewOrderDetectDeliveryDialog"
+import AssignDeliveryPartnerDialog from "@food/components/admin/orders/AssignDeliveryPartnerDialog"
 import SettingsDialog from "@food/components/admin/orders/SettingsDialog"
 import { useGenericTableManagement } from "@food/components/admin/orders/useGenericTableManagement"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
+const DELIVERY_ACCEPT_TIMEOUT_SECONDS = Math.max(
+  15,
+  Number(import.meta?.env?.VITE_DELIVERY_ACCEPT_TIMEOUT_SECONDS) || 60,
+)
+
+const hasAssignmentTimeoutElapsed = (assignedAt) => {
+  if (!assignedAt) return false
+  const assignedAtMs = new Date(assignedAt).getTime()
+  if (!Number.isFinite(assignedAtMs)) return false
+  return Date.now() - assignedAtMs >= DELIVERY_ACCEPT_TIMEOUT_SECONDS * 1000
+}
+
+const normalizeId = (value) => {
+  if (!value) return ""
+  if (typeof value === "string") return value.trim()
+  if (typeof value === "number") return String(value)
+  if (typeof value === "object") {
+    if (value?._id) return normalizeId(value._id)
+    if (value?.$oid) return String(value.$oid).trim()
+    if (typeof value.toString === "function") {
+      const raw = String(value.toString()).trim()
+      if (raw && raw !== "[object Object]") return raw
+    }
+  }
+  return ""
+}
 
 const getOrderStatus = (order) => String(order?.orderStatus || order?.status || "").toLowerCase()
 const isCancelledOrder = (status, cancelledAt) =>
@@ -20,10 +47,32 @@ const isCancelledOrder = (status, cancelledAt) =>
   status === "cancelled_by_admin" ||
   Boolean(cancelledAt)
 
+const getDeliveryPartnerFallbackReason = (order) => {
+  const history = Array.isArray(order?.statusHistory) ? order.statusHistory : []
+  if (!history.length) return null
+
+  // Most recent partner action that returned assignment back to queue.
+  const latestPartnerUnassign = [...history]
+    .reverse()
+    .find((entry) => {
+      const byRole = String(entry?.byRole || "").toUpperCase()
+      const from = String(entry?.from || "").toLowerCase()
+      const to = String(entry?.to || "").toLowerCase()
+      return byRole === "DELIVERY_PARTNER" && from === "assigned" && to === "unassigned"
+    })
+
+  if (!latestPartnerUnassign) return null
+
+  const note = String(latestPartnerUnassign?.note || "").toLowerCase()
+  if (note.includes("timed out") || note.includes("timeout")) return "timed_out"
+  if (note.includes("pass") || note.includes("reject")) return "passed"
+  return null
+}
+
 // Function to map backend order status to frontend display status
 const mapOrderStatus = (order) => {
   const status = getOrderStatus(order)
-  const { deliveryPartnerName, deliveryState, cancelledAt } = order
+  const { deliveryPartnerName, deliveryState, cancelledAt, dispatch } = order
 
   // If cancelled, show as Rejected
   if (isCancelledOrder(status, cancelledAt)) {
@@ -49,6 +98,24 @@ const mapOrderStatus = (order) => {
     return "Order ID Accepted"
   }
 
+  const partnerFallbackReason = getDeliveryPartnerFallbackReason(order)
+
+  if (status === "ready_for_pickup" && dispatch?.status === "unassigned" && partnerFallbackReason === "timed_out") {
+    return "Delivery Request Timed Out"
+  }
+
+  if (status === "ready_for_pickup" && dispatch?.status === "unassigned" && partnerFallbackReason === "passed") {
+    return "Delivery Boy Passed"
+  }
+
+  if (status === "ready_for_pickup" && dispatch?.status === "unassigned") {
+    return "Ready for Assignment"
+  }
+
+  if (dispatch?.status === "accepted") {
+    return "Assignment Accepted"
+  }
+
   // If delivery boy is assigned
   if (deliveryPartnerName) {
     return "Delivery Boy Assigned"
@@ -60,7 +127,7 @@ const mapOrderStatus = (order) => {
     'pending': 'Ordered',
     'confirmed': 'Restaurant Accepted',
     'preparing': 'Restaurant Accepted',
-    'ready_for_pickup': 'Restaurant Accepted',
+    'ready_for_pickup': 'Ready for Assignment',
     'ready': 'Restaurant Accepted',
     'picked_up': 'Order ID Accepted',
     'out_for_delivery': 'Order ID Accepted',
@@ -124,6 +191,20 @@ const buildStatusHistory = (order) => {
       timestamp: formatTimestamp(deliveryState?.acceptedAt) || formatTimestamp(order.updatedAt) || "N/A",
       deliveryBoy: deliveryPartnerName || "Delivery Boy",
       deliveryBoyNumber: deliveryPartnerPhone || "N/A"
+    })
+  }
+
+  const fallbackReason = getDeliveryPartnerFallbackReason(order)
+  if (status === "ready_for_pickup" && String(order?.dispatch?.status || "").toLowerCase() === "unassigned" && fallbackReason === "passed") {
+    history.push({
+      status: "Delivery Boy Passed",
+      timestamp: formatTimestamp(order.updatedAt) || "N/A"
+    })
+  }
+  if (status === "ready_for_pickup" && String(order?.dispatch?.status || "").toLowerCase() === "unassigned" && fallbackReason === "timed_out") {
+    history.push({
+      status: "Delivery Request Timed Out",
+      timestamp: formatTimestamp(order.updatedAt) || "N/A"
     })
   }
 
@@ -245,9 +326,18 @@ const transformOrder = (order, index) => {
   const displayStatus = mapOrderStatus(normalizedOrder)
   const statusHistory = buildStatusHistory(normalizedOrder)
 
+  const assignmentTimedOut = hasAssignmentTimeoutElapsed(order?.dispatch?.assignedAt)
+
   return {
     sl: index + 1,
+    orderMongoId: order._id,
     orderId: order.orderId,
+    zoneId:
+      normalizeId(order?.zoneId?._id) ||
+      normalizeId(order?.zoneId) ||
+      normalizeId(restaurant?.zoneId?._id) ||
+      normalizeId(restaurant?.zoneId) ||
+      "",
     userName: order.customerName || order.userName || user?.name || 'Unknown',
     userNumber: order.customerPhone || order.userNumber || user?.phone || order.deliveryAddress?.phone || 'N/A',
     restaurantName: order.restaurantName || order.restaurant || restaurant?.restaurantName || 'Unknown Restaurant',
@@ -257,6 +347,16 @@ const transformOrder = (order, index) => {
     statusHistory: statusHistory,
     orderDate: dateStr,
     orderTime: timeStr,
+    dispatchStatus: order?.dispatch?.status || "unassigned",
+    rawOrderStatus: order?.orderStatus || order?.status || "",
+    canAssign:
+      String(order?.orderStatus || "").toLowerCase() === "ready_for_pickup" &&
+      String(order?.dispatch?.status || "unassigned").toLowerCase() === "unassigned",
+    canResend:
+      String(order?.orderStatus || "").toLowerCase() === "ready_for_pickup" &&
+      String(order?.dispatch?.status || "").toLowerCase() === "assigned" &&
+      assignmentTimedOut &&
+      Boolean(order?.dispatch?.deliveryPartnerId),
     // Keep original order data for detail view
     originalOrder: order
   }
@@ -276,42 +376,86 @@ export default function OrderDetectDelivery() {
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false)
+  const [selectedOrderForAssignment, setSelectedOrderForAssignment] = useState(null)
+  const [actionLoadingKey, setActionLoadingKey] = useState("")
+  const orderStatusRef = useRef(new Map())
+
+  const fetchOrders = async ({ silent = false } = {}) => {
+    try {
+      if (!silent) setIsLoading(true)
+      setError(null)
+      const params = {
+        page: 1,
+        limit: 1000,
+      }
+
+      const response = await adminAPI.getOrders(params)
+
+      if (response.data?.success && response.data?.data?.orders) {
+        const transformedOrders = response.data.data.orders.map((order, index) =>
+          transformOrder(order, index)
+        )
+        setOrders(transformedOrders)
+      } else {
+        debugError("Failed to fetch orders:", response.data)
+        setError(response.data?.message || "Failed to fetch orders")
+        toast.error("Failed to fetch orders")
+        setOrders([])
+      }
+    } catch (error) {
+      debugError("Error fetching orders:", error)
+      setError(error.response?.data?.message || "Failed to fetch orders")
+      toast.error(error.response?.data?.message || "Failed to fetch orders")
+      setOrders([])
+    } finally {
+      if (!silent) setIsLoading(false)
+    }
+  }
 
   // Fetch orders from backend
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        const params = {
-          page: 1,
-          limit: 1000, // Fetch all orders for now
-        }
-        
-        const response = await adminAPI.getOrders(params)
-        
-        if (response.data?.success && response.data?.data?.orders) {
-          const transformedOrders = response.data.data.orders.map((order, index) => 
-            transformOrder(order, index)
-          )
-          setOrders(transformedOrders)
-        } else {
-          debugError("Failed to fetch orders:", response.data)
-          setError(response.data?.message || "Failed to fetch orders")
-          toast.error("Failed to fetch orders")
-          setOrders([])
-        }
-      } catch (error) {
-        debugError("Error fetching orders:", error)
-        setError(error.response?.data?.message || "Failed to fetch orders")
-        toast.error(error.response?.data?.message || "Failed to fetch orders")
-        setOrders([])
-      } finally {
-        setIsLoading(false)
+    fetchOrders()
+  }, [])
+
+  useEffect(() => {
+    if (!Array.isArray(orders) || orders.length === 0) return
+
+    const nextMap = new Map(orderStatusRef.current)
+    for (const order of orders) {
+      const key = String(order?.orderMongoId || order?.orderId || "").trim()
+      if (!key) continue
+
+      const currentStatus = String(order?.status || "").trim()
+      const previousStatus = nextMap.get(key)
+      const isPassedNow = currentStatus === "Delivery Boy Passed"
+      const wasPassedBefore = previousStatus === "Delivery Boy Passed"
+      const isTimedOutNow = currentStatus === "Delivery Request Timed Out"
+      const wasTimedOutBefore = previousStatus === "Delivery Request Timed Out"
+
+      if (isPassedNow && !wasPassedBefore) {
+        toast.error(
+          `Delivery boy passed order #${order?.orderId || key}. Please reassign.`,
+        )
       }
+      if (isTimedOutNow && !wasTimedOutBefore) {
+        toast.warning(
+          `Delivery request timed out for order #${order?.orderId || key}. Please reassign.`,
+        )
+      }
+
+      nextMap.set(key, currentStatus)
     }
 
-    fetchOrders()
+    orderStatusRef.current = nextMap
+  }, [orders])
+
+  // Keep action availability (like resend/reassign after timeout) fresh.
+  useEffect(() => {
+    const id = setInterval(() => {
+      fetchOrders({ silent: true })
+    }, 3000)
+    return () => clearInterval(id)
   }, [])
 
   const {
@@ -347,14 +491,28 @@ export default function OrderDetectDelivery() {
     const ordered = filteredData.filter(o => o.status === "Ordered").length
     const restaurantAccepted = filteredData.filter(o => o.status === "Restaurant Accepted" || o.status === "Accepted").length
     const rejected = filteredData.filter(o => o.status === "Rejected").length
+    const readyForAssignment = filteredData.filter(o => o.status === "Ready for Assignment").length
     const deliveryBoyAssigned = filteredData.filter(o => o.status === "Delivery Boy Assigned").length
+    const assignmentAccepted = filteredData.filter(o => o.status === "Assignment Accepted").length
     const reachedPickup = filteredData.filter(o => o.status === "Delivery Boy Reached Pickup" || o.status === "Reached Pickup").length
     const orderIdAccepted = filteredData.filter(o => o.status === "Order ID Accepted").length
     const reachedDrop = filteredData.filter(o => o.status === "Reached Drop").length
     const delivered = filteredData.filter(o => o.status === "Ordered Delivered").length
     
-    return { total, ordered, restaurantAccepted, rejected, deliveryBoyAssigned, reachedPickup, orderIdAccepted, reachedDrop, delivered }
+    return { total, ordered, restaurantAccepted, rejected, readyForAssignment, deliveryBoyAssigned, assignmentAccepted, reachedPickup, orderIdAccepted, reachedDrop, delivered }
   }, [filteredData, orders.length])
+
+  const handleOpenAssignDialog = (order) => {
+    setSelectedOrderForAssignment(order)
+    setIsAssignDialogOpen(true)
+  }
+
+  const handleResend = async (order) => {
+    if (!order?.orderMongoId) return
+    setSelectedOrderForAssignment(order)
+    setIsAssignDialogOpen(true)
+    toast.info("Reassign delivery partner for this order")
+  }
 
   const resetColumns = () => {
     setVisibleColumns({
@@ -463,11 +621,33 @@ export default function OrderDetectDelivery() {
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
           <div className="flex items-center justify-between">
             <div>
+              <p className="text-sm text-slate-500 mb-1">Ready For Assignment</p>
+              <p className="text-2xl font-bold text-violet-600">{stats.readyForAssignment}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-violet-50">
+              <Truck className="w-6 h-6 text-violet-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div className="flex items-center justify-between">
+            <div>
               <p className="text-sm text-slate-500 mb-1">Delivery Boy Assigned</p>
               <p className="text-2xl font-bold text-purple-600">{stats.deliveryBoyAssigned}</p>
             </div>
             <div className="p-3 bg-purple-50 rounded-lg">
               <Truck className="w-6 h-6 text-purple-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500 mb-1">Assignment Accepted</p>
+              <p className="text-2xl font-bold text-emerald-600">{stats.assignmentAccepted}</p>
+            </div>
+            <div className="p-3 bg-emerald-50 rounded-lg">
+              <CheckCircle className="w-6 h-6 text-emerald-600" />
             </div>
           </div>
         </div>
@@ -538,11 +718,20 @@ export default function OrderDetectDelivery() {
         onOpenChange={setIsViewOrderOpen}
         order={selectedOrder}
       />
+      <AssignDeliveryPartnerDialog
+        isOpen={isAssignDialogOpen}
+        onOpenChange={setIsAssignDialogOpen}
+        order={selectedOrderForAssignment}
+        onAssigned={() => fetchOrders({ silent: true })}
+      />
       <OrderDetectDeliveryTable 
         orders={filteredData} 
         visibleColumns={visibleColumns}
         onViewOrder={handleViewOrder}
         onPrintOrder={handlePrintOrder}
+        onAssignOrder={handleOpenAssignDialog}
+        onResendOrder={handleResend}
+        actionLoadingKey={actionLoadingKey}
       />
     </div>
   )

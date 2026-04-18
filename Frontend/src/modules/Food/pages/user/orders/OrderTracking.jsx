@@ -407,7 +407,20 @@ function mapOrderToTrackingUiStatus(orderLike) {
   if (statusRaw === "delivered" || statusRaw === "completed") return "delivered"
 
   // Live Ride / Phase-based mapping (Highest priority for precision)
-  const isRiderAccepted = orderLike.dispatch?.status === "accepted" || orderLike.assignmentInfo?.status === "accepted" || orderLike.deliveryPartner?.status === "accepted";
+  const isRiderAccepted =
+    orderLike.dispatch?.status === "accepted" ||
+    orderLike.assignmentInfo?.status === "accepted" ||
+    orderLike.deliveryPartner?.status === "accepted" ||
+    Boolean(orderLike.dispatch?.acceptedAt) ||
+    Boolean(orderLike.deliveryState?.acceptedAt);
+
+  // Until rider accepts, keep customer in pre-delivery stage.
+  if (
+    !isRiderAccepted &&
+    (String(statusRaw) === "ready_for_pickup" || String(statusRaw) === "ready")
+  ) {
+    return "ready_waiting"
+  }
   
   if (phase === "reached_drop" || phase === "at_drop" || statusRaw === "at_drop") return "at_drop"
   if (phase === "en_route_to_delivery" || statusRaw === "picked_up" || statusRaw === "out_for_delivery") return "on_way"
@@ -688,11 +701,22 @@ export default function OrderTracking() {
   // Single source of truth: backend order.status (+ deliveryState phase for live ride)
   useEffect(() => {
     if (!order) return
-    setOrderStatus(mapOrderToTrackingUiStatus(order))
+    const nextStatus = mapOrderToTrackingUiStatus(order)
+    
+    // Notify user when a rider accepts their order
+    if (orderStatus === 'ready_waiting' && nextStatus === 'assigned') {
+      toast.success("Delivery partner assigned! They are on their way to pick up your order.");
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    }
+    
+    setOrderStatus(nextStatus)
   }, [
     order?.status,
     order?.deliveryState?.currentPhase,
     order?.deliveryState?.status,
+    order?.deliveryPartnerId,
+    order?.dispatch?.status,
+    orderStatus
   ])
 
   const acceptedAtMs = useMemo(() => {
@@ -1187,6 +1211,12 @@ export default function OrderTracking() {
       color: BRAND_THEME.colors.brand.primary,
       iconType: 'food'
     },
+    ready_waiting: {
+      title: "Food is ready!",
+      subtitle: "Searching for a delivery partner",
+      color: BRAND_THEME.colors.brand.primary,
+      iconType: 'food'
+    },
     assigned: {
       title: "Rider is arriving",
       subtitle: "A delivery partner is arriving at the restaurant",
@@ -1232,6 +1262,11 @@ export default function OrderTracking() {
   }
 
   const currentStatus = statusConfig[orderStatus] || statusConfig.placed
+  const isRiderAcceptedForUi =
+    order?.dispatch?.status === "accepted" ||
+    order?.assignmentInfo?.status === "accepted" ||
+    Boolean(order?.dispatch?.acceptedAt) ||
+    Boolean(order?.deliveryState?.acceptedAt)
   const isDeliveredOrder =
     orderStatus === "delivered" ||
     order?.status === "delivered" ||
@@ -1287,7 +1322,8 @@ export default function OrderTracking() {
 
       {/* Green Header */}
       <motion.div
-        className={`${currentStatus.color} text-white sticky top-0 z-40`}
+        className={`${!currentStatus.color.startsWith('#') ? currentStatus.color : ''} text-white sticky top-0 z-40`}
+        style={{ backgroundColor: currentStatus.color.startsWith('#') ? currentStatus.color : undefined }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
@@ -1454,7 +1490,10 @@ export default function OrderTracking() {
         </motion.div>
 
         {/* Delivery Partner Info */}
-        {order?.deliveryPartnerId && (
+        {order?.deliveryPartnerId &&
+          isRiderAcceptedForUi &&
+          !isDeliveredOrder &&
+          orderStatus !== "cancelled" && (
           <motion.div
             className="bg-white rounded-xl shadow-sm overflow-hidden"
             initial={{ opacity: 0, y: 20 }}

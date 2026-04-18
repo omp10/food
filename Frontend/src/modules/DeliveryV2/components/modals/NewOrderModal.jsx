@@ -16,12 +16,12 @@ export const NewOrderModal = ({ order, onAccept, onReject, onMinimize }) => {
 
   useEffect(() => {
     if (timeLeft <= 0) {
-      onReject();
+      onReject(order, 'timeout');
       return;
     }
     const timer = setInterval(() => setTimeLeft((t) => t - 1), 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, onReject]);
+  }, [timeLeft, onReject, order]);
 
   const { distanceKm, etaMins } = useMemo(() => {
     if (!order) return { distanceKm: null, etaMins: null };
@@ -254,7 +254,7 @@ export const NewOrderModal = ({ order, onAccept, onReject, onMinimize }) => {
             />
 
             <button 
-              onClick={onReject}
+              onClick={() => onReject(order, 'passed')}
               className="w-full text-gray-400 font-bold text-[9px] uppercase tracking-widest hover:text-red-500 transition-colors py-1 active:scale-95"
             >
               Pass this task

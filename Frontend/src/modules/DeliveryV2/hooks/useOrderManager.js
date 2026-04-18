@@ -77,6 +77,26 @@ export const useOrderManager = () => {
     }
   };
 
+  const rejectOrder = async (order, reasonType = "passed") => {
+    const orderId = order?.orderId || order?._id || order?.id;
+    if (!orderId) {
+      toast.error('Invalid order data');
+      return;
+    }
+
+    try {
+      await deliveryAPI.rejectOrder(orderId, {
+        reasonType: String(reasonType || "passed").toLowerCase() === "timeout"
+          ? "timeout"
+          : "passed",
+      });
+    } catch (error) {
+      // UI should not get stuck if reject API fails transiently.
+      // Keep this silent-ish and let order recovery sync handle retries/state.
+      console.warn('Reject Order Error:', error);
+    }
+  };
+
   /**
    * Mark "Reached Pickup" (Arrival at restaurant)
    */
@@ -186,6 +206,7 @@ export const useOrderManager = () => {
 
   return {
     acceptOrder,
+    rejectOrder,
     reachPickup,
     pickUpOrder,
     reachDrop,

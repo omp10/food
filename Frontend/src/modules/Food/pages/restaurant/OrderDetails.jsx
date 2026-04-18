@@ -225,7 +225,10 @@ export default function OrderDetails() {
               paidAmount,
               paymentStatus
             },
-            deliveryPartnerId: order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null,
+            deliveryPartnerId:
+              String(order.dispatch?.status || "").toLowerCase() === "accepted"
+                ? (order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null)
+                : null,
             dispatchStatus: order.dispatch?.status || null,
             reason: order.cancellationReason || '',
             timeline: [

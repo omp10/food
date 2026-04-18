@@ -10,6 +10,10 @@ const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
 
+const isDispatchAccepted = (orderLike) =>
+  String(orderLike?.dispatch?.status || orderLike?.dispatchStatus || "")
+    .toLowerCase() === "accepted" || Boolean(orderLike?.dispatch?.acceptedAt)
+
 
 export default function Orders() {
   const navigate = useNavigate()
@@ -123,7 +127,9 @@ export default function Orders() {
         transformedStatus.toLowerCase() === 'completed'
 
       const hasRestaurantRating = Number.isFinite(Number(order.restaurantRating))
-      const hasDeliveryPartner = !!(order.deliveryPartnerId || order.deliveryPartnerName)
+      const hasDeliveryPartner =
+        Boolean(order.isDeliveryAccepted) &&
+        !!(order.deliveryPartnerId || order.deliveryPartnerName)
       const hasDeliveryRating = Number.isFinite(Number(order.deliveryPartnerRating))
       const hasRating = hasRestaurantRating && (!hasDeliveryPartner || hasDeliveryRating)
 
@@ -276,6 +282,7 @@ export default function Orders() {
             const restaurantRating = order.ratings?.restaurant?.rating || null
             const deliveryPartnerRating = order.ratings?.deliveryPartner?.rating || null
 
+            const deliveryAccepted = isDispatchAccepted(order)
             return {
               id: order._id?.toString() || order.orderId || `ORD-${order._id}`,
               mongoId: order._id,
@@ -322,9 +329,17 @@ export default function Orders() {
               estimatedDeliveryTime: order.estimatedDeliveryTime || 30,
               preparationTime: order.preparationTime || 0,
               deliveredAt: order.deliveredAt || null,
-              deliveryPartnerId: order.deliveryPartnerId?._id || order.deliveryPartnerId || null,
-              deliveryPartnerName: order.deliveryPartnerId?.name || order.deliveryPartnerName || null,
-              deliveryPartnerPhone: order.deliveryPartnerId?.phone || order.deliveryPartnerPhone || null,
+              dispatchStatus: order.dispatch?.status || null,
+              isDeliveryAccepted: deliveryAccepted,
+              deliveryPartnerId: deliveryAccepted
+                ? (order.deliveryPartnerId?._id || order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null)
+                : null,
+              deliveryPartnerName: deliveryAccepted
+                ? (order.deliveryPartnerId?.name || order.deliveryPartnerName || null)
+                : null,
+              deliveryPartnerPhone: deliveryAccepted
+                ? (order.deliveryPartnerId?.phone || order.deliveryPartnerPhone || null)
+                : null,
               note: order.note || null
             }
           })
@@ -403,7 +418,9 @@ export default function Orders() {
     return restaurantMatch || itemsMatch
   })
 
-  const ratingModalHasDeliveryPartner = !!(ratingModal.order?.deliveryPartnerId || ratingModal.order?.deliveryPartnerName)
+  const ratingModalHasDeliveryPartner =
+    Boolean(ratingModal.order?.isDeliveryAccepted) &&
+    !!(ratingModal.order?.deliveryPartnerId || ratingModal.order?.deliveryPartnerName)
   const ratingSubmitDisabled = submittingRating ||
     selectedRestaurantRating === null ||
     (ratingModalHasDeliveryPartner && selectedDeliveryRating === null)
@@ -598,7 +615,9 @@ Order again from this restaurant in the ${companyName} app.`
 
   // Submit rating & feedback to backend
   const handleSubmitRating = async () => {
-    const hasDeliveryPartner = !!(ratingModal.order?.deliveryPartnerId || ratingModal.order?.deliveryPartnerName)
+    const hasDeliveryPartner =
+      Boolean(ratingModal.order?.isDeliveryAccepted) &&
+      !!(ratingModal.order?.deliveryPartnerId || ratingModal.order?.deliveryPartnerName)
     const isMissingDeliveryRating = hasDeliveryPartner && selectedDeliveryRating === null
     if (!ratingModal.order || selectedRestaurantRating === null || isMissingDeliveryRating) {
       toast.error("Please select all required ratings first")

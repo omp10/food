@@ -3852,9 +3852,35 @@ export async function updateDeliverySupportTicket(id, body = {}) {
 }
 
 // ----- Delivery partners (approved list) -----
-export async function getDeliveryPartners(query) {
+export async function getDeliveryPartners(query, adminScope = {}) {
     const { page = 1, limit = 1000, search } = query;
     const filter = { status: 'approved' };
+    const scope = normalizeAdminScope(adminScope);
+
+    if (query?.zoneId && String(query.zoneId).trim()) {
+        const zoneId = String(query.zoneId).trim();
+        if (!mongoose.Types.ObjectId.isValid(zoneId)) {
+            throw new ValidationError('Invalid zoneId');
+        }
+        if (scope.isSubAdmin) {
+            assertZoneAccess(adminScope, zoneId);
+        }
+        filter.zoneId = new mongoose.Types.ObjectId(zoneId);
+    } else if (scope.isSubAdmin) {
+        if (!scope.zoneIds.length) {
+            return {
+                deliveryPartners: [],
+                pagination: {
+                    page: Number(page) || 1,
+                    limit: Math.max(1, Math.min(1000, Number(limit) || 100)),
+                    total: 0,
+                    pages: 1
+                }
+            };
+        }
+        filter.zoneId = { $in: scope.zoneIds.map((zid) => new mongoose.Types.ObjectId(zid)) };
+    }
+
     if (search && typeof search === 'string' && search.trim()) {
         const term = search.trim();
         filter.$or = [
@@ -3874,6 +3900,7 @@ export async function getDeliveryPartners(query) {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limitNum)
+            .populate('zoneId', 'name zoneName serviceLocation')
             .lean(),
         FoodDeliveryPartner.countDocuments(filter)
     ]);
@@ -3885,9 +3912,11 @@ export async function getDeliveryPartners(query) {
         email: doc.email || '',
         phone: doc.phone || '',
         deliveryId: doc._id ? `DP-${doc._id.toString().slice(-8).toUpperCase()}` : null,
-        zone: doc.city || doc.state || doc.address || '',
+        zoneId: doc.zoneId?._id || doc.zoneId || null,
+        zone: doc.zoneId?.name || doc.zoneId?.zoneName || doc.zoneId?.serviceLocation || doc.city || doc.state || doc.address || '',
         vehicleType: doc.vehicleType || '',
         status: doc.status,
+        availabilityStatus: doc.availabilityStatus || 'offline',
         profilePhoto: doc.profilePhoto || null,
         profileImage: doc.profilePhoto ? { url: doc.profilePhoto } : null
     }));
@@ -4690,6 +4719,38 @@ export async function rejectDeliveryPartner(id, reason) {
         }
     }
     return updated;
+}
+
+export async function updateDeliveryPartnerZone(id, zoneId, adminScope = {}) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
+
+    const partner = await FoodDeliveryPartner.findById(id);
+    if (!partner) return null;
+
+    const rawZoneId = String(zoneId || '').trim();
+    if (!rawZoneId) {
+        throw new ValidationError('zoneId is required');
+    }
+    if (!mongoose.Types.ObjectId.isValid(rawZoneId)) {
+        throw new ValidationError('Invalid zoneId');
+    }
+
+    assertZoneAccess(adminScope, rawZoneId);
+
+    const zone = await FoodZone.findById(rawZoneId).select('_id isActive').lean();
+    if (!zone) {
+        throw new ValidationError('Zone not found');
+    }
+    if (zone.isActive === false) {
+        throw new ValidationError('Cannot assign inactive zone');
+    }
+
+    partner.zoneId = new mongoose.Types.ObjectId(rawZoneId);
+    await partner.save();
+
+    return FoodDeliveryPartner.findById(partner._id)
+        .populate('zoneId', 'name zoneName serviceLocation')
+        .lean();
 }
 
 // ----- Zones CRUD -----

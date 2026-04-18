@@ -18,6 +18,7 @@ import { FoodRestaurantCommission } from '../../admin/models/restaurantCommissio
 import {
   sendNotificationToOwner,
   sendNotificationToOwners,
+  notifyAdminsSafely,
 } from "../../../../core/notifications/firebase.service.js";
 import { FoodTransaction } from '../models/foodTransaction.model.js';
 import { FoodSupportTicket } from '../../user/models/supportTicket.model.js';
@@ -222,6 +223,61 @@ async function notifyOwnerSafely(target, payload) {
   }
 }
 
+async function notifyAdminsOrderReadyForAssignment(order) {
+  try {
+    await notifyAdminsSafely({
+      title: "Order Ready For Delivery Assignment",
+      body: `Order ${order.orderId} is ready. Please assign a delivery partner.`,
+      data: {
+        type: "order_ready_for_assignment",
+        orderId: String(order.orderId || ""),
+        orderMongoId: String(order._id || ""),
+        link: "/admin/food/order-detect-delivery",
+      },
+    });
+  } catch (error) {
+    logger.warn(`Admin ready notification failed: ${error?.message || error}`);
+  }
+}
+
+async function notifyAssignedDeliveryPartner(order) {
+  const assignedId =
+    order?.dispatch?.deliveryPartnerId?._id?.toString?.() ||
+    order?.dispatch?.deliveryPartnerId?.toString?.() ||
+    order?.dispatch?.deliveryPartnerId;
+  if (!assignedId) return { notified: false };
+
+  const restaurant = await FoodRestaurant.findById(order.restaurantId)
+    .select("restaurantName location addressLine1 area city state")
+    .lean();
+  const payload = buildDeliverySocketPayload(order, restaurant);
+  const io = getIO();
+
+  if (io) {
+    io.to(rooms.delivery(assignedId)).emit("new_order", payload);
+    io.to(rooms.delivery(assignedId)).emit("play_notification_sound", {
+      orderId: payload.orderId,
+      orderMongoId: payload.orderMongoId,
+    });
+  }
+
+  await notifyOwnerSafely(
+    { ownerType: "DELIVERY_PARTNER", ownerId: assignedId },
+    {
+      title: "New delivery task",
+      body: `Order ${payload.orderId} is assigned to you.`,
+      data: {
+        type: "new_order",
+        orderId: payload.orderId,
+        orderMongoId: payload.orderMongoId,
+        link: "/delivery",
+      },
+    },
+  );
+
+  return { notified: true };
+}
+
 function buildOrderIdentityFilter(orderIdOrMongoId) {
   const raw = String(orderIdOrMongoId || "").trim();
   if (!raw) return null;
@@ -272,15 +328,38 @@ function pushStatusHistory(order, { byRole, byId, from, to, note = "" }) {
   });
 }
 
+function isDispatchAccepted(orderLike = {}) {
+  const dispatchStatus = String(orderLike?.dispatch?.status || "").toLowerCase();
+  return dispatchStatus === "accepted" || Boolean(orderLike?.dispatch?.acceptedAt);
+}
+
+function sanitizeDispatchForClient(orderLike = {}) {
+  const order = orderLike?.toObject ? orderLike.toObject() : { ...(orderLike || {}) };
+  if (isDispatchAccepted(order)) return order;
+
+  return {
+    ...order,
+    deliveryPartnerId: null,
+    deliveryPartnerName: null,
+    deliveryPartnerPhone: null,
+    dispatch: {
+      ...(order?.dispatch || {}),
+      deliveryPartnerId: null,
+      acceptedAt: null,
+    },
+  };
+}
+
 function normalizeOrderForClient(orderDoc) {
-  const order = orderDoc?.toObject ? orderDoc.toObject() : orderDoc || {};
+  const order = sanitizeDispatchForClient(orderDoc);
   return {
     ...order,
     status: order?.orderStatus || order?.status || "",
     deliveredAt:
       order?.deliveryState?.deliveredAt || order?.deliveredAt || null,
-    deliveryPartnerId:
-      order?.dispatch?.deliveryPartnerId || order?.deliveryPartnerId || null,
+    deliveryPartnerId: isDispatchAccepted(order)
+      ? (order?.dispatch?.deliveryPartnerId || order?.deliveryPartnerId || null)
+      : null,
     rating: order?.ratings?.restaurant?.rating ?? order?.rating ?? null,
     deliveryState: {
       ...(order?.deliveryState || {}),
@@ -1114,20 +1193,6 @@ export async function createOrder(userId, dto) {
     }
   }
 
-  if (
-    orderType === "food" &&
-    dispatchMode === "auto" &&
-    (isCash ||
-      order.payment.status === "paid" ||
-      order.payment.status === "cod_pending")
-  ) {
-    try {
-      await tryAutoAssign(order._id);
-    } catch {
-      // leave unassigned
-    }
-  }
-
   const saved = order.toObject();
   return { order: saved, razorpay: razorpayPayload };
 }
@@ -1188,13 +1253,6 @@ export async function verifyPayment(userId, dto) {
       orderMongoId: String(order._id),
     },
   });
-
-  const settings = order.orderType === "food" ? await getDispatchSettings() : null;
-  if (settings?.dispatchMode === "auto") {
-    try {
-      await tryAutoAssign(order._id);
-    } catch {}
-  }
 
   return { order: order.toObject(), payment: order.payment };
 }
@@ -1325,6 +1383,12 @@ export async function processDispatchTimeout(orderId, partnerId) {
         if (offer) offer.action = 'timeout';
 
         // Unassign and trigger next step
+        pushStatusHistory(order, {
+          byRole: 'SYSTEM',
+          from: 'assigned',
+          to: 'unassigned',
+          note: 'Timed out without response',
+        });
         order.dispatch.status = 'unassigned';
         order.dispatch.deliveryPartnerId = null;
         await order.save();
@@ -1397,8 +1461,11 @@ export async function getOrderById(
   if (deliveryPartnerId && orderPartnerId !== deliveryPartnerId.toString())
     throw new ForbiddenError("Not assigned to you");
 
-  if (deliveryPartnerId || restaurantId) {
+  if (deliveryPartnerId) {
     return sanitizeOrderForExternal(order);
+  }
+  if (restaurantId) {
+    return sanitizeOrderForExternal(sanitizeDispatchForClient(order));
   }
 
   if (userId) {
@@ -1819,132 +1886,26 @@ export async function updateOrderStatusRestaurant(
     console.error("[DEBUG] Error emitting status update to restaurant:", err);
   }
 
-  // Real-time: delivery request / ready notifications.
+  // Real-time: admin assignment notifications + ready notifications for assigned rider only.
   try {
     const io = getIO();
     if (io) {
-      // On accept (confirmed or preparing) -> request delivery partners.
-      if (
-        (String(orderStatus) === "preparing" || String(orderStatus) === "confirmed") && 
-        (String(from) !== "preparing" && String(from) !== "confirmed")
-      ) {
-        console.log(
-          `[DEBUG] Order ${order.orderId} status changed to '${orderStatus}'. Triggering delivery dispatch.`,
-        );
-        // If auto dispatch, try assign now.
-        if (
-          order.dispatch?.status === "unassigned" &&
-          order.dispatch?.modeAtCreation === "auto"
-        ) {
-          try {
-            console.log(`[DEBUG] Auto-assigning order ${order.orderId}`);
-            await tryAutoAssign(order._id);
-            // Refresh order state from DB after auto-assignment
-            order = await FoodOrder.findById(order._id); 
-          } catch (err) {
-            console.error(
-              `[DEBUG] Auto-assign failed for order ${order.orderId}:`,
-              err,
-            );
-          }
-        }
-
-        const restaurant = await FoodRestaurant.findById(order.restaurantId)
-          .select("restaurantName location addressLine1 area city state")
-          .lean();
-        const payload = buildDeliverySocketPayload(order, restaurant);
-
-        // If assigned, notify assigned partner only.
-        const assignedId =
-          order.dispatch?.deliveryPartnerId?.toString?.() ||
-          order.dispatch?.deliveryPartnerId;
-        if (assignedId && order.dispatch?.status === "assigned") {
-          console.log(
-            `[DEBUG] Order ${order.orderId} assigned to ${assignedId}. Notifying.`,
-          );
-          io.to(rooms.delivery(assignedId)).emit("new_order", payload);
-          io.to(rooms.delivery(assignedId)).emit("play_notification_sound", {
-            orderId: payload.orderId,
-            orderMongoId: payload.orderMongoId,
-          });
-          await notifyOwnerSafely(
-            { ownerType: "DELIVERY_PARTNER", ownerId: assignedId },
-            {
-              title: "New delivery task",
-              body: `Order ${payload.orderId} is assigned to you.`,
-              data: {
-                type: "new_order",
-                orderId: payload.orderId,
-                orderMongoId: payload.orderMongoId,
-                link: "/delivery",
-              },
-            },
-          );
+      if (String(orderStatus) === 'ready_for_pickup' && String(from) !== 'ready_for_pickup') {
+        if (order.dispatch?.status === 'assigned' && order.dispatch?.deliveryPartnerId) {
+          const assignedId = order.dispatch.deliveryPartnerId?.toString?.() || order.dispatch.deliveryPartnerId;
+          const restaurant = await FoodRestaurant.findById(order.restaurantId)
+            .select('restaurantName location addressLine1 area city state')
+            .lean();
+          const payload = buildDeliverySocketPayload(order, restaurant);
+          io.to(rooms.delivery(assignedId)).emit('order_ready', payload);
         } else {
-          // Broadcast to nearby online partners so someone can accept/claim.
-          console.log(
-            `[DEBUG] Searching for nearby partners for order ${order.orderId}`,
-          );
-          const { partners } = await listNearbyOnlineDeliveryPartners(
-            order.restaurantId,
-            { maxKm: 15, limit: 25 },
-          );
-          console.log(
-            `[DEBUG] Found ${partners.length} partners: ${JSON.stringify(partners)}`,
-          );
-          for (const p of partners) {
-            const targetRoom = rooms.delivery(p.partnerId);
-            console.log(
-              `[DEBUG] Emitting new_order_available to room: ${targetRoom}`,
-            );
-            io.to(targetRoom).emit("new_order_available", {
-              ...payload,
-              pickupDistanceKm: p.distanceKm,
-            });
-          }
-          await notifyOwnersSafely(
-            partners.slice(0, 5).map((p) => ({
-              ownerType: "DELIVERY_PARTNER",
-              ownerId: p.partnerId,
-            })),
-            {
-              title: "New delivery order available",
-              body: `Order ${payload.orderId} is available near ${restaurant?.restaurantName || "your area"}.`,
-              data: {
-                type: "new_order_available",
-                orderId: payload.orderId,
-                orderMongoId: payload.orderMongoId,
-                link: "/delivery",
-              },
-            },
-          );
-          // Also trigger a generic sound event for the first few partners.
-          for (const p of partners.slice(0, 5)) {
-            io.to(rooms.delivery(p.partnerId)).emit("play_notification_sound", {
-              orderId: payload.orderId,
-              orderMongoId: payload.orderMongoId,
-            });
-          }
+          await notifyAdminsOrderReadyForAssignment(order);
         }
       }
-
-            // When ready for pickup -> ping assigned delivery partner.
-            if (String(orderStatus) === 'ready_for_pickup' && String(from) !== 'ready_for_pickup') {
-                console.log(`[DEBUG] Order ${order.orderId} changed to 'ready_for_pickup'.`);
-                const assignedId = order.dispatch?.deliveryPartnerId?.toString?.() || order.dispatch?.deliveryPartnerId;
-                if (assignedId) {
-                    console.log(`[DEBUG] Notifying assigned partner ${assignedId} that order is ready.`);
-                    const restaurant = await FoodRestaurant.findById(order.restaurantId).select('restaurantName location addressLine1 area city state').lean();
-                    const payload = buildDeliverySocketPayload(order, restaurant);
-                    io.to(rooms.delivery(assignedId)).emit('order_ready', payload);
-                } else {
-                    console.log(`[DEBUG] Order ${order.orderId} is ready but no partner assigned.`);
-                }
-            }
-        }
-    } catch (err) {
-        console.error('[DEBUG] Error in delivery notification logic:', err);
     }
+  } catch (err) {
+    console.error('[DEBUG] Error in delivery notification logic:', err);
+  }
 
     enqueueOrderEvent('restaurant_order_status_updated', {
         orderMongoId: order._id?.toString?.(),
@@ -2016,64 +1977,19 @@ export async function resendDeliveryNotificationRestaurant(orderId, restaurantId
         throw new ValidationError('A delivery partner has already accepted this order.');
     }
 
-    order.dispatch.status = 'unassigned';
-    order.dispatch.deliveryPartnerId = undefined;
-    order.dispatch.offeredTo = [];
-    order.dispatch.assignedAt = undefined;
-    await order.save();
-
-    let notifiedCount = 0;
-
-    if (order.dispatch?.modeAtCreation === 'auto') {
-        const assignedOrder = await tryAutoAssign(order._id);
-        if (assignedOrder && assignedOrder.dispatch?.status === 'assigned') {
-            notifiedCount = 1;
-            return { notifiedCount }; // One specific partner notified via auto-assign
-        }
-    }
-
-    // Fallback or Pool Mode Broadcast
-    try {
-        const io = getIO();
-        if (io) {
-            const restaurant = await FoodRestaurant.findById(order.restaurantId).select('restaurantName location addressLine1 area city state').lean();
-            
-            const payload = buildDeliverySocketPayload(order, restaurant);
-
-            const { partners } = await listNearbyOnlineDeliveryPartners(order.restaurantId, { maxKm: 30, limit: 30 });
-            notifiedCount = partners.length;
-            
-            for (const p of partners) {
-                const targetRoom = rooms.delivery(p.partnerId);
-                io.to(targetRoom).emit("new_order_available", { ...payload, pickupDistanceKm: p.distanceKm });
-                io.to(targetRoom).emit("play_notification_sound", { orderId: payload.orderId, orderMongoId: payload.orderMongoId });
-            }
-
-            if (partners.length > 0) {
-                 await notifyOwnersSafely(
-                    partners.slice(0, 10).map((p) => ({ ownerType: "DELIVERY_PARTNER", ownerId: p.partnerId })),
-                    {
-                        title: "New delivery order available",
-                        body: `Order ${payload.orderId} is available near ${restaurant?.restaurantName || "your area"}.`,
-                        data: { type: "new_order_available", orderId: payload.orderId, orderMongoId: payload.orderMongoId, link: "/delivery" }
-                    }
-                );
-            }
-        }
-    } catch (err) {
-        console.error('[DEBUG] Resend notification broadcast error:', err);
-    }
-
-    return { notifiedCount };
+    await notifyAdminsOrderReadyForAssignment(order);
+    return { notifiedCount: 1 };
 }
 
 export async function getCurrentTripDelivery(deliveryPartnerId) {
   if (!deliveryPartnerId) throw new ValidationError("Delivery partner ID required");
   const partnerId = new mongoose.Types.ObjectId(deliveryPartnerId);
   
-  // Find the single active order assigned to or accepted by this rider
+  // Active trip must be accepted by this rider.
+  // Assigned-but-not-accepted orders should appear in available requests modal.
   const order = await FoodOrder.findOne({
     "dispatch.deliveryPartnerId": partnerId,
+    "dispatch.status": "accepted",
     orderStatus: {
       $in: ["confirmed", "preparing", "ready_for_pickup", "picked_up", "reached_pickup", "reached_drop"]
     }
@@ -2091,27 +2007,22 @@ export async function getCurrentTripDelivery(deliveryPartnerId) {
 export async function listOrdersAvailableDelivery(deliveryPartnerId, query) {
   const { page, limit, skip } = buildPaginationOptions(query);
   const filter = {
+    "dispatch.deliveryPartnerId": new mongoose.Types.ObjectId(
+      deliveryPartnerId,
+    ),
+    "dispatch.status": "assigned",
     $or: [
-      // "Marketplace" pool – only show orders once restaurant accepted.
-      {
-        "dispatch.status": "unassigned",
-        orderStatus: { $in: ["preparing", "ready_for_pickup"] },
-      },
-      // My assigned/accepted orders – keep showing until terminal.
-      {
-        "dispatch.deliveryPartnerId": new mongoose.Types.ObjectId(
-          deliveryPartnerId,
-        ),
-        orderStatus: {
-          $nin: [
-            "delivered",
-            "cancelled_by_user",
-            "cancelled_by_restaurant",
-            "cancelled_by_admin",
-          ],
-        },
-      },
+      { "dispatch.acceptedAt": { $exists: false } },
+      { "dispatch.acceptedAt": null },
     ],
+    orderStatus: {
+      $nin: [
+        "delivered",
+        "cancelled_by_user",
+        "cancelled_by_restaurant",
+        "cancelled_by_admin",
+      ],
+    },
   };
   const [docs, total] = await Promise.all([
     FoodOrder.find(filter)
@@ -2131,7 +2042,6 @@ export async function acceptOrderDelivery(orderId, deliveryPartnerId) {
   const identity = buildOrderIdentityFilter(orderId);
   if (!identity) throw new ValidationError("Order id required");
 
-  // Atomically claim if unassigned, or accept if already assigned to me.
   const order = await FoodOrder.findOne({
     ...identity,
     orderStatus: {
@@ -2142,10 +2052,7 @@ export async function acceptOrderDelivery(orderId, deliveryPartnerId) {
         "cancelled_by_admin",
       ],
     },
-    $or: [
-      { "dispatch.status": "unassigned" },
-      { "dispatch.deliveryPartnerId": partnerId },
-    ],
+    "dispatch.deliveryPartnerId": partnerId,
   });
 
   if (!order) throw new NotFoundError("Order not found");
@@ -2157,18 +2064,14 @@ export async function acceptOrderDelivery(orderId, deliveryPartnerId) {
     throw new ValidationError("Order not ready for delivery assignment");
   }
 
-  const wasUnassigned =
-    order.dispatch?.status === "unassigned" ||
-    !order.dispatch?.deliveryPartnerId;
   if (
-    !wasUnassigned &&
-    order.dispatch.deliveryPartnerId?.toString() !==
-      deliveryPartnerId.toString()
+    order.dispatch?.deliveryPartnerId?.toString() !==
+    deliveryPartnerId.toString()
   ) {
     throw new ForbiddenError("Not your order");
   }
 
-  const from = order.dispatch?.status || "unassigned";
+  const from = order.dispatch?.status || "assigned";
   order.dispatch.deliveryPartnerId = partnerId;
   order.dispatch.status = "accepted";
   if (!order.dispatch.assignedAt) order.dispatch.assignedAt = new Date();
@@ -2273,7 +2176,7 @@ export async function acceptOrderDelivery(orderId, deliveryPartnerId) {
   return getOrderById(order._id, { deliveryPartnerId });
 }
 
-export async function rejectOrderDelivery(orderId, deliveryPartnerId) {
+export async function rejectOrderDelivery(orderId, deliveryPartnerId, reasonType = 'passed') {
     const identity = buildOrderIdentityFilter(orderId);
     if (!identity) throw new ValidationError('Order id required');
     const order = await FoodOrder.findOne(identity);
@@ -2288,17 +2191,52 @@ export async function rejectOrderDelivery(orderId, deliveryPartnerId) {
     order.dispatch.deliveryPartnerId = undefined;
     order.dispatch.assignedAt = undefined;
     order.dispatch.acceptedAt = undefined;
-    pushStatusHistory(order, { byRole: 'DELIVERY_PARTNER', byId: deliveryPartnerId, from: 'assigned', to: 'unassigned', note: 'Rejected' });
+    const normalizedReasonType = String(reasonType || '').trim().toLowerCase() === 'timeout' ? 'timed_out' : 'passed';
+    const historyNote = normalizedReasonType === 'timed_out'
+      ? 'Timed out without response'
+      : 'Passed by delivery partner';
+    pushStatusHistory(order, { byRole: 'DELIVERY_PARTNER', byId: deliveryPartnerId, from: 'assigned', to: 'unassigned', note: historyNote });
     await order.save();
+
+    try {
+      const io = getIO();
+      if (io) {
+        io.to(rooms.restaurant(order.restaurantId)).emit("order_status_update", {
+          orderMongoId: order._id?.toString?.(),
+          orderId: order.orderId,
+          orderStatus: order.orderStatus,
+          dispatchStatus: order.dispatch?.status,
+        });
+        io.to(rooms.user(order.userId)).emit("order_status_update", {
+          orderMongoId: order._id?.toString?.(),
+          orderId: order.orderId,
+          orderStatus: order.orderStatus,
+          dispatchStatus: order.dispatch?.status,
+        });
+      }
+
+      const timeoutCase = normalizedReasonType === 'timed_out';
+      await notifyAdminsSafely({
+        title: timeoutCase ? "Delivery Request Timed Out" : "Delivery Boy Passed Task",
+        body: timeoutCase
+          ? `Delivery request timed out for order ${order.orderId}. Please reassign.`
+          : `Delivery boy passed request for order ${order.orderId}. Please reassign.`,
+        data: {
+          type: timeoutCase ? "delivery_request_timed_out" : "delivery_request_passed",
+          orderId: String(order.orderId || ""),
+          orderMongoId: String(order._id || ""),
+          reasonType: normalizedReasonType,
+          link: "/admin/food/order-detect-delivery",
+        },
+      });
+    } catch {}
     
     enqueueOrderEvent('delivery_rejected', {
         orderMongoId: order._id?.toString?.(),
         orderId: order.orderId,
-        deliveryPartnerId
+        deliveryPartnerId,
+        reasonType: normalizedReasonType
     });
-
-    // 🚀 Immediately try to find the next best partner instead of waiting for timeout
-    void tryAutoAssign(order._id).catch(err => logger.error(`SmartDispatch: Auto-assign after reject failed: ${err.message}`));
 
     return order.toObject();
 }
@@ -3025,30 +2963,84 @@ export async function assignDeliveryPartnerAdmin(
   orderId,
   deliveryPartnerId,
   adminId,
+  adminScope = {},
 ) {
   const order = await FoodOrder.findById(orderId);
   if (!order) throw new NotFoundError("Order not found");
+  const scope = normalizeAdminScope(adminScope);
+  if (scope.isSubAdmin) {
+    const orderZoneId = order?.zoneId ? String(order.zoneId) : "";
+    const hasZoneAccess = scope.zoneIds.some((zid) => String(zid) === orderZoneId);
+    if (!hasZoneAccess) throw new ForbiddenError("Sub-admin can only assign orders in assigned zones");
+  }
+  if (order.orderStatus !== "ready_for_pickup") {
+    throw new ValidationError("Only ready orders can be assigned to a delivery partner");
+  }
   if (order.dispatch.status === "accepted")
     throw new ValidationError("Order already accepted by partner");
 
   const partner = await FoodDeliveryPartner.findById(deliveryPartnerId)
-    .select("status")
+    .select("status zoneId")
     .lean();
   if (!partner || partner.status !== "approved")
     throw new ValidationError("Delivery partner not available");
+  if (!partner.zoneId) {
+    throw new ValidationError("Delivery partner is not mapped to any zone");
+  }
+  if (String(partner.zoneId) !== String(order.zoneId || "")) {
+    throw new ValidationError("Delivery partner does not belong to this order zone");
+  }
 
-    order.dispatch.status = 'assigned';
-    order.dispatch.deliveryPartnerId = new mongoose.Types.ObjectId(deliveryPartnerId);
-    order.dispatch.assignedAt = new Date();
-    pushStatusHistory(order, { byRole: 'ADMIN', byId: adminId, from: order.dispatch.status, to: 'assigned' });
-    await order.save();
-    enqueueOrderEvent('delivery_partner_assigned', {
-        orderMongoId: order._id?.toString?.(),
-        orderId: order.orderId,
-        deliveryPartnerId,
-        adminId
-    });
-    return order.toObject();
+  const from = order.dispatch?.status || 'unassigned';
+  order.dispatch.status = 'assigned';
+  order.dispatch.deliveryPartnerId = new mongoose.Types.ObjectId(deliveryPartnerId);
+  order.dispatch.assignedAt = new Date();
+  order.dispatch.acceptedAt = undefined;
+  pushStatusHistory(order, { byRole: 'ADMIN', byId: adminId, from, to: 'assigned' });
+  await order.save();
+  await order.populate('dispatch.deliveryPartnerId', 'name phone zoneId');
+  await notifyAssignedDeliveryPartner(order);
+  enqueueOrderEvent('delivery_partner_assigned', {
+      orderMongoId: order._id?.toString?.(),
+      orderId: order.orderId,
+      deliveryPartnerId,
+      adminId
+  });
+  return order.toObject();
+}
+
+export async function resendAssignedDeliveryNotificationAdmin(orderId, adminId, adminScope = {}) {
+  const identity = buildOrderIdentityFilter(orderId);
+  if (!identity) throw new ValidationError("Order id required");
+
+  const order = await FoodOrder.findOne(identity)
+    .populate("dispatch.deliveryPartnerId", "name phone zoneId");
+  if (!order) throw new NotFoundError("Order not found");
+  const scope = normalizeAdminScope(adminScope);
+  if (scope.isSubAdmin) {
+    const orderZoneId = order?.zoneId ? String(order.zoneId) : "";
+    const hasZoneAccess = scope.zoneIds.some((zid) => String(zid) === orderZoneId);
+    if (!hasZoneAccess) throw new ForbiddenError("Sub-admin can only resend notifications in assigned zones");
+  }
+  if (order.orderStatus !== "ready_for_pickup") {
+    throw new ValidationError("Only ready orders can be resent to a delivery partner");
+  }
+  if (order.dispatch?.status !== "assigned" || !order.dispatch?.deliveryPartnerId) {
+    throw new ValidationError("No assigned delivery partner found for resend");
+  }
+
+  await notifyAssignedDeliveryPartner(order);
+  enqueueOrderEvent('delivery_partner_notification_resent', {
+    orderMongoId: order._id?.toString?.(),
+    orderId: order.orderId,
+    deliveryPartnerId: order.dispatch.deliveryPartnerId?._id?.toString?.() || order.dispatch.deliveryPartnerId?.toString?.(),
+    adminId,
+  });
+
+  return {
+    success: true,
+    order: order.toObject(),
+  };
 }
 
 export async function deleteOrderAdmin(orderId, adminId, adminScope = {}) {

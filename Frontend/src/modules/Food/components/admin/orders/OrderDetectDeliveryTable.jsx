@@ -1,12 +1,16 @@
 import { useState, useEffect, useMemo } from "react"
-import { Eye, Printer, ArrowUpDown, Phone, User } from "lucide-react"
+import { Eye, Printer, ArrowUpDown, Phone, User, Send, RefreshCw } from "lucide-react"
 
 const getStatusColor = (status) => {
   const colors = {
     "Ordered": "bg-blue-100 text-blue-700",
     "Accepted": "bg-green-100 text-green-700",
     "Rejected": "bg-red-100 text-red-700",
+    "Ready for Assignment": "bg-violet-100 text-violet-700",
+    "Delivery Boy Passed": "bg-rose-100 text-rose-700",
+    "Delivery Request Timed Out": "bg-amber-100 text-amber-700",
     "Delivery Boy Assigned": "bg-purple-100 text-purple-700",
+    "Assignment Accepted": "bg-emerald-100 text-emerald-700",
     "Reached Pickup": "bg-orange-100 text-orange-700",
     "Reached Drop": "bg-amber-100 text-amber-700",
     "Ordered Delivered": "bg-emerald-100 text-emerald-700",
@@ -14,7 +18,15 @@ const getStatusColor = (status) => {
   return colors[status] || "bg-slate-100 text-slate-700"
 }
 
-export default function OrderDetectDeliveryTable({ orders, visibleColumns, onViewOrder, onPrintOrder }) {
+export default function OrderDetectDeliveryTable({
+  orders,
+  visibleColumns,
+  onViewOrder,
+  onPrintOrder,
+  onAssignOrder,
+  onResendOrder,
+  actionLoadingKey,
+}) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
   const totalPages = Math.ceil(orders.length / itemsPerPage)
@@ -178,6 +190,25 @@ export default function OrderDetectDeliveryTable({ orders, visibleColumns, onVie
                       >
                         <Eye className="w-4 h-4" />
                       </button>
+                      {order.canAssign && (
+                        <button
+                          onClick={() => onAssignOrder(order)}
+                          className="p-1.5 rounded text-violet-600 hover:bg-violet-50 transition-colors"
+                          title="Assign Delivery Partner"
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
+                      )}
+                      {order.canResend && (
+                        <button
+                          onClick={() => onResendOrder(order)}
+                          disabled={actionLoadingKey === `resend:${order.orderMongoId}`}
+                          className="p-1.5 rounded text-emerald-600 hover:bg-emerald-50 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                          title="Resend Notification"
+                        >
+                          <RefreshCw className={`w-4 h-4 ${actionLoadingKey === `resend:${order.orderMongoId}` ? "animate-spin" : ""}`} />
+                        </button>
+                      )}
                       <button 
                         onClick={() => onPrintOrder(order)}
                         className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors"

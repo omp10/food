@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { MapPin, ArrowLeft, Search, Bike } from "lucide-react"
 import { adminAPI } from "@food/api"
@@ -24,6 +24,7 @@ export default function DeliveryBoyViewMap() {
   const [mapLoading, setMapLoading] = useState(true)
   const [zones, setZones] = useState([])
   const [deliveryBoys, setDeliveryBoys] = useState([])
+  const [selectedZoneId, setSelectedZoneId] = useState("all")
   const deliveryMetaByIdRef = useRef(new Map())
   const [loading, setLoading] = useState(true)
   const [locationSearch, setLocationSearch] = useState("")
@@ -39,34 +40,43 @@ export default function DeliveryBoyViewMap() {
       (deliveryNode) => {
         const nextDeliveryBoys = Object.entries(deliveryNode || {})
           .map(([deliveryId, payload]) => {
-            const location = payload?.location || {}
-            const lat = Number(location?.lat)
-            const lng = Number(location?.lng)
+            const rawLocation = payload?.location || {}
+            const lat = Number(payload?.lat ?? rawLocation?.lat)
+            const lng = Number(payload?.lng ?? rawLocation?.lng)
+            const status = String(payload?.status ?? rawLocation?.status ?? "").toLowerCase()
+            const isOnlineFlag = payload?.isOnline ?? rawLocation?.isOnline
+
             const isOnline =
-              location?.isOnline === true ||
-              location?.status === "online" ||
-              location?.status === "busy"
+              isOnlineFlag === true ||
+              status === "online" ||
+              status === "busy"
 
             if (!isOnline || !Number.isFinite(lat) || !Number.isFinite(lng)) {
               return null
             }
 
             const meta = deliveryMetaByIdRef.current.get(String(deliveryId)) || {}
+            const zoneId =
+              meta.zoneId ||
+              meta.zone?._id ||
+              meta.zone?.id ||
+              null
 
             return {
               _id: String(deliveryId),
               name: meta.name || meta.fullName || "Delivery Partner",
               phone: meta.phone || "N/A",
+              zoneId: zoneId ? String(zoneId) : null,
               availability: {
                 isOnline: true,
                 currentLocation: {
                   type: "Point",
                   coordinates: [lng, lat],
-                  heading: Number(location?.heading) || 0,
-                  speed: Number(location?.speed) || 0,
-                  lastUpdate: Number(location?.timestamp || location?.last_updated) || Date.now()
+                  heading: Number(payload?.heading ?? rawLocation?.heading) || 0,
+                  speed: Number(payload?.speed ?? rawLocation?.speed) || 0,
+                  lastUpdate: Number(payload?.timestamp ?? rawLocation?.timestamp ?? payload?.last_updated ?? rawLocation?.last_updated) || Date.now()
                 },
-                lastLocationUpdate: Number(location?.timestamp || location?.last_updated) || Date.now()
+                lastLocationUpdate: Number(payload?.timestamp ?? rawLocation?.timestamp ?? payload?.last_updated ?? rawLocation?.last_updated) || Date.now()
               }
             }
           })
@@ -84,6 +94,11 @@ export default function DeliveryBoyViewMap() {
       if (typeof unsubscribeRealtime === "function") unsubscribeRealtime()
     }
   }, [])
+
+  const filteredDeliveryBoys = useMemo(() => {
+    if (selectedZoneId === "all") return deliveryBoys
+    return deliveryBoys.filter((boy) => String(boy?.zoneId || "") === String(selectedZoneId))
+  }, [deliveryBoys, selectedZoneId])
 
   // Initialize Places Autocomplete when map is loaded
   useEffect(() => {
@@ -112,14 +127,18 @@ export default function DeliveryBoyViewMap() {
       if (zones.length > 0) {
         drawAllZonesOnMap(window.google, mapInstanceRef.current)
       }
-      if (deliveryBoys.length > 0) {
+      if (filteredDeliveryBoys.length > 0) {
         // drawDeliveryBoyMarkers is async, so handle it properly
-        drawDeliveryBoyMarkers(window.google, mapInstanceRef.current).catch(error => {
+        drawDeliveryBoyMarkers(window.google, mapInstanceRef.current, filteredDeliveryBoys).catch(error => {
           debugError("Error drawing delivery boy markers:", error)
+        })
+      } else {
+        drawDeliveryBoyMarkers(window.google, mapInstanceRef.current, []).catch(error => {
+          debugError("Error clearing delivery boy markers:", error)
         })
       }
     }
-  }, [zones, mapLoading, deliveryBoys])
+  }, [zones, mapLoading, filteredDeliveryBoys, selectedZoneId])
 
   const fetchZones = async () => {
     try {
@@ -160,7 +179,15 @@ export default function DeliveryBoyViewMap() {
           nextMap.set(String(boyId), {
             name: boy?.name || boy?.fullData?.name || "Delivery Partner",
             fullName: boy?.fullName || boy?.fullData?.fullName || "",
-            phone: boy?.phone || boy?.fullData?.phone || "N/A"
+            phone: boy?.phone || boy?.fullData?.phone || "N/A",
+            zoneId:
+              boy?.zoneId?._id ||
+              boy?.zoneId?.id ||
+              boy?.zoneId ||
+              boy?.fullData?.zoneId?._id ||
+              boy?.fullData?.zoneId?.id ||
+              boy?.fullData?.zoneId ||
+              null
           })
         })
         deliveryMetaByIdRef.current = nextMap
@@ -257,6 +284,7 @@ export default function DeliveryBoyViewMap() {
     ]
 
     const bounds = new google.maps.LatLngBounds()
+    let pointsToFit = 0
 
     zones.forEach((zone, index) => {
       if (!zone.coordinates || zone.coordinates.length < 3) return
@@ -266,7 +294,11 @@ export default function DeliveryBoyViewMap() {
         const lng = typeof coord === 'object' ? (coord.longitude || coord.lng) : null
         if (lat === null || lng === null) return null
         const latLng = new google.maps.LatLng(lat, lng)
-        bounds.extend(latLng)
+        const zoneId = String(zone?._id || zone?.id)
+        if (selectedZoneId === "all" || zoneId === String(selectedZoneId)) {
+          bounds.extend(latLng)
+          pointsToFit++
+        }
         return latLng
       }).filter(Boolean)
 
@@ -327,10 +359,17 @@ export default function DeliveryBoyViewMap() {
       })
     })
 
-    if (zones.length > 0) {
+    if (pointsToFit > 0) {
       map.fitBounds(bounds)
       const padding = { top: 50, right: 50, bottom: 50, left: 50 }
       map.fitBounds(bounds, padding)
+      
+      if (selectedZoneId !== "all") {
+        const listener = google.maps.event.addListener(map, 'idle', () => {
+          if (map.getZoom() > 16) map.setZoom(15)
+          google.maps.event.removeListener(listener)
+        })
+      }
     }
   }
 
@@ -384,8 +423,8 @@ export default function DeliveryBoyViewMap() {
   }
 
   // Draw delivery boy markers (bikes) on the map
-  const drawDeliveryBoyMarkers = async (google, map) => {
-    if (!deliveryBoys || deliveryBoys.length === 0) {
+  const drawDeliveryBoyMarkers = async (google, map, markerList = []) => {
+    if (!markerList || markerList.length === 0) {
       // Clear previous markers
       deliveryBoyMarkersRef.current.forEach(marker => {
         if (marker) marker.setMap(null)
@@ -404,7 +443,7 @@ export default function DeliveryBoyViewMap() {
     const processedIds = new Set()
 
     // Process all delivery boys and create markers
-    for (const boy of deliveryBoys) {
+    for (const boy of markerList) {
       // Get unique ID to prevent duplicate markers
       const fullData = boy.fullData || boy
       const boyId = boy._id || boy.id || boy.deliveryId || fullData?._id || fullData?.id || fullData?.deliveryId
@@ -539,7 +578,7 @@ export default function DeliveryBoyViewMap() {
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate("/admin/food/zone-setup")}
+            onClick={() => navigate("/admin/food")}
             className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-slate-600" />
@@ -549,24 +588,40 @@ export default function DeliveryBoyViewMap() {
               <Bike className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Delivery Boy View</h1>
-              <p className="text-sm text-slate-600">View zones and online delivery boys on map</p>
+              <h1 className="text-2xl font-bold text-slate-900">Delivery Boy Heatmap</h1>
+              <p className="text-sm text-slate-600">View online delivery partners available in the selected zone</p>
             </div>
           </div>
         </div>
 
-        {/* Search Bar */}
+        {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input
-              ref={autocompleteInputRef}
-              type="text"
-              placeholder="Search location on map..."
-              value={locationSearch}
-              onChange={(e) => setLocationSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                ref={autocompleteInputRef}
+                type="text"
+                placeholder="Search location on map..."
+                value={locationSearch}
+                onChange={(e) => setLocationSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <select
+              value={selectedZoneId}
+              onChange={(event) => setSelectedZoneId(event.target.value)}
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All zones</option>
+              {zones
+                .filter((zone) => zone?.isActive !== false)
+                .map((zone) => (
+                  <option key={String(zone?._id || zone?.id)} value={String(zone?._id || zone?.id)}>
+                    {zone?.name || zone?.zoneName || zone?.serviceLocation || "Unnamed Zone"}
+                  </option>
+                ))}
+            </select>
           </div>
         </div>
 
@@ -602,7 +657,7 @@ export default function DeliveryBoyViewMap() {
               </div>
             )}
 
-            {!loading && !mapLoading && zones.length === 0 && deliveryBoys.length === 0 && (
+            {!loading && !mapLoading && zones.length === 0 && filteredDeliveryBoys.length === 0 && (
               <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
                 <div className="text-center p-6">
                   <MapPin className="w-12 h-12 text-slate-400 mx-auto mb-4" />
@@ -622,14 +677,14 @@ export default function DeliveryBoyViewMap() {
                     Click on any <span className="font-semibold text-blue-600">zone</span> on the map to view details. Total zones: <strong>{zones.length}</strong>
                   </p>
                 )}
-                {deliveryBoys.length > 0 && (
+                {filteredDeliveryBoys.length > 0 && (
                   <p>
-                    Click on any <span className="font-semibold text-green-600">green bike icon</span> to view delivery boy details. Online delivery boys: <strong>{deliveryBoys.length}</strong>
+                    Click on any <span className="font-semibold text-green-600">green bike icon</span> to view delivery boy details. Online delivery boys in selected zone: <strong>{filteredDeliveryBoys.length}</strong>
                   </p>
                 )}
-                {deliveryBoys.length === 0 && (
+                {filteredDeliveryBoys.length === 0 && (
                   <p className="text-amber-600">
-                    No online delivery boys found. Delivery boys will appear when they go online.
+                    No online delivery boys found for the selected zone.
                   </p>
                 )}
               </div>

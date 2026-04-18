@@ -1223,7 +1223,7 @@ export async function updateSupportTicket(req, res, next) {
 // ----- Delivery partners -----
 export async function getDeliveryPartners(req, res, next) {
     try {
-        const data = await adminService.getDeliveryPartners(req.query);
+        const data = await adminService.getDeliveryPartners(req.query, req.adminAuth || {});
         res.status(200).json({
             success: true,
             message: 'Delivery partners fetched successfully',
@@ -1312,6 +1312,26 @@ export async function rejectDeliveryPartner(req, res, next) {
             success: true,
             message: 'Delivery partner rejected successfully',
             data: partner
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function updateDeliveryPartnerZone(req, res, next) {
+    try {
+        const zoneId = req.body?.zoneId != null ? String(req.body.zoneId).trim() : '';
+        const partner = await adminService.updateDeliveryPartnerZone(req.params.id, zoneId, req.adminAuth || {});
+        if (!partner) {
+            return res.status(404).json({
+                success: false,
+                message: 'Delivery partner not found'
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: 'Delivery partner zone updated successfully',
+            data: { partner }
         });
     } catch (error) {
         next(error);
