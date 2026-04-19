@@ -30,7 +30,6 @@ import { restaurantAPI } from "@food/api";
 import { useRestaurantNotifications } from "@food/hooks/useRestaurantNotifications";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import ResendNotificationButton from "@food/components/restaurant/ResendNotificationButton";
 import BRAND_THEME from "@/config/brandTheme";
 const debugLog = (...args) => {};
 const debugWarn = (...args) => {};
@@ -2606,18 +2605,6 @@ export default function OrdersMain() {
                   <span className="text-[11px] text-gray-500">
                     {selectedOrder.timePlaced}
                   </span>
-                  {/* Delivery Resend Button - Only for preparing/ready orders with no partner */}
-                  {(String(selectedOrder.status).toLowerCase() === "preparing" ||
-                    String(selectedOrder.status).toLowerCase() === "ready") &&
-                    !selectedOrder.deliveryPartnerId && (
-                      <div className="mt-1">
-                        <ResendNotificationButton
-                          orderId={selectedOrder.orderId}
-                          mongoId={selectedOrder.mongoId}
-                          onSuccess={() => setIsSheetOpen(false)}
-                        />
-                      </div>
-                    )}
                 </div>
               </div>
 
@@ -2810,13 +2797,6 @@ function OrderCard({
                     />
                     {isDeliveryAccepted ? "Assigned" : "Not Assigned"}
                   </span>
-                  {dispatchStatus !== "accepted" && (
-                    <ResendNotificationButton
-                      orderId={orderId}
-                      mongoId={mongoId}
-                      onSuccess={onSelect}
-                    />
-                  )}
                 </div>
               )}
             </div>

@@ -884,6 +884,9 @@ export async function getTransactionReport(query = {}) {
         );
     };
 
+    const isPendingDueNoResponseTx = (tx) =>
+        isNoResponseCompensatedTx(tx) && isNoResponseDuePendingTx(tx);
+
     let completedTransaction = 0;
     let refundedTransaction = 0;
     let adminEarning = 0;
@@ -899,6 +902,11 @@ export async function getTransactionReport(query = {}) {
         if (isCompletedLikeTx(tx)) {
             completedTransaction += tx.amounts?.totalCustomerPaid || 0;
             adminEarning += tx.amounts?.platformNetProfit || 0;
+            restaurantEarning += tx.amounts?.restaurantShare || 0;
+            deliverymanEarning += tx.amounts?.riderShare || 0;
+        } else if (isPendingDueNoResponseTx(tx)) {
+            // Business rule: when user due is still unpaid, hold completed/admin numbers
+            // but keep restaurant and rider earnings visible.
             restaurantEarning += tx.amounts?.restaurantShare || 0;
             deliverymanEarning += tx.amounts?.riderShare || 0;
         }

@@ -417,6 +417,15 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
     toast.success('Call marked as connected. 10-second timer started');
   }, [customerContact.dialPhone, startResponseWaitTimer]);
 
+  const cancelNoResponseFlow = useCallback(() => {
+    if (isSubmittingNoResponse) return;
+    setHasContactAttempted(false);
+    setResponseWaitEndsAt(null);
+    setResponseWaitSecondsLeft(0);
+    setNoResponseProofUrl('');
+    toast.success('No-response flow cancelled. Back to normal handover.');
+  }, [isSubmittingNoResponse]);
+
   const isResponseWaitActive = !!responseWaitEndsAt && responseWaitSecondsLeft > 0;
   const isResponseWaitCompleted = hasContactAttempted && !!responseWaitEndsAt && responseWaitSecondsLeft <= 0;
   const waitMinutes = String(Math.floor(responseWaitSecondsLeft / 60)).padStart(2, '0');
@@ -1130,6 +1139,16 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                                 ? 'Please wait here until countdown completes.'
                                 : 'Call user to start 10-second wait timer.'}
                           </p>
+                          {hasContactAttempted && (
+                            <button
+                              type="button"
+                              onClick={cancelNoResponseFlow}
+                              disabled={isSubmittingNoResponse}
+                              className="mt-3 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest bg-white border border-amber-200 text-amber-800 hover:bg-amber-100 disabled:opacity-60"
+                            >
+                              Cancel
+                            </button>
+                          )}
                         </div>
 
                         {isResponseWaitCompleted && (
@@ -1213,6 +1232,14 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                                   ? 'Wait time complete. Upload proof and mark user not responding.'
                                   : 'Please wait full 10 seconds before proceeding.'}
                               </p>
+                              <button
+                                type="button"
+                                onClick={cancelNoResponseFlow}
+                                disabled={isSubmittingNoResponse}
+                                className="mt-3 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest bg-white border border-amber-200 text-amber-800 hover:bg-amber-100 disabled:opacity-60"
+                              >
+                                Cancel
+                              </button>
                             </div>
 
                             <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 mb-4">
