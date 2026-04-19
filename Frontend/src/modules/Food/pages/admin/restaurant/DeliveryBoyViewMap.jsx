@@ -10,6 +10,94 @@ const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
 
+const parseCoords = (coords = []) => {
+  if (!Array.isArray(coords) || coords.length < 2) return null
+  let lat = null
+  let lng = null
+  if (coords[0] > -180 && coords[0] < 180 && coords[1] > -90 && coords[1] < 90) {
+    lng = Number(coords[0])
+    lat = Number(coords[1])
+  } else {
+    lat = Number(coords[0])
+    lng = Number(coords[1])
+  }
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null
+  return { lat, lng }
+}
+
+const getZonePoint = (coord = {}) => {
+  if (Array.isArray(coord) && coord.length >= 2) {
+    const parsed = parseCoords(coord)
+    return parsed
+  }
+  const lat = Number(coord?.latitude ?? coord?.lat)
+  const lng = Number(coord?.longitude ?? coord?.lng)
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null
+  return { lat, lng }
+}
+
+const isPointInsidePolygon = (point, polygon = []) => {
+  if (!point || !Array.isArray(polygon) || polygon.length < 3) return false
+  let inside = false
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = Number(polygon[i]?.lng)
+    const yi = Number(polygon[i]?.lat)
+    const xj = Number(polygon[j]?.lng)
+    const yj = Number(polygon[j]?.lat)
+    const intersect =
+      yi > point.lat !== yj > point.lat &&
+      point.lng < ((xj - xi) * (point.lat - yi)) / ((yj - yi) || Number.EPSILON) + xi
+    if (intersect) inside = !inside
+  }
+  return inside
+}
+
+const getOnlinePartnerFromDirectory = (boy = {}) => {
+  const boyId = boy?._id || boy?.id || boy?.deliveryId || boy?.fullData?._id || boy?.fullData?.id
+  if (!boyId) return null
+
+  const availability = boy?.availability || boy?.fullData?.availability || {}
+  const currentLocation = availability?.currentLocation || {}
+  const coords =
+    parseCoords(currentLocation?.coordinates) ||
+    (Number.isFinite(Number(boy?.lastLat)) && Number.isFinite(Number(boy?.lastLng))
+      ? { lat: Number(boy.lastLat), lng: Number(boy.lastLng) }
+      : null)
+  if (!coords) return null
+
+  const status = String(availability?.status || boy?.availabilityStatus || "").toLowerCase()
+  const isOnline = availability?.isOnline === true || status === "online" || status === "busy"
+  if (!isOnline) return null
+
+  const zoneId =
+    boy?.zoneId?._id ||
+    boy?.zoneId?.id ||
+    boy?.zoneId ||
+    boy?.fullData?.zoneId?._id ||
+    boy?.fullData?.zoneId?.id ||
+    boy?.fullData?.zoneId ||
+    null
+
+  return {
+    _id: String(boyId),
+    name: boy?.name || boy?.fullName || boy?.fullData?.name || "Delivery Partner",
+    phone: boy?.phone || boy?.fullData?.phone || "N/A",
+    zoneId: zoneId ? String(zoneId) : null,
+    availability: {
+      isOnline: true,
+      currentLocation: {
+        type: "Point",
+        coordinates: [coords.lng, coords.lat],
+        heading: Number(currentLocation?.heading || 0),
+        speed: Number(currentLocation?.speed || 0),
+        lastUpdate: Number(currentLocation?.timestamp || availability?.lastLocationUpdate || boy?.lastLocationAt || Date.now())
+      },
+      lastLocationUpdate: Number(availability?.lastLocationUpdate || currentLocation?.timestamp || boy?.lastLocationAt || Date.now())
+    }
+  }
+}
 
 export default function DeliveryBoyViewMap() {
   const navigate = useNavigate()
@@ -45,11 +133,24 @@ export default function DeliveryBoyViewMap() {
             const lng = Number(payload?.lng ?? rawLocation?.lng)
             const status = String(payload?.status ?? rawLocation?.status ?? "").toLowerCase()
             const isOnlineFlag = payload?.isOnline ?? rawLocation?.isOnline
+            const rawTimestamp =
+              payload?.timestamp ??
+              rawLocation?.timestamp ??
+              payload?.last_updated ??
+              rawLocation?.last_updated ??
+              0
+            const timestampNumber = Number(rawTimestamp)
+            const timestamp = Number.isFinite(timestampNumber)
+              ? timestampNumber
+              : (Date.parse(String(rawTimestamp || "")) || 0)
+            const isRecentPing = Number.isFinite(timestamp) && Date.now() - timestamp <= 10 * 60 * 1000
 
             const isOnline =
               isOnlineFlag === true ||
               status === "online" ||
-              status === "busy"
+              status === "busy" ||
+              // Fallback for feeds that don't send status but have fresh live coordinates.
+              (isOnlineFlag !== false && Number.isFinite(lat) && Number.isFinite(lng) && isRecentPing)
 
             if (!isOnline || !Number.isFinite(lat) || !Number.isFinite(lng)) {
               return null
@@ -74,9 +175,9 @@ export default function DeliveryBoyViewMap() {
                   coordinates: [lng, lat],
                   heading: Number(payload?.heading ?? rawLocation?.heading) || 0,
                   speed: Number(payload?.speed ?? rawLocation?.speed) || 0,
-                  lastUpdate: Number(payload?.timestamp ?? rawLocation?.timestamp ?? payload?.last_updated ?? rawLocation?.last_updated) || Date.now()
+                  lastUpdate: timestamp || Date.now()
                 },
-                lastLocationUpdate: Number(payload?.timestamp ?? rawLocation?.timestamp ?? payload?.last_updated ?? rawLocation?.last_updated) || Date.now()
+                lastLocationUpdate: timestamp || Date.now()
               }
             }
           })
@@ -97,8 +198,23 @@ export default function DeliveryBoyViewMap() {
 
   const filteredDeliveryBoys = useMemo(() => {
     if (selectedZoneId === "all") return deliveryBoys
-    return deliveryBoys.filter((boy) => String(boy?.zoneId || "") === String(selectedZoneId))
-  }, [deliveryBoys, selectedZoneId])
+    const selectedZone = zones.find(
+      (zone) => String(zone?._id || zone?.id || "") === String(selectedZoneId)
+    )
+    const zonePolygon = Array.isArray(selectedZone?.coordinates)
+      ? selectedZone.coordinates.map(getZonePoint).filter(Boolean)
+      : []
+
+    return deliveryBoys.filter((boy) => {
+      const boyZoneMatched = String(boy?.zoneId || "") === String(selectedZoneId)
+      if (boyZoneMatched) return true
+
+      // Fallback: if zoneId is missing/mismatched, still show rider when live point is inside selected zone polygon.
+      if (zonePolygon.length < 3) return false
+      const riderPoint = parseCoords(boy?.availability?.currentLocation?.coordinates || [])
+      return isPointInsidePolygon(riderPoint, zonePolygon)
+    })
+  }, [deliveryBoys, selectedZoneId, zones])
 
   // Initialize Places Autocomplete when map is loaded
   useEffect(() => {
@@ -161,11 +277,12 @@ export default function DeliveryBoyViewMap() {
         limit: 1000,
         status: "approved",
         isActive: true,
-        includeAvailability: false
+        includeAvailability: true
       })
 
       if (response.data?.success && response.data.data?.deliveryPartners) {
         const nextMap = new Map()
+        const onlineFromApi = []
         response.data.data.deliveryPartners.forEach((boy) => {
           const boyId =
             boy?._id ||
@@ -189,8 +306,17 @@ export default function DeliveryBoyViewMap() {
               boy?.fullData?.zoneId ||
               null
           })
+
+          const onlinePartner = getOnlinePartnerFromDirectory(boy)
+          if (onlinePartner) {
+            onlineFromApi.push(onlinePartner)
+          }
         })
         deliveryMetaByIdRef.current = nextMap
+        if (onlineFromApi.length > 0) {
+          setDeliveryBoys(onlineFromApi)
+          setLoading(false)
+        }
       }
     } catch (error) {
       debugError("Error fetching delivery partner directory:", error)
@@ -443,6 +569,7 @@ export default function DeliveryBoyViewMap() {
     const processedIds = new Set()
 
     // Process all delivery boys and create markers
+    const markerBounds = new google.maps.LatLngBounds()
     for (const boy of markerList) {
       // Get unique ID to prevent duplicate markers
       const fullData = boy.fullData || boy
@@ -533,6 +660,7 @@ export default function DeliveryBoyViewMap() {
         title: boyName,
         zIndex: 1000, // Show above zones
       })
+      markerBounds.extend(new google.maps.LatLng(lat, lng))
 
       // Create info window
       const infoWindow = new google.maps.InfoWindow({
@@ -569,6 +697,15 @@ export default function DeliveryBoyViewMap() {
       })
 
       deliveryBoyMarkersRef.current.push(marker)
+    }
+
+    if (deliveryBoyMarkersRef.current.length > 0) {
+      if (deliveryBoyMarkersRef.current.length === 1) {
+        map.setCenter(markerBounds.getCenter())
+        if (map.getZoom() < 14) map.setZoom(14)
+      } else {
+        map.fitBounds(markerBounds, { top: 60, right: 60, bottom: 60, left: 60 })
+      }
     }
   }
 

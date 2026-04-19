@@ -3950,6 +3950,7 @@ export async function updateDeliverySupportTicket(id, body = {}) {
 export async function getDeliveryPartners(query, adminScope = {}) {
     const { page = 1, limit = 1000, search } = query;
     const filter = { status: 'approved' };
+    const includeAvailability = String(query?.includeAvailability || '').toLowerCase() === 'true';
     const scope = normalizeAdminScope(adminScope);
 
     if (query?.zoneId && String(query.zoneId).trim()) {
@@ -4012,6 +4013,32 @@ export async function getDeliveryPartners(query, adminScope = {}) {
         vehicleType: doc.vehicleType || '',
         status: doc.status,
         availabilityStatus: doc.availabilityStatus || 'offline',
+        lastLat: Number(doc?.lastLat) || 0,
+        lastLng: Number(doc?.lastLng) || 0,
+        lastLocationAt: doc?.lastLocationAt || null,
+        ...(includeAvailability
+            ? {
+                availability: {
+                    isOnline: String(doc?.availabilityStatus || '').toLowerCase() === 'online',
+                    status: doc?.availabilityStatus || 'offline',
+                    lastLocationUpdate: doc?.lastLocationAt || null,
+                    currentLocation:
+                        Array.isArray(doc?.lastLocation?.coordinates) && doc.lastLocation.coordinates.length >= 2
+                            ? {
+                                type: 'Point',
+                                coordinates: doc.lastLocation.coordinates,
+                                lastUpdate: doc?.lastLocationAt || null,
+                            }
+                            : (Number.isFinite(Number(doc?.lastLat)) && Number.isFinite(Number(doc?.lastLng))
+                                ? {
+                                    type: 'Point',
+                                    coordinates: [Number(doc.lastLng), Number(doc.lastLat)],
+                                    lastUpdate: doc?.lastLocationAt || null,
+                                }
+                                : null),
+                },
+            }
+            : {}),
         profilePhoto: doc.profilePhoto || null,
         profileImage: doc.profilePhoto ? { url: doc.profilePhoto } : null
     }));
