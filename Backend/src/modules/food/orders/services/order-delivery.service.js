@@ -224,6 +224,7 @@ export async function listOrdersAvailableDelivery(deliveryPartnerId, query) {
             'delivered',
             'cancelled_by_user',
             'cancelled_by_restaurant',
+            'cancelled_by_user_unavailable',
             'cancelled_by_admin',
           ],
         },
@@ -277,6 +278,7 @@ export async function acceptOrderDelivery(orderId, deliveryPartnerId) {
   const cancellableStatuses = [
     'cancelled_by_user',
     'cancelled_by_restaurant',
+    'cancelled_by_user_unavailable',
     'cancelled_by_admin',
   ];
 

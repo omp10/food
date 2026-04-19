@@ -1123,6 +1123,8 @@ export default function Cart() {
   const total = displayedAppliedCoupon 
     ? (pricing?.total ? (Number(pricing.total) + Number(pricing.autoOfferDiscount || 0)) : totalBeforeDiscount - effectiveDiscount)
     : (pricing?.total || totalBeforeDiscount - effectiveDiscount)
+  const previousDue = Number(pricing?.previousDue || 0)
+  const totalPayable = Number(pricing?.totalPayable ?? (total + previousDue))
     
   const savings = displayedAppliedCoupon ? couponDiscount : (pricing?.savings ?? Math.max(0, totalBeforeDiscount - total))
   const selectedPaymentLabel =
@@ -1769,8 +1771,8 @@ export default function Cart() {
       });
 
       // Check wallet balance if wallet payment selected
-      if (selectedPaymentMethod === "wallet" && walletBalance < total) {
-        toast.error(`Insufficient wallet balance. Required: ${RUPEE_SYMBOL}${total.toFixed(0)}, Available: ${RUPEE_SYMBOL}${walletBalance.toFixed(0)}`)
+      if (selectedPaymentMethod === "wallet" && walletBalance < totalPayable) {
+        toast.error(`Insufficient wallet balance. Required: ${RUPEE_SYMBOL}${totalPayable.toFixed(0)}, Available: ${RUPEE_SYMBOL}${walletBalance.toFixed(0)}`)
         setIsPlacingOrder(false)
         return
       }
@@ -2719,13 +2721,13 @@ export default function Cart() {
                         {savings > 0 ? (
                           <>
                             <span className="text-base text-gray-400 dark:text-gray-500 line-through font-medium">{RUPEE_SYMBOL}{totalBeforeDiscount.toFixed(2)}</span>
-                            <span className="text-base font-bold text-gray-900 dark:text-white">{RUPEE_SYMBOL}{total.toFixed(2)}</span>
+                            <span className="text-base font-bold text-gray-900 dark:text-white">{RUPEE_SYMBOL}{totalPayable.toFixed(2)}</span>
                             <span className="text-[11px] bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded text-center ml-1 font-semibold border border-blue-200 dark:border-blue-800">
                               You saved {RUPEE_SYMBOL}{savings.toFixed(0)}
                             </span>
                           </>
                         ) : (
-                          <span className="text-base font-bold text-gray-900 dark:text-white">{RUPEE_SYMBOL}{total.toFixed(2)}</span>
+                          <span className="text-base font-bold text-gray-900 dark:text-white">{RUPEE_SYMBOL}{totalPayable.toFixed(2)}</span>
                         )}
                       </div>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Incl. taxes and charges</p>
@@ -2774,9 +2776,15 @@ export default function Cart() {
                         <span>-{RUPEE_SYMBOL}{couponDiscount.toFixed(2)}</span>
                       </div>
                     )}
+                    {previousDue > 0 && (
+                      <div className="flex justify-between text-sm font-semibold text-amber-700">
+                        <span>Previous Due</span>
+                        <span>{RUPEE_SYMBOL}{previousDue.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-base font-bold pt-3 mt-1 border-t border-gray-100 dark:border-gray-800 text-gray-900 dark:text-white">
                       <span>To Pay</span>
-                      <span>{RUPEE_SYMBOL}{total.toFixed(2)}</span>
+                      <span>{RUPEE_SYMBOL}{totalPayable.toFixed(2)}</span>
                     </div>
                   </div>
                 )}
@@ -2834,13 +2842,13 @@ export default function Cart() {
             {/* Place Order Button */}
             <button
               onClick={handlePlaceOrder}
-              disabled={isPlacingOrder || (selectedPaymentMethod === "wallet" && walletBalance < total)}
+              disabled={isPlacingOrder || (selectedPaymentMethod === "wallet" && walletBalance < totalPayable)}
               className="w-full text-white px-6 h-12 md:h-14 rounded-2xl font-bold shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between transition-transform active:scale-[0.98]"
               style={{ backgroundImage: BRAND_THEME.tokens.orders.primaryGradient }}
             >
               {(selectedPaymentMethod === "razorpay" || selectedPaymentMethod === "wallet" || selectedPaymentMethod === "cash") && (
                 <div className="text-left flex flex-col justify-center border-r-[1.5px] border-white/20 pr-4">
-                  <span className="text-xs md:text-sm font-semibold text-white/90">{RUPEE_SYMBOL}{total.toFixed(2)}</span>
+                  <span className="text-xs md:text-sm font-semibold text-white/90">{RUPEE_SYMBOL}{totalPayable.toFixed(2)}</span>
                   <span className="text-[9px] md:text-[10px] uppercase font-bold tracking-wider text-white/80 mt-[-2px]">Total</span>
                 </div>
               )}
@@ -2882,9 +2890,9 @@ export default function Cart() {
                     <div>
                       <p className="text-lg font-semibold text-gray-900">
                         {selectedPaymentMethod === "razorpay"
-                          ? `Pay ${RUPEE_SYMBOL}${total.toFixed(2)} online (Razorpay)`
+                          ? `Pay ${RUPEE_SYMBOL}${totalPayable.toFixed(2)} online (Razorpay)`
                           : selectedPaymentMethod === "wallet"
-                            ? `Pay ${RUPEE_SYMBOL}${total.toFixed(2)} from Wallet`
+                            ? `Pay ${RUPEE_SYMBOL}${totalPayable.toFixed(2)} from Wallet`
                             : `Pay on delivery (COD)`}
                       </p>
                     </div>
@@ -3121,7 +3129,7 @@ export default function Cart() {
                           color: 'bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400',
                           selectedColor: 'bg-blue-500 text-white',
                           subInfo: `Bal: ${RUPEE_SYMBOL}${walletBalance.toFixed(0)}`,
-                          disabled: walletBalance < total,
+                          disabled: walletBalance < totalPayable,
                           disabledText: 'Low Balance'
                         },
                         {
@@ -3208,7 +3216,7 @@ export default function Cart() {
                     >
                       <div className="flex-shrink-0">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">Total Pay</p>
-                        <p className="text-xl font-black tabular-nums" style={{ color: BRAND_THEME.tokens.cart.primaryText }}>{RUPEE_SYMBOL}{total.toFixed(0)}</p>
+                        <p className="text-xl font-black tabular-nums" style={{ color: BRAND_THEME.tokens.cart.primaryText }}>{RUPEE_SYMBOL}{totalPayable.toFixed(0)}</p>
                       </div>
                       <Button
                         onClick={() => setShowPaymentSheet(false)}

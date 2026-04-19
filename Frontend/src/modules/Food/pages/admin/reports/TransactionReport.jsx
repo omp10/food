@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
-import { BarChart3, ChevronDown, Info, Settings, FileText, FileSpreadsheet, Code, Loader2 } from "lucide-react"
+import { BarChart3, ChevronDown, Info, Settings, FileText, FileSpreadsheet, Code, Loader2, Wallet } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@food/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@food/components/ui/dialog"
 import { exportTransactionReportToCSV, exportTransactionReportToExcel, exportTransactionReportToPDF, exportTransactionReportToJSON } from "@food/components/admin/reports/reportsExportUtils"
@@ -31,7 +31,8 @@ export default function TransactionReport() {
     refundedTransaction: 0,
     adminEarning: 0,
     restaurantEarning: 0,
-    deliverymanEarning: 0
+    deliverymanEarning: 0,
+    userDueOutstanding: 0,
   })
   const [filters, setFilters] = useState({
     zone: "All Zones",
@@ -106,7 +107,8 @@ export default function TransactionReport() {
             refundedTransaction: 0,
             adminEarning: 0,
             restaurantEarning: 0,
-            deliverymanEarning: 0
+            deliverymanEarning: 0,
+            userDueOutstanding: 0,
           })
         } else {
           setTransactions([])
@@ -178,11 +180,45 @@ export default function TransactionReport() {
     if (['pending', 'created', 'authorized', 'cod_pending'].includes(normalized)) {
       return 'bg-yellow-100 text-yellow-700'
     }
-    if (['failed', 'refunded', 'cancelled', 'cancelled_by_admin', 'cancelled_by_user', 'cancelled_by_restaurant'].includes(normalized)) {
+    if (
+      [
+        'failed',
+        'refunded',
+        'cancelled',
+        'cancelled_by_admin',
+        'cancelled_by_user',
+        'cancelled_by_restaurant',
+        'cancelled_by_user_unavailable',
+        'cancelled - user unavailable',
+      ].includes(normalized)
+    ) {
       return 'bg-red-100 text-red-700'
     }
 
     return 'bg-slate-100 text-slate-700'
+  }
+
+  const getDisplayStatus = (transaction) => {
+    return (
+      transaction?.displayStatus ||
+      transaction?.status ||
+      transaction?.orderStatus ||
+      'N/A'
+    )
+  }
+
+  const getDueAmount = (transaction) => {
+    const directDue = Number(transaction?.dueAmount || 0)
+    if (directDue > 0) return directDue
+    return Number(transaction?.noResponseMeta?.dueAmount || 0)
+  }
+
+  const getDueStatus = (transaction) => {
+    const status =
+      transaction?.dueStatus ||
+      transaction?.noResponseMeta?.dueStatus ||
+      (getDueAmount(transaction) > 0 ? "unpaid" : "n/a")
+    return String(status || "n/a").toUpperCase()
   }
 
   if (loading) {
@@ -368,6 +404,24 @@ export default function TransactionReport() {
                 <p className="text-base font-bold text-orange-600">{formatCurrency(summary.deliverymanEarning)}</p>
               </div>
             </div>
+
+            {/* User Due Outstanding */}
+            <div className="rounded-lg shadow-sm border border-slate-200 p-3" style={{ backgroundColor: '#f1f5f9' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-amber-700" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-slate-900">User Due Pending</p>
+                    <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
+                      <Info className="w-3 h-3 text-white" />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-base font-bold text-amber-700">{formatCurrency(summary.userDueOutstanding || 0)}</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -446,13 +500,15 @@ export default function TransactionReport() {
                   <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: '8%' }}>Delivery Charge</th>
                   <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: '8%' }}>Platform Fee</th>
                   <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: '8%' }}>Order Amount</th>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: '8%' }}>Penalty / Due</th>
+                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: '8%' }}>Due Status</th>
                   <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: '8%' }}>Status</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-100">
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="px-6 py-20 text-center">
+                    <td colSpan={15} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
                         <p className="text-sm text-slate-500">No transactions match your search</p>
@@ -508,8 +564,24 @@ export default function TransactionReport() {
                         <span className="text-[10px] font-medium text-slate-900">{formatFullCurrency(transaction.orderAmount)}</span>
                       </td>
                       <td className="px-1.5 py-1">
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${getStatusBadgeClasses(transaction.status || transaction.orderStatus)}`}>
-                          {transaction.status || transaction.orderStatus || 'N/A'}
+                        <span className={`text-[10px] font-semibold ${getDueAmount(transaction) > 0 ? "text-amber-700" : "text-slate-500"}`}>
+                          {formatFullCurrency(getDueAmount(transaction))}
+                        </span>
+                      </td>
+                      <td className="px-1.5 py-1">
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                          getDueStatus(transaction) === "UNPAID"
+                            ? "bg-amber-100 text-amber-700"
+                            : getDueStatus(transaction) === "PAID"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-slate-100 text-slate-600"
+                        }`}>
+                          {getDueStatus(transaction)}
+                        </span>
+                      </td>
+                      <td className="px-1.5 py-1">
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${getStatusBadgeClasses(getDisplayStatus(transaction))}`}>
+                          {getDisplayStatus(transaction)}
                         </span>
                       </td>
                     </tr>

@@ -158,8 +158,14 @@ export function validateOrderStatusDto(body) {
             'ready_for_pickup',
             'picked_up',
             'delivered',
-            'cancelled_by_restaurant'
-        ])
+            'cancelled_by_restaurant',
+            'cancelled_by_user_unavailable'
+        ]),
+        reasonType: z.string().trim().optional(),
+        reason: z.string().trim().optional(),
+        noResponseProofImage: z.string().trim().optional(),
+        callAttempted: z.boolean().optional(),
+        waitTimerCompletedAt: z.union([z.string().trim(), z.date()]).optional()
     });
     const result = schema.safeParse(body);
     if (!result.success) {

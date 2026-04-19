@@ -12,6 +12,7 @@ const getStatusColor = (orderStatus) => {
     "Food On The Way": "bg-yellow-100 text-yellow-700",
     "Canceled": "bg-rose-100 text-rose-700",
     "Cancelled by Restaurant": "bg-red-100 text-red-700",
+    "Cancelled - User Unavailable": "bg-red-100 text-red-700",
     "Cancelled by User": "bg-orange-100 text-orange-700",
     "Payment Failed": "bg-red-100 text-red-700",
     "Refunded": "bg-sky-100 text-sky-700",
@@ -22,9 +23,11 @@ const getStatusColor = (orderStatus) => {
 }
 
 const getPaymentStatusColor = (paymentStatus) => {
-  if (paymentStatus === "Paid") return "text-emerald-600"
-  if (paymentStatus === "Refunded") return "text-sky-600"
-  if (paymentStatus === "Unpaid" || paymentStatus === "Failed") return "text-red-600"
+  const normalized = String(paymentStatus || "").toLowerCase()
+  if (normalized.includes("no due")) return "text-emerald-600"
+  if (normalized.startsWith("paid") || normalized.includes("collected")) return "text-emerald-600"
+  if (normalized.includes("refunded")) return "text-sky-600"
+  if (normalized.startsWith("unpaid") || normalized.includes("failed") || normalized.includes("due")) return "text-red-600"
   return "text-slate-600"
 }
 

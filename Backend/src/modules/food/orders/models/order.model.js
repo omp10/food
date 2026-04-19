@@ -39,6 +39,8 @@ const pricingSchema = new mongoose.Schema(
         platformFee: { type: Number, default: 0, min: 0 },
         restaurantCommission: { type: Number, default: 0, min: 0 },
         discount: { type: Number, default: 0, min: 0 },
+        previousDue: { type: Number, default: 0, min: 0 },
+        totalPayable: { type: Number, default: 0, min: 0 },
         // Discount breakdown for reporting
         couponByAdmin: { type: Number, default: 0, min: 0 },
         couponByRestaurant: { type: Number, default: 0, min: 0 },
@@ -259,6 +261,7 @@ const orderSchema = new mongoose.Schema(
                 'delivered',
                 'cancelled_by_user',
                 'cancelled_by_restaurant',
+                'cancelled_by_user_unavailable',
                 'cancelled_by_admin'
             ],
             default: 'created'

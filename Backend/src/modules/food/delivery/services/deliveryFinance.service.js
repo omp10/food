@@ -9,6 +9,8 @@ import { getDeliveryCashLimitSettings } from '../../admin/services/admin.service
 import { ValidationError } from '../../../../core/auth/errors.js';
 import { createRazorpayOrder, getRazorpayKeyId, isRazorpayConfigured, verifyPaymentSignature } from '../../orders/helpers/razorpay.helper.js';
 
+const PAYABLE_DELIVERY_STATUSES = ['delivered', 'cancelled_by_user_unavailable'];
+
 /**
  * Enhanced wallet fetch for delivery partners.
  * Integrates:
@@ -30,7 +32,7 @@ export const getDeliveryPartnerWalletEnhanced = async (deliveryPartnerId) => {
         getDeliveryCashLimitSettings(),
         // 1. Total Earnings from Delivered Orders
         FoodOrder.aggregate([
-            { $match: { 'dispatch.deliveryPartnerId': partnerId, orderStatus: 'delivered' } },
+            { $match: { 'dispatch.deliveryPartnerId': partnerId, orderStatus: { $in: PAYABLE_DELIVERY_STATUSES } } },
             { $group: { _id: null, totalEarned: { $sum: { $ifNull: ['$riderEarning', 0] } } } }
         ]),
         // 2. Gross cash collected (COD orders)
@@ -98,9 +100,9 @@ export const getDeliveryPartnerWalletEnhanced = async (deliveryPartnerId) => {
 
     // Fetch transactions for UI (Orders, Bonuses, Withdrawals)
     const [ordersTx] = await Promise.all([
-        FoodOrder.find({ 'dispatch.deliveryPartnerId': partnerId, orderStatus: 'delivered' })
+        FoodOrder.find({ 'dispatch.deliveryPartnerId': partnerId, orderStatus: { $in: PAYABLE_DELIVERY_STATUSES } })
             .sort({ createdAt: -1 })
-            .select('orderId riderEarning payment orderStatus createdAt')
+            .select('orderId riderEarning payment orderStatus createdAt updatedAt')
             .limit(20)
             .lean(),
     ]);
@@ -111,8 +113,14 @@ export const getDeliveryPartnerWalletEnhanced = async (deliveryPartnerId) => {
             type: 'payment',
             amount: o.riderEarning || 0,
             status: 'Completed',
-            date: o.createdAt,
-            description: o.payment?.method === 'cash' ? 'COD delivery earning' : 'Online delivery earning',
+            date:
+                String(o?.orderStatus || '').toLowerCase() === 'cancelled_by_user_unavailable'
+                    ? (o.updatedAt || o.createdAt)
+                    : o.createdAt,
+            description:
+                String(o?.orderStatus || '').toLowerCase() === 'cancelled_by_user_unavailable'
+                    ? 'User unavailable compensation'
+                    : (o.payment?.method === 'cash' ? 'COD delivery earning' : 'Online delivery earning'),
             orderId: o.orderId
         })),
         ...(withdrawalsList || []).map(w => ({

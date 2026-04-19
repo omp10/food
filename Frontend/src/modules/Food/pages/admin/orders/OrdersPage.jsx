@@ -439,6 +439,39 @@ export default function OrdersPage({ statusKey = "all" }) {
       }
 
       const backendStatus = String(order.orderStatus || "").toLowerCase()
+      const isUserUnavailableOrder =
+        backendStatus === "cancelled_by_user_unavailable" ||
+        order?.noResponseMeta?.isUserUnavailable === true
+      const noResponseDueAmount = Number(order?.noResponseMeta?.dueAmount || 0)
+      const noResponseDueStatus = String(order?.noResponseMeta?.dueStatus || "").toLowerCase()
+      const normalizedPaymentMethod = String(paymentMethod || "").toLowerCase()
+      const isCashOrder = normalizedPaymentMethod === "cash" || normalizedPaymentMethod === "cod"
+      let paymentCollectionStatus = order.paymentCollectionStatus || null
+
+      // User-unavailable payment matrix:
+      // COD -> cash due / recovered due
+      // Online/Wallet -> already paid, no due
+      if (isUserUnavailableOrder) {
+        if (isCashOrder) {
+          if (noResponseDueStatus === "paid") {
+            paymentStatus = "Paid"
+            paymentCollectionStatus = noResponseDueAmount > 0
+              ? `Recovered User Due (\u20B9${noResponseDueAmount.toFixed(2)})`
+              : "Recovered User Due"
+          } else {
+            paymentStatus = "Unpaid"
+            paymentCollectionStatus = noResponseDueAmount > 0
+              ? `User Unavailable - Cash Due (\u20B9${noResponseDueAmount.toFixed(2)})`
+              : "User Unavailable - Cash Due"
+          }
+        } else {
+          if (paymentStatus !== "Refunded" && paymentStatus !== "Failed") {
+            paymentStatus = "Paid"
+          }
+          paymentCollectionStatus = "No Due - Online Paid"
+        }
+      }
+
       let displayStatus = order.orderStatus
       if (!backendStatus || backendStatus === "created" || backendStatus === "confirmed") {
         displayStatus = "Pending"
@@ -450,8 +483,11 @@ export default function OrdersPage({ statusKey = "all" }) {
         displayStatus = "Food On The Way"
       } else if (backendStatus === "delivered") {
         displayStatus = "Delivered"
-      } else if (backendStatus === "cancelled_by_restaurant") {
-        displayStatus = "Cancelled by Restaurant"
+      } else if (backendStatus === "cancelled_by_restaurant" || backendStatus === "cancelled_by_user_unavailable") {
+        displayStatus = order?.noResponseMeta?.isUserUnavailable
+          || backendStatus === "cancelled_by_user_unavailable"
+          ? "Cancelled - User Unavailable"
+          : "Cancelled by Restaurant"
       } else if (backendStatus === "cancelled_by_user") {
         displayStatus = "Cancelled by User"
       } else if (backendStatus === "cancelled_by_admin") {
@@ -504,12 +540,15 @@ export default function OrdersPage({ statusKey = "all" }) {
         totalAmount,
         paymentType,
         paymentStatus,
+        paymentCollectionStatus,
         orderStatus: displayStatus,
         deliveryPartnerName,
         deliveryPartnerPhone,
         deliveryType: order.deliveryType || "Home Delivery",
         orderOtp: order.deliveryOtp,
         address: order.address || order.customerAddress || order.deliveryAddress,
+        noResponseDueAmount,
+        noResponseDueStatus,
         refundStatus: order.payment?.refund?.status || (order.payment?.status === 'refunded' ? 'processed' : null)
       }
     })

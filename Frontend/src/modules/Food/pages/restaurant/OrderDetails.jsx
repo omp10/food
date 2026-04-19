@@ -74,6 +74,14 @@ export default function OrderDetails() {
         if (response.data?.success && response.data.data?.order) {
           const order = response.data.data.order
           const orderStatusRaw = String(order.status || order.orderStatus || "").toLowerCase()
+          const isNoResponseCancel =
+            (orderStatusRaw === "cancelled_by_restaurant" || orderStatusRaw === "cancelled_by_user_unavailable") &&
+            (order?.noResponseMeta?.isUserUnavailable === true || orderStatusRaw === "cancelled_by_user_unavailable")
+          const isCancelledStatus =
+            orderStatusRaw === "cancelled" || orderStatusRaw.startsWith("cancelled_")
+          const statusForUi = isNoResponseCancel
+            ? "CANCELLED - USER UNAVAILABLE"
+            : (isCancelledStatus ? "CANCELLED" : orderStatusRaw.toUpperCase() || "PENDING")
           const pricing = order.pricing || {}
           const computedSubtotal = Array.isArray(order.items)
             ? order.items.reduce((sum, item) => {
@@ -195,7 +203,7 @@ export default function OrderDetails() {
           // Transform API order data to match component structure
           const transformedOrder = {
             id: order.orderId || order._id,
-            status: orderStatusRaw.toUpperCase() || 'PENDING',
+            status: statusForUi,
             date: new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
             time: new Date(order.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
             restaurant: restaurantName,
@@ -230,7 +238,9 @@ export default function OrderDetails() {
                 ? (order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null)
                 : null,
             dispatchStatus: order.dispatch?.status || null,
-            reason: order.cancellationReason || '',
+            reason: isNoResponseCancel
+              ? 'Cancelled: user unavailable at drop location.'
+              : (order.cancellationReason || ''),
             timeline: [
               { event: 'Order placed', timestamp: new Date(order.createdAt).toLocaleString('en-GB'), status: 'completed' },
               ...(reached.confirmed ? [{ event: 'Order confirmed', timestamp: order.tracking?.confirmed?.timestamp ? new Date(order.tracking.confirmed.timestamp).toLocaleString('en-GB') : '', status: 'completed' }] : []),
@@ -238,7 +248,7 @@ export default function OrderDetails() {
               ...(reached.ready ? [{ event: 'Ready for pickup', timestamp: order.tracking?.ready?.timestamp ? new Date(order.tracking.ready.timestamp).toLocaleString('en-GB') : '', status: 'completed' }] : []),
               ...(reached.outForDelivery ? [{ event: 'Out for delivery', timestamp: order.tracking?.outForDelivery?.timestamp ? new Date(order.tracking.outForDelivery.timestamp).toLocaleString('en-GB') : '', status: 'completed' }] : []),
               ...(reached.delivered ? [{ event: 'Delivered', timestamp: order.tracking?.delivered?.timestamp ? new Date(order.tracking.delivered.timestamp).toLocaleString('en-GB') : '', status: 'completed' }] : []),
-              ...(statusLower === 'cancelled' ? [{ event: 'Cancelled', timestamp: order.cancelledAt ? new Date(order.cancelledAt).toLocaleString('en-GB') : '', status: 'rejected', reason: order.cancellationReason }] : [])
+              ...(isCancelledStatus ? [{ event: 'Cancelled', timestamp: order.cancelledAt ? new Date(order.cancelledAt).toLocaleString('en-GB') : '', status: 'rejected', reason: isNoResponseCancel ? 'User unavailable at drop location.' : order.cancellationReason }] : [])
             ]
           }
           
@@ -357,7 +367,7 @@ export default function OrderDetails() {
     doc.text("Status:", leftMargin, yPosition)
     doc.setFont("helvetica", "normal")
     // Set color based on status
-    if (orderData.status === "REJECTED" || orderData.status === "CANCELLED") {
+    if (orderData.status === "REJECTED" || String(orderData.status || "").startsWith("CANCELLED")) {
       doc.setTextColor(220, 38, 38) // Red
     } else if (orderData.status === "DELIVERED") {
       doc.setTextColor(22, 163, 74) // Green
@@ -593,12 +603,13 @@ export default function OrderDetails() {
   const getStatusColor = (status) => {
     switch (status) {
       case "REJECTED":
-      case "CANCELLED":
         return "bg-red-700 text-white"
       case "DELIVERED":
         return "bg-green-600 text-white"
       default:
-        return "bg-gray-600 text-white"
+        return String(status || "").startsWith("CANCELLED")
+          ? "bg-red-700 text-white"
+          : "bg-gray-600 text-white"
     }
   }
 

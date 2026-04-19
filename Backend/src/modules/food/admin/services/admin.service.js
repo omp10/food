@@ -29,6 +29,7 @@ import { FoodRestaurantSupportTicket } from '../../restaurant/models/supportTick
 import { RestaurantOffer } from '../../restaurant/models/restaurantOffer.model.js';
 import { FoodOrder } from '../../orders/models/order.model.js';
 import { FoodTransaction } from '../../orders/models/foodTransaction.model.js';
+import { FoodUserDebt } from '../../orders/models/userDebt.model.js';
 import { StoreProduct } from '../models/storeProduct.model.js';
 import { StoreOrder } from '../models/storeOrder.model.js';
 import { FoodRestaurantWithdrawal } from '../../restaurant/models/foodRestaurantWithdrawal.model.js';
@@ -343,7 +344,7 @@ export async function getRestaurants(query, adminScope = {}) {
     return { restaurants, total, page, limit };
 }
 
-const CANCELLED_ORDER_STATUSES = ['cancelled_by_user', 'cancelled_by_restaurant', 'cancelled_by_admin'];
+const CANCELLED_ORDER_STATUSES = ['cancelled_by_user', 'cancelled_by_restaurant', 'cancelled_by_user_unavailable', 'cancelled_by_admin'];
 const PENDING_ORDER_STATUSES = ['created', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up'];
 
 const getDateRangeByPeriod = (periodRaw) => {
@@ -767,6 +768,24 @@ export async function getTransactionReport(query = {}) {
         .sort({ createdAt: -1 })
         .lean();
 
+    const orderIds = transactionRows
+        .map((tx) => tx?.orderId?._id || tx?.orderId)
+        .filter((id) => mongoose.Types.ObjectId.isValid(id))
+        .map((id) => new mongoose.Types.ObjectId(id));
+
+    const noResponseDebts = orderIds.length
+        ? await FoodUserDebt.find({
+            failedOrderId: { $in: orderIds },
+            reasonType: 'user_unavailable',
+        })
+            .select('failedOrderId amount status proofImageUrl metadata settledOrderId settledAt')
+            .lean()
+        : [];
+
+    const noResponseMap = new Map(
+        noResponseDebts.map((row) => [String(row?.failedOrderId), row]),
+    );
+
     const transactions = transactionRows.map((tx) => {
         const order = tx.orderId || {};
         const pricing = order.pricing || {};
@@ -788,6 +807,16 @@ export async function getTransactionReport(query = {}) {
             pricing.platformFee !== undefined && pricing.platformFee !== null
                 ? Number(pricing.platformFee || 0) || 0
                 : platformFeeDerived;
+
+        const orderIdForMeta = order?._id ? String(order._id) : '';
+        const debt = orderIdForMeta ? noResponseMap.get(orderIdForMeta) : null;
+        const backendOrderStatus = String(order?.orderStatus || '').toLowerCase();
+        const isUserUnavailableCancel =
+            (backendOrderStatus === 'cancelled_by_restaurant' || backendOrderStatus === 'cancelled_by_user_unavailable') && Boolean(debt);
+        const displayStatus = isUserUnavailableCancel
+            ? 'Cancelled - User Unavailable'
+            : (tx.status || order?.orderStatus || 'N/A');
+
         return {
             id: tx._id,
             orderId: tx.orderReadableId || order.orderId || 'N/A',
@@ -805,19 +834,69 @@ export async function getTransactionReport(query = {}) {
             deliveryCharge: pricing.deliveryFee || 0,
             platformFee,
             orderAmount: tx.amounts?.totalCustomerPaid || pricing.total || 0,
-            status: tx.status
+            status: tx.status,
+            orderStatus: order?.orderStatus || '',
+            displayStatus,
+            noResponseMeta: isUserUnavailableCancel
+                ? {
+                    isUserUnavailable: true,
+                    dueAmount: Number(debt?.amount || 0),
+                    dueStatus: debt?.status || 'pending',
+                    proofImageUrl: debt?.proofImageUrl || '',
+                    callAttempted: Boolean(debt?.metadata?.callAttempted),
+                    waitTimerCompletedAt: debt?.metadata?.waitTimerCompletedAt || null,
+                    settledOrderId: debt?.settledOrderId || null,
+                    settledAt: debt?.settledAt || null,
+                }
+                : null,
         };
     });
+
+    const isNoResponseCompensatedTx = (tx) => {
+        const orderStatus = String(tx?.orderId?.orderStatus || '').toLowerCase();
+        const historyKinds = Array.isArray(tx?.history)
+            ? tx.history.map((h) => String(h?.kind || '').toLowerCase())
+            : [];
+        return (
+            orderStatus === 'cancelled_by_user_unavailable' ||
+            historyKinds.includes('cancelled_by_delivery_no_response')
+        );
+    };
+
+    const isNoResponseDuePendingTx = (tx) => {
+        const orderMongoId = String(tx?.orderId?._id || tx?.orderId || '').trim();
+        if (!orderMongoId) return false;
+        const debt = noResponseMap.get(orderMongoId);
+        if (!debt) return false;
+        return String(debt?.status || '').toLowerCase() === 'unpaid';
+    };
+
+    const isCompletedLikeTx = (tx) => {
+        const txStatus = String(tx?.status || '').toLowerCase();
+        const orderStatus = String(tx?.orderId?.orderStatus || '').toLowerCase();
+        const isPendingDueNoResponse =
+            isNoResponseCompensatedTx(tx) && isNoResponseDuePendingTx(tx);
+        if (isPendingDueNoResponse) return false;
+        return (
+            ['captured', 'settled', 'authorized'].includes(txStatus) ||
+            orderStatus === 'delivered' ||
+            isNoResponseCompensatedTx(tx)
+        );
+    };
 
     let completedTransaction = 0;
     let refundedTransaction = 0;
     let adminEarning = 0;
     let restaurantEarning = 0;
     let deliverymanEarning = 0;
+    const userDueOutstanding = (noResponseDebts || []).reduce((sum, debt) => {
+        if (String(debt?.status || '').toLowerCase() !== 'unpaid') return sum;
+        return sum + (Number(debt?.amount || 0) || 0);
+    }, 0);
 
     for (const tx of transactionRows) {
         // Calculate Summary
-        if (tx.status === 'captured' || tx.status === 'settled' || (tx.orderId && tx.orderId.orderStatus === 'delivered')) {
+        if (isCompletedLikeTx(tx)) {
             completedTransaction += tx.amounts?.totalCustomerPaid || 0;
             adminEarning += tx.amounts?.platformNetProfit || 0;
             restaurantEarning += tx.amounts?.restaurantShare || 0;
@@ -835,6 +914,7 @@ export async function getTransactionReport(query = {}) {
         adminEarning,
         restaurantEarning,
         deliverymanEarning,
+        userDueOutstanding,
     };
 
     return { transactions, summary };
@@ -2192,13 +2272,20 @@ export async function getRestaurantAnalytics(restaurantId) {
     const currentYear = now.getFullYear();
 
     const completedOrders = orders.filter(o => o.orderStatus === 'delivered');
-    const cancelledOrders = orders.filter(o => ['cancelled_by_user', 'cancelled_by_restaurant', 'cancelled_by_admin'].includes(o.orderStatus));
+    const cancelledOrders = orders.filter(o => ['cancelled_by_user', 'cancelled_by_restaurant', 'cancelled_by_user_unavailable', 'cancelled_by_admin'].includes(o.orderStatus));
 
     // Money metrics should come from the ledger (FoodTransaction), not FoodOrder.
     const completedTx = (txRows || []).filter((tx) => {
-        const orderStatus = tx?.orderId?.orderStatus;
-        if (orderStatus) return orderStatus === 'delivered';
-        return tx?.status === 'captured' || tx?.status === 'authorized' || tx?.status === 'settled';
+        const orderStatus = String(tx?.orderId?.orderStatus || '').toLowerCase();
+        const txStatus = String(tx?.status || '').toLowerCase();
+        const historyKinds = Array.isArray(tx?.history)
+            ? tx.history.map((h) => String(h?.kind || '').toLowerCase())
+            : [];
+        const isNoResponseCompensated =
+            orderStatus === 'cancelled_by_user_unavailable' ||
+            historyKinds.includes('cancelled_by_delivery_no_response');
+        if (orderStatus) return orderStatus === 'delivered' || isNoResponseCompensated;
+        return ['captured', 'authorized', 'settled'].includes(txStatus) || isNoResponseCompensated;
     });
 
     const sum = (arr, pick) => (arr || []).reduce((s, it) => s + (Number(pick(it)) || 0), 0);

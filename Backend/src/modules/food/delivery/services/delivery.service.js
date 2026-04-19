@@ -8,6 +8,8 @@ import { uploadImageBuffer } from '../../../../services/cloudinary.service.js';
 import { ValidationError } from '../../../../core/auth/errors.js';
 import { getDeliveryCashLimitSettings } from '../../admin/services/admin.service.js';
 
+const PAYABLE_DELIVERY_STATUSES = ['delivered', 'cancelled_by_user_unavailable'];
+
 export const registerDeliveryPartner = async (payload, files) => {
     const { 
         name, phone, email, countryCode, address, city, state, 
@@ -337,7 +339,7 @@ export const getDeliveryPartnerWallet = async (deliveryPartnerId) => {
             {
                 $match: {
                     'dispatch.deliveryPartnerId': partnerId,
-                    orderStatus: 'delivered',
+                    orderStatus: { $in: PAYABLE_DELIVERY_STATUSES },
                 }
             },
             {
@@ -379,10 +381,10 @@ export const getDeliveryPartnerWallet = async (deliveryPartnerId) => {
     const [paymentTxList, bonusTxList] = await Promise.all([
         FoodOrder.find({
             'dispatch.deliveryPartnerId': partnerId,
-            orderStatus: 'delivered',
+            orderStatus: { $in: PAYABLE_DELIVERY_STATUSES },
         })
             .sort({ 'deliveryState.deliveredAt': -1, createdAt: -1 })
-            .select('orderId riderEarning payment orderStatus deliveryState createdAt deliveryState.deliveredAt')
+            .select('orderId riderEarning payment orderStatus deliveryState createdAt updatedAt deliveryState.deliveredAt')
             .limit(2000)
             .lean(),
         DeliveryBonusTransaction.find({ deliveryPartnerId: partnerId })
@@ -393,7 +395,8 @@ export const getDeliveryPartnerWallet = async (deliveryPartnerId) => {
 
     const paymentTransactions = (paymentTxList || []).map((o) => {
         const deliveredAt = o?.deliveryState?.deliveredAt || o?.deliveredAt || null;
-        const date = deliveredAt || o?.createdAt || new Date();
+        const isUserUnavailable = String(o?.orderStatus || '').toLowerCase() === 'cancelled_by_user_unavailable';
+        const date = deliveredAt || (isUserUnavailable ? (o?.updatedAt || o?.createdAt) : o?.createdAt) || new Date();
         return {
             _id: o._id,
             type: 'payment',
@@ -404,7 +407,10 @@ export const getDeliveryPartnerWallet = async (deliveryPartnerId) => {
             orderId: o.orderId || String(o._id),
             paymentMethod: o?.payment?.method || '',
             metadata: { orderId: o.orderId || String(o._id) },
-            description: o?.payment?.method === 'cash' ? 'COD delivery earning' : 'Online delivery earning'
+            description:
+                String(o?.orderStatus || '').toLowerCase() === 'cancelled_by_user_unavailable'
+                    ? 'User unavailable compensation'
+                    : (o?.payment?.method === 'cash' ? 'COD delivery earning' : 'Online delivery earning')
         };
     });
 
@@ -471,10 +477,20 @@ export const getDeliveryPartnerEarnings = async (deliveryPartnerId, query = {}) 
 
     const match = {
         'dispatch.deliveryPartnerId': partnerId,
-        orderStatus: 'delivered',
     };
     if (range) {
-        match['deliveryState.deliveredAt'] = { $gte: range.start, $lte: range.end };
+        match.$or = [
+            {
+                orderStatus: 'delivered',
+                'deliveryState.deliveredAt': { $gte: range.start, $lte: range.end },
+            },
+            {
+                orderStatus: 'cancelled_by_user_unavailable',
+                updatedAt: { $gte: range.start, $lte: range.end },
+            },
+        ];
+    } else {
+        match.orderStatus = { $in: PAYABLE_DELIVERY_STATUSES };
     }
 
     const [totalOrders, agg] = await Promise.all([
@@ -561,13 +577,14 @@ const computeRange = (period, date) => {
 const toTripDto = (order) => {
     const createdAt = order?.createdAt || null;
     const deliveredAt = order?.deliveryState?.deliveredAt || order?.deliveredAt || order?.completedAt || null;
-    const dateForUi = deliveredAt || createdAt || order?.updatedAt || null;
+    const orderStatus = String(order?.orderStatus || order?.status || '').toLowerCase();
+    const isUserUnavailableCancelled = orderStatus === 'cancelled_by_user_unavailable';
+    const dateForUi = deliveredAt || (isUserUnavailableCancelled ? (order?.updatedAt || createdAt) : createdAt) || order?.updatedAt || null;
 
     const time = dateForUi
         ? new Date(dateForUi).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
         : '';
 
-    const orderStatus = String(order?.orderStatus || order?.status || '').toLowerCase();
     const isDelivered = orderStatus === 'delivered' || String(order?.deliveryState?.currentPhase || '').toLowerCase() === 'delivered';
     const isCancelled = orderStatus.startsWith('cancelled') || String(order?.deliveryState?.status || '').toLowerCase().includes('cancel');
 
@@ -582,7 +599,8 @@ const toTripDto = (order) => {
     const paymentMethod = order?.payment?.method || order?.paymentMethod || '';
     const pricingTotal = Number(order?.pricing?.total) || Number(order?.totalAmount) || 0;
 
-    const earningAmount = Number(order?.riderEarning ?? order?.deliveryEarning ?? 0) || 0;
+    const rawEarningAmount = Number(order?.riderEarning ?? order?.deliveryEarning ?? 0) || 0;
+    const earningAmount = (isDelivered || isUserUnavailableCancelled) ? rawEarningAmount : 0;
     const codAmount = paymentMethod === 'cash' ? Number(order?.payment?.amountDue) || 0 : 0;
     const codCollectedAmount = paymentMethod === 'cash' && order?.payment?.status === 'paid' ? codAmount : 0;
     return {
@@ -590,6 +608,8 @@ const toTripDto = (order) => {
         _id: order?._id,
         orderId: order?.orderId || order?._id,
         status,
+        rawOrderStatus: orderStatus,
+        isCompensatedCancellation: isUserUnavailableCancelled,
         restaurantName,
         restaurant: restaurantName,
         items: order?.items || order?.orderItems || [],
@@ -669,7 +689,7 @@ export const getDeliveryPocketDetails = async (deliveryPartnerId, query = {}) =>
 
     const orders = await FoodOrder.find({
         'dispatch.deliveryPartnerId': partnerId,
-        orderStatus: 'delivered',
+        orderStatus: { $in: PAYABLE_DELIVERY_STATUSES },
         $or: [
             { 'deliveryState.deliveredAt': { $gte: start, $lte: end } },
             { deliveredAt: { $gte: start, $lte: end } },
@@ -702,7 +722,10 @@ export const getDeliveryPocketDetails = async (deliveryPartnerId, query = {}) =>
         createdAt: o?.deliveryState?.deliveredAt || o?.deliveredAt || o?.createdAt,
         orderId: o.orderId || String(o._id),
         metadata: { orderId: o.orderId || String(o._id) },
-        description: o?.restaurantId?.restaurantName ? `Order earning - ${o.restaurantId.restaurantName}` : 'Order earning'
+        description:
+            String(o?.orderStatus || '').toLowerCase() === 'cancelled_by_user_unavailable'
+                ? 'User unavailable compensation'
+                : (o?.restaurantId?.restaurantName ? `Order earning - ${o.restaurantId.restaurantName}` : 'Order earning')
     }));
 
     const bonusTransactions = (bonusTxList || []).map((t) => ({
@@ -760,7 +783,7 @@ export const getActiveEarningAddonsForPartner = async (deliveryPartnerId) => {
 
             const baseMatch = {
                 'dispatch.deliveryPartnerId': partnerId,
-                orderStatus: 'delivered'
+                orderStatus: { $in: PAYABLE_DELIVERY_STATUSES }
             };
 
             if (startDate && endDate) {

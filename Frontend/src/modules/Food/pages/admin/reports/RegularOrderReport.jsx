@@ -198,8 +198,11 @@ export default function RegularOrderReport() {
               displayStatus = "Food On The Way"
             } else if (backendStatus === "delivered") {
               displayStatus = "Delivered"
-            } else if (backendStatus === "cancelled_by_restaurant") {
-              displayStatus = "Canceled"
+            } else if (backendStatus === "cancelled_by_restaurant" || backendStatus === "cancelled_by_user_unavailable") {
+              displayStatus = order?.noResponseMeta?.isUserUnavailable
+                || backendStatus === "cancelled_by_user_unavailable"
+                ? "Cancelled - User Unavailable"
+                : "Canceled"
             } else if (backendStatus === "cancelled_by_user" || backendStatus === "cancelled_by_admin") {
               displayStatus = "Canceled"
             }
@@ -307,7 +310,11 @@ export default function RegularOrderReport() {
       filteredOrders.reduce(
         (acc, order) => {
           acc.total += 1
-          if (acc[order.orderStatus] != null) acc[order.orderStatus] += 1
+          if (acc[order.orderStatus] != null) {
+            acc[order.orderStatus] += 1
+          } else if (order.orderStatus === "Cancelled - User Unavailable") {
+            acc.Canceled += 1
+          }
           return acc
         },
         {

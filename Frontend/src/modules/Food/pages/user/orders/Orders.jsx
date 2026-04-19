@@ -268,6 +268,7 @@ export default function Orders() {
               backendStatus === 'cancelled' ||
               backendStatus === 'cancelled_by_user' ||
               backendStatus === 'cancelled_by_restaurant' ||
+              backendStatus === 'cancelled_by_user_unavailable' ||
               backendStatus === 'cancelled_by_admin'
             const cancellationReason = order.cancellationReason || ''
             // Check cancelledBy field first, then fallback to cancellation reason pattern

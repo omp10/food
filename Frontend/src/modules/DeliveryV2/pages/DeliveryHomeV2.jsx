@@ -5,7 +5,7 @@ import { useProximityCheck } from '@/modules/DeliveryV2/hooks/useProximityCheck'
 import { useOrderManager } from '@/modules/DeliveryV2/hooks/useOrderManager';
 import { useDeliveryNotifications } from '@food/hooks/useDeliveryNotifications';
 import { writeOrderTracking } from '@food/realtimeTracking';
-import { deliveryAPI } from '@food/api';
+import { deliveryAPI, uploadAPI } from '@food/api';
 import { toast } from 'sonner';
 import { BRAND_THEME } from '@/config/brandTheme';
 
@@ -29,13 +29,60 @@ import {
   Bell, HelpCircle, AlertTriangle,
   Wallet, History, User as UserIcon, LayoutGrid,
   Plus, Minus, Navigation2, Target, Play, CheckCircle2, Clock, ChevronDown,
-  Contact, Package, Store
+  Contact, Package, Store, Phone, Camera, Image as ImageIcon, Loader2
 } from 'lucide-react';
 
 import { getHaversineDistance, calculateETA, calculateHeading } from '@/modules/DeliveryV2/utils/geo';
 import { useCompanyName } from "@food/hooks/useCompanyName";
 import { useNavigate } from 'react-router-dom';
 import useNotificationInbox from "@food/hooks/useNotificationInbox";
+
+const USER_RESPONSE_WAIT_SECONDS = 10;
+const NO_RESPONSE_BACKEND_STATUS = 'cancelled_by_user_unavailable';
+
+const pickFirstText = (...values) => {
+  for (const value of values) {
+    const text = String(value ?? '').trim();
+    if (text) return text;
+  }
+  return '';
+};
+
+const normalizeDialPhone = (value) => {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+  const hasPlusPrefix = raw.startsWith('+');
+  const digits = raw.replace(/\D/g, '');
+  if (digits.length < 8) return '';
+  return hasPlusPrefix ? `+${digits}` : digits;
+};
+
+const extractCustomerContact = (order) => {
+  const userObj = order?.user || order?.userId || order?.customer || order?.customerId || {};
+  const deliveryAddress = order?.deliveryAddress || order?.address || {};
+
+  const name = pickFirstText(
+    order?.userName,
+    order?.customerName,
+    userObj?.name,
+    deliveryAddress?.name,
+    deliveryAddress?.fullName,
+    'Customer',
+  );
+
+  const rawPhone = pickFirstText(
+    order?.userPhone,
+    order?.customerPhone,
+    userObj?.phone,
+    deliveryAddress?.phone,
+    deliveryAddress?.contactNumber,
+    deliveryAddress?.mobile,
+  );
+  const dialPhone = normalizeDialPhone(rawPhone);
+  const phone = rawPhone || dialPhone;
+
+  return { name, phone, dialPhone };
+};
 
 /** Minimal bottom-sheet popup (Restored from legacy FeedNavbar) */
 function BottomPopup({ isOpen, onClose, title, children }) {
@@ -107,7 +154,17 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
   const [simIndex, setSimIndex] = useState(0);
   const [simProgress, setSimProgress] = useState(0); // 0 to 1 between points
   const [activePolyline, setActivePolyline] = useState(null);
+  const [customerContact, setCustomerContact] = useState(() => ({ name: 'Customer', phone: '', dialPhone: '' }));
+  const [isCustomerContactLoading, setIsCustomerContactLoading] = useState(false);
+  const [hasContactAttempted, setHasContactAttempted] = useState(false);
+  const [responseWaitEndsAt, setResponseWaitEndsAt] = useState(null);
+  const [responseWaitSecondsLeft, setResponseWaitSecondsLeft] = useState(0);
+  const [noResponseProofUrl, setNoResponseProofUrl] = useState('');
+  const [isUploadingNoResponseProof, setIsUploadingNoResponseProof] = useState(false);
+  const [isSubmittingNoResponse, setIsSubmittingNoResponse] = useState(false);
   const mapRef = useRef(null);
+  const noResponseProofInputRef = useRef(null);
+  const lastContactFetchOrderIdRef = useRef(null);
 
   const isLoggingOut = useRef(false);
   const handleLogout = useCallback(() => {
@@ -252,6 +309,203 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
   useEffect(() => {
     setIsModalMinimized(false);
   }, [tripStatus, showVerification, incomingOrder]);
+
+  useEffect(() => {
+    const orderId = String(activeOrder?.orderId || activeOrder?._id || '').trim();
+    if (!orderId || !['PICKED_UP', 'REACHED_DROP'].includes(tripStatus)) {
+      setHasContactAttempted(false);
+      setResponseWaitEndsAt(null);
+      setResponseWaitSecondsLeft(0);
+      setNoResponseProofUrl('');
+      setIsUploadingNoResponseProof(false);
+      setIsSubmittingNoResponse(false);
+    }
+  }, [activeOrder?.orderId, activeOrder?._id, tripStatus]);
+
+  useEffect(() => {
+    if (!responseWaitEndsAt) {
+      setResponseWaitSecondsLeft(0);
+      return;
+    }
+
+    const syncTime = () => {
+      const seconds = Math.max(0, Math.ceil((responseWaitEndsAt - Date.now()) / 1000));
+      setResponseWaitSecondsLeft(seconds);
+    };
+
+    syncTime();
+    const intervalId = setInterval(syncTime, 1000);
+    return () => clearInterval(intervalId);
+  }, [responseWaitEndsAt]);
+
+  useEffect(() => {
+    const orderId = String(activeOrder?.orderId || activeOrder?._id || '').trim();
+    if (!orderId) {
+      setCustomerContact({ name: 'Customer', phone: '', dialPhone: '' });
+      setIsCustomerContactLoading(false);
+      lastContactFetchOrderIdRef.current = null;
+      return;
+    }
+
+    const localContact = extractCustomerContact(activeOrder);
+    setCustomerContact(localContact);
+
+    const shouldFetch =
+      ['PICKED_UP', 'REACHED_DROP'].includes(tripStatus) && !localContact.dialPhone;
+
+    if (!shouldFetch || lastContactFetchOrderIdRef.current === orderId) return;
+
+    lastContactFetchOrderIdRef.current = orderId;
+    setIsCustomerContactLoading(true);
+
+    let cancelled = false;
+    deliveryAPI
+      .getOrderDetails(orderId)
+      .then((response) => {
+        if (cancelled) return;
+        const remoteOrder =
+          response?.data?.data?.order ||
+          response?.data?.data?.activeOrder ||
+          response?.data?.data ||
+          null;
+
+        if (!remoteOrder) return;
+
+        const remoteContact = extractCustomerContact(remoteOrder);
+        if (remoteContact.dialPhone || remoteContact.phone) {
+          setCustomerContact((prev) => ({
+            name: remoteContact.name || prev.name || 'Customer',
+            phone: remoteContact.phone || prev.phone,
+            dialPhone: remoteContact.dialPhone || prev.dialPhone,
+          }));
+        }
+      })
+      .catch((error) => {
+        console.warn('[DeliveryHomeV2] Customer contact fetch failed:', error);
+      })
+      .finally(() => {
+        if (!cancelled) setIsCustomerContactLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeOrder, tripStatus]);
+
+  const activeOrderForVerification = activeOrder
+    ? {
+        ...activeOrder,
+        userName: customerContact.name || activeOrder.userName,
+        userPhone: customerContact.phone || activeOrder.userPhone,
+      }
+    : activeOrder;
+
+  const startResponseWaitTimer = useCallback(() => {
+    setHasContactAttempted(true);
+    setResponseWaitEndsAt((current) => {
+      if (current && current > Date.now()) return current;
+      return Date.now() + USER_RESPONSE_WAIT_SECONDS * 1000;
+    });
+  }, []);
+
+  const handleContactUserCall = useCallback(() => {
+    if (!customerContact.dialPhone) {
+      toast.error('Customer phone not available');
+      return;
+    }
+    startResponseWaitTimer();
+    toast.success('Call marked as connected. 10-second timer started');
+  }, [customerContact.dialPhone, startResponseWaitTimer]);
+
+  const isResponseWaitActive = !!responseWaitEndsAt && responseWaitSecondsLeft > 0;
+  const isResponseWaitCompleted = hasContactAttempted && !!responseWaitEndsAt && responseWaitSecondsLeft <= 0;
+  const waitMinutes = String(Math.floor(responseWaitSecondsLeft / 60)).padStart(2, '0');
+  const waitSeconds = String(responseWaitSecondsLeft % 60).padStart(2, '0');
+
+  useEffect(() => {
+    const shouldLockScroll = tripStatus === 'REACHED_DROP' && hasContactAttempted && isResponseWaitActive;
+    if (!shouldLockScroll) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
+  }, [hasContactAttempted, isResponseWaitActive, tripStatus]);
+
+  const handleNoResponseProofSelect = useCallback(async (file) => {
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error('Proof image must be under 8MB');
+      return;
+    }
+
+    setIsUploadingNoResponseProof(true);
+    try {
+      const response = await uploadAPI.uploadMedia(file, { folder: 'appzeto/delivery/no-response-proof' });
+      const uploadedUrl = response?.data?.data?.url || response?.data?.data?.secure_url || '';
+      if (!uploadedUrl) throw new Error('Upload failed');
+      setNoResponseProofUrl(uploadedUrl);
+      toast.success('Proof uploaded');
+    } catch (error) {
+      console.error('[DeliveryHomeV2] No-response proof upload failed:', error);
+      toast.error('Failed to upload proof');
+    } finally {
+      setIsUploadingNoResponseProof(false);
+    }
+  }, []);
+
+  const submitNoResponseCancellation = useCallback(async () => {
+    const orderId = String(activeOrder?.orderId || activeOrder?._id || '').trim();
+    if (!orderId) {
+      toast.error('Order not found');
+      return;
+    }
+    if (!isResponseWaitCompleted) {
+      toast.error('Please wait for timer completion');
+      return;
+    }
+    if (!noResponseProofUrl) {
+      toast.error('Upload proof photo first');
+      return;
+    }
+
+    setIsSubmittingNoResponse(true);
+    try {
+      const payload = {
+        orderStatus: NO_RESPONSE_BACKEND_STATUS,
+        reasonType: 'user_unavailable',
+        reason: 'User not responding at drop location',
+        noResponseProofImage: noResponseProofUrl,
+        callAttempted: hasContactAttempted,
+        waitTimerCompletedAt: new Date().toISOString(),
+      };
+
+      try {
+        await deliveryAPI.updateOrderStatus(orderId, payload);
+      } catch (primaryError) {
+        const fallbackPayload = { orderStatus: NO_RESPONSE_BACKEND_STATUS };
+        await deliveryAPI.updateOrderStatus(orderId, fallbackPayload);
+      }
+      toast.success('Order marked as user unavailable');
+      clearActiveOrder();
+      setShowVerification(false);
+    } catch (error) {
+      console.error('[DeliveryHomeV2] No-response status update failed:', error);
+      const apiMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error?.message ||
+        error?.response?.data?.errors?.[0]?.message ||
+        error?.message;
+      toast.error(apiMessage ? `Failed to mark user unavailable: ${apiMessage}` : 'Failed to mark user unavailable');
+    } finally {
+      setIsSubmittingNoResponse(false);
+    }
+  }, [activeOrder?.orderId, activeOrder?._id, clearActiveOrder, hasContactAttempted, isResponseWaitCompleted, noResponseProofUrl]);
 
   // 1. Initial Sync (Force sync with server to avoid 'stuck' persistent state)
   useEffect(() => {
@@ -832,11 +1086,62 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                             <div>
                               <h3 className="text-gray-950 text-xl font-bold">Handover Drop</h3>
                               <p className={`text-[10px] font-bold uppercase tracking-widest mt-0.5 ${isWithinRange ? 'text-green-600' : 'text-orange-500'}`}>
-                                {isWithinRange ? 'Ready - Swipe to Arrive' : `${(distanceToTarget / 1000).toFixed(1)} km • ${eta || '--'} min Arrival`}
+                                {isWithinRange ? 'Ready - Confirm Drop Arrival' : `${(distanceToTarget / 1000).toFixed(1)} km • ${eta || '--'} min to drop`}
                               </p>
                             </div>
                           </div>
                         </div>
+
+                        <div className="w-full mb-6 rounded-3xl border border-blue-100 bg-blue-50/70 p-4">
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-2">Contact User</p>
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-gray-900 truncate">{customerContact.name || 'Customer'}</p>
+                              <p className="text-xs font-semibold text-gray-600">
+                                {isCustomerContactLoading ? 'Fetching phone...' : (customerContact.phone || 'Phone not available')}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleContactUserCall}
+                              disabled={!customerContact.dialPhone}
+                              className={`shrink-0 inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${customerContact.dialPhone
+                                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 active:scale-95'
+                                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                }`}
+                            >
+                              <Phone className="w-3.5 h-3.5" />
+                              {hasContactAttempted ? 'Called User' : 'Call User'}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="w-full mb-6 rounded-3xl border border-amber-100 bg-amber-50 p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700">Waiting Timer</p>
+                            <p className="text-sm font-black text-amber-800">
+                              {isResponseWaitActive ? `${waitMinutes}:${waitSeconds}` : (isResponseWaitCompleted ? 'Completed' : 'Not Started')}
+                            </p>
+                          </div>
+                          <p className="text-xs font-semibold text-amber-800/90 mt-2">
+                            {isResponseWaitCompleted
+                              ? 'Wait time complete. Next step: reach drop location to continue.'
+                              : hasContactAttempted
+                                ? 'Please wait here until countdown completes.'
+                                : 'Call user to start 10-second wait timer.'}
+                          </p>
+                        </div>
+
+                        {isResponseWaitCompleted && (
+                          <div className="w-full mb-6 rounded-2xl border border-green-100 bg-green-50 p-4">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-green-700 mb-1">
+                              Next Step Unlocked
+                            </p>
+                            <p className="text-xs font-semibold text-green-800/90">
+                              Slide to confirm drop arrival. Immediately after that, you can upload proof and mark the user as not responding.
+                            </p>
+                          </div>
+                        )}
 
                         {/* Customer Instructions Panel */}
                         {activeOrder?.note && (
@@ -851,8 +1156,8 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                           </div>
                         )}
                         <ActionSlider
-                          label="Slide to Arrive"
-                          successLabel="Arrived"
+                          label="Slide to Confirm Arrival"
+                          successLabel="Drop Reached"
                           disabled={!isWithinRange}
                           onConfirm={reachDrop}
                           containerStyle={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
@@ -860,18 +1165,106 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                         />
                       </div>
                     ) : (
-                      <button
-                        onClick={() => setShowVerification(true)}
-                        className="w-full bg-green-500 hover:bg-green-600 text-white shadow-xl shadow-green-500/30 rounded-2xl py-5 font-bold text-sm tracking-[0.2em] transform transition-all active:scale-95 flex items-center justify-center gap-3"
-                      >
-                        <CheckCircle2 className="w-6 h-6" /> VERIFY & COMPLETE
-                      </button>
+                      <div className="w-full bg-white rounded-[2rem] p-5 shadow-[0_-20px_60px_rgba(0,0,0,0.25)] border border-gray-100">
+                        <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 mb-4">
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-2">Contact User</p>
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-gray-900 truncate">{customerContact.name || 'Customer'}</p>
+                              <p className="text-xs font-semibold text-gray-600">
+                                {isCustomerContactLoading ? 'Fetching phone...' : (customerContact.phone || 'Phone not available')}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleContactUserCall}
+                              disabled={!customerContact.dialPhone}
+                              className={`shrink-0 inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${customerContact.dialPhone
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 active:scale-95'
+                                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                }`}
+                            >
+                              <Phone className="w-3.5 h-3.5" />
+                              {hasContactAttempted ? 'Called User' : 'Call User'}
+                            </button>
+                          </div>
+                        </div>
+
+                        {!hasContactAttempted ? (
+                          <button
+                            type="button"
+                            onClick={() => setShowVerification(true)}
+                            className="w-full rounded-2xl py-3.5 font-black text-[10px] tracking-[0.2em] uppercase flex items-center justify-center gap-2 transition-all bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200 active:scale-95 mb-4"
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                            Verify & Complete
+                          </button>
+                        ) : (
+                          <>
+                            <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 mb-4">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700">Waiting Timer</p>
+                                <p className="text-sm font-black text-amber-800">
+                                  {isResponseWaitActive ? `${waitMinutes}:${waitSeconds}` : (isResponseWaitCompleted ? 'Completed' : 'Not Started')}
+                                </p>
+                              </div>
+                              <p className="text-xs font-semibold text-amber-800/90 mt-2">
+                                {isResponseWaitCompleted
+                                  ? 'Wait time complete. Upload proof and mark user not responding.'
+                                  : 'Please wait full 10 seconds before proceeding.'}
+                              </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 mb-4">
+                              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-700 mb-2">User Not Responding</p>
+                              <p className="text-xs font-semibold text-rose-800/90 mb-3">
+                                After the timer completes, upload a proof photo and mark this order as user not responding.
+                              </p>
+                              <div className="flex items-center gap-2 mb-3">
+                                <button
+                                  type="button"
+                                  onClick={() => noResponseProofInputRef.current?.click()}
+                                  disabled={isUploadingNoResponseProof}
+                                  className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest bg-white border border-rose-200 text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                                >
+                                  {isUploadingNoResponseProof ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
+                                  {isUploadingNoResponseProof ? 'Uploading...' : (noResponseProofUrl ? 'Replace Proof' : 'Upload Proof')}
+                                </button>
+                                {noResponseProofUrl && (
+                                  <span className="text-[10px] font-bold text-green-700 bg-green-100 px-2.5 py-1 rounded-lg">Proof Added</span>
+                                )}
+                              </div>
+                              <input
+                                ref={noResponseProofInputRef}
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                className="hidden"
+                                onChange={(e) => handleNoResponseProofSelect(e.target.files?.[0])}
+                              />
+                              <button
+                                type="button"
+                                onClick={submitNoResponseCancellation}
+                                disabled={!isResponseWaitCompleted || !noResponseProofUrl || isSubmittingNoResponse}
+                                className={`w-full rounded-2xl py-3.5 font-black text-[10px] tracking-[0.2em] uppercase flex items-center justify-center gap-2 transition-all ${!isResponseWaitCompleted || !noResponseProofUrl || isSubmittingNoResponse
+                                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                  : 'bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-200 active:scale-95'
+                                  }`}
+                              >
+                                {isSubmittingNoResponse ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                                {isSubmittingNoResponse ? 'Submitting...' : 'Mark User Not Responding'}
+                              </button>
+                            </div>
+                          </>
+                        )}
+
+                      </div>
                     )}
                   </div>
                 )}
                 {showVerification && tripStatus !== 'COMPLETED' && (
                   <DeliveryVerificationModal
-                    order={activeOrder}
+                    order={activeOrderForVerification}
                     onComplete={async (otp) => {
                       const res = await completeDelivery(otp);
                       setShowVerification(false);
@@ -953,3 +1346,4 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
     </div>
   );
 }
+

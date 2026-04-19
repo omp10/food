@@ -198,19 +198,41 @@ export default function AllOrdersPage() {
       price: item.price || 0
     }))
     
-    // Determine status (backend: orderStatus)
-    let status = (order.orderStatus || order.status || "created").toUpperCase()
-    if (status === 'CANCELLED') status = 'CANCELLED'
-    else if (status === 'REJECTED') status = 'REJECTED'
-    else if (status === 'DELIVERED') status = 'DELIVERED'
-    else if (status === 'PREPARING') status = 'PREPARING'
-    else if (status === 'READY') status = 'READY'
-    else if (status === 'OUT_FOR_DELIVERY' || status === 'OUT FOR DELIVERY') status = 'OUT FOR DELIVERY'
+    // Determine canonical status (for color/filter) + display label (for UI text)
+    const backendStatus = String(order.orderStatus || order.status || "created").toLowerCase()
+    let status = 'PENDING'
+    let statusLabel = 'PENDING'
+    if (backendStatus === 'cancelled' || backendStatus === 'cancelled_by_user' || backendStatus === 'cancelled_by_admin') {
+      status = 'CANCELLED'
+      statusLabel = 'CANCELLED'
+    } else if (backendStatus === 'cancelled_by_restaurant' || backendStatus === 'cancelled_by_user_unavailable') {
+      status = 'CANCELLED'
+      statusLabel = order?.noResponseMeta?.isUserUnavailable || backendStatus === 'cancelled_by_user_unavailable'
+        ? 'CANCELLED - USER UNAVAILABLE'
+        : 'CANCELLED'
+    } else if (backendStatus === 'rejected') {
+      status = 'REJECTED'
+      statusLabel = 'REJECTED'
+    } else if (backendStatus === 'delivered') {
+      status = 'DELIVERED'
+      statusLabel = 'DELIVERED'
+    } else if (backendStatus === 'preparing') {
+      status = 'PREPARING'
+      statusLabel = 'PREPARING'
+    } else if (backendStatus === 'ready' || backendStatus === 'ready_for_pickup') {
+      status = 'READY'
+      statusLabel = 'READY'
+    } else if (backendStatus === 'out_for_delivery' || backendStatus === 'out for delivery' || backendStatus === 'picked_up') {
+      status = 'OUT FOR DELIVERY'
+      statusLabel = 'OUT FOR DELIVERY'
+    }
     
     // Get rejection/cancellation reason
     let reason = null
     if (status === 'REJECTED' && order.rejectionReason) {
       reason = `Rejected by Restaurant: ${order.rejectionReason}`
+    } else if (status === 'CANCELLED' && order?.noResponseMeta?.isUserUnavailable) {
+      reason = 'Cancelled: user unavailable at drop location.'
     } else if (status === 'CANCELLED' && order.cancellationReason) {
       reason = `Cancelled by ${order.cancelledBy === 'customer' ? 'customer' : 'restaurant'}: ${order.cancellationReason}`
     } else if (status === 'REJECTED') {
@@ -231,6 +253,7 @@ export default function AllOrdersPage() {
     return {
       id: order.orderId || order._id?.toString() || '',
       status,
+      statusLabel,
       date,
       time,
       restaurant: restaurantName,
@@ -630,7 +653,7 @@ export default function AllOrdersPage() {
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className={`px-2.5 py-1 rounded text-xs font-bold ${getStatusColor(order.status)}`}>
-                  {order.status}
+                  {order.statusLabel || order.status}
                 </span>
                 {order.tags && order.tags.map((tag, idx) => (
                   <span key={idx} className="px-2.5 py-1 rounded text-xs font-bold bg-green-600 text-white">

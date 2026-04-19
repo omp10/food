@@ -44,6 +44,7 @@ const isCancelledOrder = (status, cancelledAt) =>
   status === "cancelled" ||
   status === "cancelled_by_user" ||
   status === "cancelled_by_restaurant" ||
+  status === "cancelled_by_user_unavailable" ||
   status === "cancelled_by_admin" ||
   Boolean(cancelledAt)
 

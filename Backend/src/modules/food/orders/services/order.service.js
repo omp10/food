@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { FoodOrder, FoodSettings } from '../models/order.model.js';
+import { FoodUserDebt } from '../models/userDebt.model.js';
 // import { paymentSnapshotFromOrder } from './foodOrderPayment.service.js';
 import { logger } from '../../../../utils/logger.js';
 import { FoodUser } from '../../../../core/users/user.model.js';
@@ -315,6 +316,142 @@ function toGeoPoint(lat, lng) {
   const b = Number(lng);
   if (!Number.isFinite(a) || !Number.isFinite(b)) return undefined;
   return { type: "Point", coordinates: [b, a] };
+}
+
+async function getUnpaidDebtSummary(userId) {
+  if (!userId || !mongoose.Types.ObjectId.isValid(String(userId))) {
+    return { totalDue: 0, count: 0 };
+  }
+  const rows = await FoodUserDebt.find({
+    userId: new mongoose.Types.ObjectId(userId),
+    status: "unpaid",
+  })
+    .select("amount")
+    .lean();
+  const totalDue = rows.reduce(
+    (sum, row) => sum + Math.max(0, Number(row?.amount || 0)),
+    0,
+  );
+  return {
+    totalDue: Math.round(totalDue),
+    count: rows.length,
+  };
+}
+
+async function settleUnpaidDebtsForOrder(userId, settledOrderId) {
+  if (!userId || !mongoose.Types.ObjectId.isValid(String(userId))) {
+    return { settledCount: 0, settledAmount: 0 };
+  }
+
+  const unpaidDebts = await FoodUserDebt.find({
+    userId: new mongoose.Types.ObjectId(userId),
+    status: "unpaid",
+  })
+    .select("amount failedOrderId reasonType")
+    .lean();
+
+  if (!unpaidDebts.length) return { settledCount: 0, settledAmount: 0 };
+
+  const settledAmount = unpaidDebts.reduce(
+    (sum, row) => sum + Math.max(0, Number(row?.amount || 0)),
+    0,
+  );
+
+  const noResponseFailedOrderIds = unpaidDebts
+    .filter((row) => String(row?.reasonType || "").toLowerCase() === "user_unavailable")
+    .map((row) => String(row?.failedOrderId || "").trim())
+    .filter((id) => mongoose.Types.ObjectId.isValid(id));
+
+  if (noResponseFailedOrderIds.length) {
+    await Promise.all(
+      noResponseFailedOrderIds.map(async (failedOrderId) => {
+        try {
+          await foodTransactionService.updateTransactionStatus(
+            new mongoose.Types.ObjectId(failedOrderId),
+            "recovered_user_due",
+            {
+              status: "captured",
+              note: `Recovered from user due settlement via order ${String(settledOrderId || "")}`,
+              recordedByRole: "SYSTEM",
+            },
+          );
+        } catch (txErr) {
+          logger.warn(
+            `Failed to mark recovered transaction for failed order ${failedOrderId}: ${txErr?.message || txErr}`,
+          );
+        }
+      }),
+    );
+  }
+
+  await FoodUserDebt.updateMany(
+    {
+      userId: new mongoose.Types.ObjectId(userId),
+      status: "unpaid",
+    },
+    {
+      $set: {
+        status: "paid",
+        settledOrderId: new mongoose.Types.ObjectId(settledOrderId),
+        settledAt: new Date(),
+      },
+    },
+  );
+
+  return { settledCount: unpaidDebts.length, settledAmount };
+}
+
+async function buildNoResponseMetaMap(orderIds = []) {
+  const validIds = (orderIds || [])
+    .map((id) => String(id || "").trim())
+    .filter((id) => mongoose.Types.ObjectId.isValid(id))
+    .map((id) => new mongoose.Types.ObjectId(id));
+  if (!validIds.length) return new Map();
+
+  const debts = await FoodUserDebt.find({
+    failedOrderId: { $in: validIds },
+    reasonType: "user_unavailable",
+  })
+    .select("failedOrderId amount status reasonType proofImageUrl callAttempted waitTimerCompletedAt settledOrderId settledAt")
+    .lean();
+
+  const map = new Map();
+  for (const debt of debts) {
+    const key = String(debt?.failedOrderId || "");
+    if (!key) continue;
+    map.set(key, {
+      isUserUnavailable: true,
+      dueAmount: Number(debt?.amount || 0),
+      dueStatus: debt?.status || "unpaid",
+      proofImageUrl: debt?.proofImageUrl || "",
+      callAttempted: debt?.callAttempted === true,
+      waitTimerCompletedAt: debt?.waitTimerCompletedAt || null,
+      settledOrderId: debt?.settledOrderId || null,
+      settledAt: debt?.settledAt || null,
+    });
+  }
+  return map;
+}
+
+function withNoResponseMeta(orderLike, metaMap) {
+  const order = orderLike?.toObject ? orderLike.toObject() : { ...(orderLike || {}) };
+  const key = String(order?._id || order?.id || "");
+  const meta = key ? metaMap?.get(key) : null;
+  return {
+    ...order,
+    noResponseMeta:
+      meta ||
+      {
+        isUserUnavailable: false,
+        dueAmount: 0,
+        dueStatus: null,
+        proofImageUrl: "",
+        callAttempted: false,
+        waitTimerCompletedAt: null,
+        settledOrderId: null,
+        settledAt: null,
+      },
+  };
 }
 
 function pushStatusHistory(order, { byRole, byId, from, to, note = "" }) {
@@ -673,6 +810,8 @@ export async function calculateOrder(userId, dto) {
       subtotal + packagingFee + deliveryFee + platformFee + tax - discount,
     );
 
+    const debtSummary = await getUnpaidDebtSummary(userId);
+    const totalPayable = total + debtSummary.totalDue;
     return {
       pricing: {
         subtotal,
@@ -681,10 +820,16 @@ export async function calculateOrder(userId, dto) {
         deliveryFee,
         platformFee,
         discount,
+        previousDue: debtSummary.totalDue,
+        totalPayable,
         total,
         currency: "INR",
         couponCode: null,
         appliedCoupon: null,
+      },
+      dues: {
+        count: debtSummary.count,
+        amount: debtSummary.totalDue,
       },
     };
   }
@@ -873,6 +1018,8 @@ export async function calculateOrder(userId, dto) {
     0,
     subtotal + packagingFee + deliveryFee + platformFee + tax - discount,
   );
+  const debtSummary = await getUnpaidDebtSummary(userId);
+  const totalPayable = total + debtSummary.totalDue;
   return {
     pricing: {
       subtotal,
@@ -886,12 +1033,18 @@ export async function calculateOrder(userId, dto) {
       couponByAdmin,
       couponByRestaurant,
       offerByRestaurant,
+      previousDue: debtSummary.totalDue,
+      totalPayable,
       total,
       currency: "INR",
       couponCode: appliedCoupon?.code || codeRaw || null,
       appliedCoupon,
       autoAppliedOffer,
       autoOfferFeedback,
+    },
+    dues: {
+      count: debtSummary.count,
+      amount: debtSummary.totalDue,
     },
   };
 }
@@ -966,6 +1119,8 @@ export async function createOrder(userId, dto) {
     couponByAdmin: Number(dto.pricing?.couponByAdmin ?? 0),
     couponByRestaurant: Number(dto.pricing?.couponByRestaurant ?? 0),
     offerByRestaurant: Number(dto.pricing?.offerByRestaurant ?? 0),
+    previousDue: 0,
+    totalPayable: 0,
     total: Number(dto.pricing?.total ?? 0),
     currency: String(dto.pricing?.currency || "INR"),
   };
@@ -995,10 +1150,17 @@ export async function createOrder(userId, dto) {
     normalizedPricing.total = computedTotal;
   }
 
+  const debtSummary = await getUnpaidDebtSummary(userId);
+  normalizedPricing.previousDue = debtSummary.totalDue;
+  normalizedPricing.totalPayable = Math.max(
+    0,
+    Number(normalizedPricing.total || 0) + Number(debtSummary.totalDue || 0),
+  );
+
   const payment = {
     method: paymentMethod,
     status: isCash ? "cod_pending" : isWallet ? "paid" : "created",
-    amountDue: normalizedPricing.total ?? 0,
+    amountDue: normalizedPricing.totalPayable ?? normalizedPricing.total ?? 0,
     razorpay: {},
     qr: {},
   };
@@ -1081,7 +1243,7 @@ export async function createOrder(userId, dto) {
   let razorpayPayload = null;
 
   if (paymentMethod === "razorpay" && isRazorpayConfigured()) {
-    const amountPaise = Math.round((normalizedPricing.total ?? 0) * 100);
+    const amountPaise = Math.round((payment.amountDue ?? 0) * 100);
     if (amountPaise < 100)
       throw new ValidationError("Amount too low for online payment");
     try {
@@ -1228,6 +1390,14 @@ export async function verifyPayment(userId, dto) {
     note: "Payment verified",
   });
   await order.save();
+
+  try {
+    await settleUnpaidDebtsForOrder(userId, order._id);
+  } catch (debtErr) {
+    logger.warn(
+      `verifyPayment debt settlement failed for order ${order._id}: ${debtErr?.message || debtErr}`,
+    );
+  }
 
   await foodTransactionService.updateTransactionStatus(order._id, 'captured', {
     status: 'captured',
@@ -1415,8 +1585,11 @@ export async function listOrdersUser(userId, query) {
       .lean(),
     FoodOrder.countDocuments(filter),
   ]);
+  const noResponseMap = await buildNoResponseMetaMap(docs.map((d) => d?._id));
   return buildPaginatedResult({
-    docs: docs.map((doc) => normalizeOrderForClient(doc)),
+    docs: docs.map((doc) =>
+      normalizeOrderForClient(withNoResponseMeta(doc, noResponseMap)),
+    ),
     total,
     page,
     limit,
@@ -1447,7 +1620,8 @@ export async function getOrderById(
       const hasZoneAccess = scope.zoneIds.some((zid) => String(zid) === orderZoneId);
       if (!hasZoneAccess) throw new ForbiddenError("Sub-admin can only access assigned zones");
     }
-    return normalizeOrderForClient(order);
+    const noResponseMap = await buildNoResponseMetaMap([order?._id]);
+    return normalizeOrderForClient(withNoResponseMeta(order, noResponseMap));
   }
 
   const orderUserId = order.userId?._id?.toString() || order.userId?.toString();
@@ -1462,16 +1636,21 @@ export async function getOrderById(
     throw new ForbiddenError("Not assigned to you");
 
   if (deliveryPartnerId) {
-    return sanitizeOrderForExternal(order);
+    const noResponseMap = await buildNoResponseMetaMap([order?._id]);
+    return sanitizeOrderForExternal(withNoResponseMeta(order, noResponseMap));
   }
   if (restaurantId) {
-    return sanitizeOrderForExternal(sanitizeDispatchForClient(order));
+    const noResponseMap = await buildNoResponseMetaMap([order?._id]);
+    return sanitizeOrderForExternal(
+      withNoResponseMeta(sanitizeDispatchForClient(order), noResponseMap),
+    );
   }
 
   if (userId) {
     const drop = order.deliveryVerification?.dropOtp || {};
     const secret = String(order.deliveryOtp || "").trim();
-    const out = normalizeOrderForClient(order);
+    const noResponseMap = await buildNoResponseMetaMap([order?._id]);
+    const out = normalizeOrderForClient(withNoResponseMeta(order, noResponseMap));
     delete out.deliveryOtp;
     out.deliveryVerification = {
       ...(order.deliveryVerification || {}),
@@ -1486,7 +1665,8 @@ export async function getOrderById(
     return out;
   }
 
-  return sanitizeOrderForExternal(order);
+  const noResponseMap = await buildNoResponseMetaMap([order?._id]);
+  return sanitizeOrderForExternal(withNoResponseMeta(order, noResponseMap));
 }
 
 export async function cancelOrder(orderId, userId, reason) {
@@ -1722,7 +1902,7 @@ export async function listOrdersRestaurant(restaurantId, query) {
       { "payment.method": { $in: ["cash", "wallet"] } },
       { "payment.status": { $in: ["paid", "authorized", "captured", "settled", "refunded"] } },
       // Include cancelled orders regardless of payment status
-      { orderStatus: { $in: ["cancelled_by_user", "cancelled_by_restaurant", "cancelled_by_admin"] } },
+      { orderStatus: { $in: ["cancelled_by_user", "cancelled_by_restaurant", "cancelled_by_user_unavailable", "cancelled_by_admin"] } },
     ],
   };
   const [docs, total] = await Promise.all([
@@ -1734,7 +1914,9 @@ export async function listOrdersRestaurant(restaurantId, query) {
       .lean(),
     FoodOrder.countDocuments(filter),
   ]);
-  return buildPaginatedResult({ docs, total, page, limit });
+  const noResponseMap = await buildNoResponseMetaMap(docs.map((d) => d?._id));
+  const docsWithMeta = docs.map((doc) => withNoResponseMeta(doc, noResponseMap));
+  return buildPaginatedResult({ docs: docsWithMeta, total, page, limit });
 }
 
 export async function updateOrderStatusRestaurant(
@@ -2020,6 +2202,7 @@ export async function listOrdersAvailableDelivery(deliveryPartnerId, query) {
         "delivered",
         "cancelled_by_user",
         "cancelled_by_restaurant",
+        "cancelled_by_user_unavailable",
         "cancelled_by_admin",
       ],
     },
@@ -2049,6 +2232,7 @@ export async function acceptOrderDelivery(orderId, deliveryPartnerId) {
         "delivered",
         "cancelled_by_user",
         "cancelled_by_restaurant",
+        "cancelled_by_user_unavailable",
         "cancelled_by_admin",
       ],
     },
@@ -2545,6 +2729,15 @@ export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
   });
 
   await order.save();
+  if (order.payment?.status === "paid" && order.userId) {
+    try {
+      await settleUnpaidDebtsForOrder(order.userId, order._id);
+    } catch (debtErr) {
+      logger.warn(
+        `completeDelivery debt settlement failed for order ${order._id}: ${debtErr?.message || debtErr}`,
+      );
+    }
+  }
   emitOrderUpdate(order, deliveryPartnerId);
   const ledgerKind =
     payMethod === "cash" && prevPayStatus === "cod_pending"
@@ -2557,8 +2750,6 @@ export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
     recordedById: deliveryPartnerId,
     note: `Delivery completed. Prev status: ${prevPayStatus}`
   });
-
-  emitOrderUpdate(order, deliveryPartnerId);
   enqueueOrderEvent('delivery_completed', {
       orderMongoId: order._id?.toString?.(),
       orderId: order.orderId,
@@ -2573,6 +2764,52 @@ export async function completeDelivery(orderId, deliveryPartnerId, body = {}) {
 function emitOrderUpdate(order, deliveryPartnerId) {
   try {
     const io = getIO();
+    const status = String(order?.orderStatus || "").toLowerCase();
+    const isCod = String(order?.payment?.method || "").toLowerCase() === "cash";
+
+    const statusLabel = status
+      .replace(/^cancelled_by_/i, "cancelled ")
+      .replace(/_/g, " ")
+      .trim();
+
+    let restaurantUserTitle = `Order #${order.orderId} status updated`;
+    let restaurantUserBody = `Order is now ${statusLabel}.`;
+
+    if (status === "picked_up") {
+      restaurantUserTitle = `Order #${order.orderId} picked up`;
+      restaurantUserBody = "Your order is on the way.";
+    } else if (status === "reached_drop") {
+      restaurantUserTitle = `Order #${order.orderId} reached drop`;
+      restaurantUserBody = "Delivery partner has arrived at the drop location.";
+    } else if (status === "delivered") {
+      restaurantUserTitle = `Order #${order.orderId} delivered!`;
+      restaurantUserBody = "Hope you enjoyed your meal!";
+    } else if (status === "cancelled_by_user_unavailable") {
+      restaurantUserTitle = `Order #${order.orderId} cancelled`;
+      restaurantUserBody = "Order closed because user was unavailable at drop location.";
+    }
+
+    let riderTitle = "Order status updated";
+    let riderBody = `Order #${order.orderId} is now ${statusLabel}.`;
+
+    if (status === "picked_up") {
+      riderTitle = "Pickup confirmed";
+      riderBody = `Order #${order.orderId} picked up successfully.`;
+    } else if (status === "reached_drop") {
+      riderTitle = "Reached drop location";
+      riderBody = `Order #${order.orderId} is ready for handover.`;
+    } else if (status === "delivered") {
+      riderTitle = "Order delivered";
+      riderBody = `Order #${order.orderId} has been marked as delivered.`;
+      if (isCod) {
+        riderTitle = "Payment Collected";
+        riderBody = `You have collected INR ${order.pricing?.total || 0} cash for Order #${order.orderId}.`;
+      }
+    } else if (status === "cancelled_by_user_unavailable") {
+      riderTitle = "User unavailable marked";
+      riderBody = `Order #${order.orderId} marked as user unavailable.`;
+    }
+
     if (io) {
       const dv =
         order.deliveryVerification?.toObject?.() || order.deliveryVerification;
@@ -2583,23 +2820,9 @@ function emitOrderUpdate(order, deliveryPartnerId) {
         deliveryState: order.deliveryState,
         deliveryVerification: dv,
       };
-      io.to(rooms.delivery(deliveryPartnerId)).emit(
-        "order_status_update",
-        payload,
-      );
-      io.to(rooms.restaurant(order.restaurantId)).emit(
-        "order_status_update",
-        payload,
-      );
+      io.to(rooms.delivery(deliveryPartnerId)).emit("order_status_update", payload);
+      io.to(rooms.restaurant(order.restaurantId)).emit("order_status_update", payload);
       io.to(rooms.user(order.userId)).emit("order_status_update", payload);
-    }
-    let riderTitle = `Order deliverd! 🏁`;
-    let riderBody = `Order #${order.orderId} has been marked as delivered.`;
-
-    // Special message for COD payment collection
-    if (order.payment?.method === "cash") {
-      riderTitle = "Payment Collected! 💵";
-      riderBody = `You have collected ₹${order.pricing?.total || 0} cash for Order #${order.orderId}.`;
     }
 
     void notifyOwnersSafely(
@@ -2608,13 +2831,13 @@ function emitOrderUpdate(order, deliveryPartnerId) {
         { ownerType: "USER", ownerId: order.userId },
       ],
       {
-        title: `Order #${order.orderId} delivered! ✅`,
-        body: `Hope you enjoyed your meal!`,
+        title: restaurantUserTitle,
+        body: restaurantUserBody,
         data: {
           type: "order_status_update",
           orderId: order.orderId,
           orderMongoId: order._id?.toString?.() || "",
-          orderStatus: "delivered",
+          orderStatus: status || order.orderStatus,
         },
       },
     );
@@ -2625,9 +2848,10 @@ function emitOrderUpdate(order, deliveryPartnerId) {
         title: riderTitle,
         body: riderBody,
         data: {
-          type: "order_completed",
+          type: status === "delivered" ? "order_completed" : "order_status_update",
           orderId: order.orderId,
           orderMongoId: order._id?.toString?.() || "",
+          orderStatus: status || order.orderStatus,
           paymentMethod: order.payment?.method,
           amountCollected: String(order.pricing?.total || 0),
         },
@@ -2637,23 +2861,99 @@ function emitOrderUpdate(order, deliveryPartnerId) {
     console.error("Error emitting order update:", e);
   }
 }
-
 export async function updateOrderStatusDelivery(orderId, deliveryPartnerId, orderStatus) {
+    const payload = orderStatus && typeof orderStatus === 'object' ? orderStatus : { orderStatus };
+    let nextOrderStatus = String(payload?.orderStatus || '').trim();
+    if (!nextOrderStatus) throw new ValidationError('orderStatus is required');
+    const normalizedReasonType = String(payload?.reasonType || '').trim().toLowerCase();
+    if (nextOrderStatus === 'cancelled_by_restaurant' && normalizedReasonType === 'user_unavailable') {
+      nextOrderStatus = 'cancelled_by_user_unavailable';
+    }
+
     const identity = buildOrderIdentityFilter(orderId);
     if (!identity) throw new ValidationError('Order id required');
     const order = await FoodOrder.findOne(identity);
     if (!order) throw new NotFoundError('Order not found');
     if (order.dispatch.deliveryPartnerId?.toString() !== deliveryPartnerId.toString()) throw new ForbiddenError('Not your order');
     const from = order.orderStatus;
-    order.orderStatus = orderStatus;
-    pushStatusHistory(order, { byRole: 'DELIVERY_PARTNER', byId: deliveryPartnerId, from, to: orderStatus });
+    order.orderStatus = nextOrderStatus;
+    pushStatusHistory(order, { byRole: 'DELIVERY_PARTNER', byId: deliveryPartnerId, from, to: nextOrderStatus });
     await order.save();
+
+    const isNoResponseCancellation =
+      nextOrderStatus === 'cancelled_by_user_unavailable' &&
+      normalizedReasonType === 'user_unavailable';
+
+    if (isNoResponseCancellation) {
+      const recoverableAmount = Number(order?.pricing?.total || 0);
+      if (recoverableAmount > 0 && order?.userId) {
+        const waitTimerCompletedAt = payload?.waitTimerCompletedAt
+          ? new Date(payload.waitTimerCompletedAt)
+          : null;
+
+        await FoodUserDebt.findOneAndUpdate(
+          { failedOrderId: order._id },
+          {
+            $set: {
+              userId: order.userId,
+              amount: recoverableAmount,
+              currency: String(order?.pricing?.currency || 'INR'),
+              reasonType: normalizedReasonType,
+              reason: String(payload?.reason || 'User not responding at drop location'),
+              proofImageUrl: String(payload?.noResponseProofImage || ''),
+              callAttempted: payload?.callAttempted === true,
+              waitTimerCompletedAt:
+                waitTimerCompletedAt && !Number.isNaN(waitTimerCompletedAt.getTime())
+                  ? waitTimerCompletedAt
+                  : null,
+              meta: {
+                cancelledBy: 'DELIVERY_PARTNER',
+                deliveryPartnerId: String(deliveryPartnerId || ''),
+              },
+            },
+            $setOnInsert: {
+              status: 'unpaid',
+              failedOrderId: order._id,
+            },
+          },
+          { new: true, upsert: true },
+        );
+
+        enqueueOrderEvent('user_debt_recorded', {
+          orderMongoId: order._id?.toString?.(),
+          orderId: order.orderId,
+          userId: String(order.userId || ''),
+          amount: recoverableAmount,
+          reasonType: normalizedReasonType,
+        });
+
+        try {
+          await foodTransactionService.updateTransactionStatus(order._id, 'cancelled_by_delivery_no_response', {
+            status: 'captured',
+            note: 'User unavailable at drop. Restaurant payout preserved in normal flow.',
+            recordedByRole: 'DELIVERY_PARTNER',
+            recordedById: deliveryPartnerId,
+          });
+        } catch (txErr) {
+          logger.warn(
+            `No-response transaction sync failed for order ${order._id?.toString?.() || ''}: ${txErr?.message || txErr}`,
+          );
+        }
+      } else {
+        logger.warn(
+          `Skipped no-response debt creation for order ${order._id?.toString?.() || ''}: missing userId/amount`,
+        );
+      }
+    }
+
+    emitOrderUpdate(order, deliveryPartnerId);
+
     enqueueOrderEvent('delivery_status_updated', {
         orderMongoId: order._id?.toString?.(),
         orderId: order.orderId,
         deliveryPartnerId,
         from,
-        to: orderStatus
+        to: nextOrderStatus
     });
     return order.toObject();
 }
@@ -2883,12 +3183,13 @@ export async function listOrdersAdmin(query, adminScope = {}) {
           $in: [
             "cancelled_by_user",
             "cancelled_by_restaurant",
+            "cancelled_by_user_unavailable",
             "cancelled_by_admin",
           ],
         };
         break;
       case "restaurant-cancelled":
-        filter.orderStatus = "cancelled_by_restaurant";
+        filter.orderStatus = { $in: ["cancelled_by_restaurant", "cancelled_by_user_unavailable"] };
         break;
       case "payment-failed":
         filter["payment.status"] = "failed";
@@ -2910,7 +3211,7 @@ export async function listOrdersAdmin(query, adminScope = {}) {
 
   if (cancelledBy) {
     if (cancelledBy === "restaurant") {
-      filter.orderStatus = "cancelled_by_restaurant";
+      filter.orderStatus = { $in: ["cancelled_by_restaurant", "cancelled_by_user_unavailable"] };
     } else if (cancelledBy === "user" || cancelledBy === "customer") {
       filter.orderStatus = "cancelled_by_user";
     }
@@ -2955,7 +3256,9 @@ export async function listOrdersAdmin(query, adminScope = {}) {
       .lean(),
     FoodOrder.countDocuments(filter),
   ]);
-  const paginated = buildPaginatedResult({ docs, total, page, limit });
+  const noResponseMap = await buildNoResponseMetaMap(docs.map((d) => d?._id));
+  const docsWithMeta = docs.map((doc) => withNoResponseMeta(doc, noResponseMap));
+  const paginated = buildPaginatedResult({ docs: docsWithMeta, total, page, limit });
   return { ...paginated, orders: paginated.data };
 }
 
@@ -2998,6 +3301,7 @@ export async function assignDeliveryPartnerAdmin(
   order.dispatch.acceptedAt = undefined;
   pushStatusHistory(order, { byRole: 'ADMIN', byId: adminId, from, to: 'assigned' });
   await order.save();
+
   await order.populate('dispatch.deliveryPartnerId', 'name phone zoneId');
   await notifyAssignedDeliveryPartner(order);
   enqueueOrderEvent('delivery_partner_assigned', {
@@ -3111,5 +3415,6 @@ export async function deleteOrderAdmin(orderId, adminId, adminScope = {}) {
     orderMongoId: String(order._id),
   };
 }
+
 
 
