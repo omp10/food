@@ -23,8 +23,8 @@ export const OrderSummaryModal = ({ order, onDone }) => {
             <CheckCircle className="w-9 h-9" style={{ color: BRAND_THEME.colors.semantic.success }} />
           </div>
           
-          <h1 className="text-white text-xl font-bold mb-1 tracking-tight">Well Done!</h1>
-          <p className="text-white/80 text-xs mb-4">Trip completed successfully.</p>
+          <h1 className="text-gray-950 text-xl font-bold mb-1 tracking-tight">Well Done!</h1>
+          <p className="text-gray-800 text-xs mb-4">Trip completed successfully.</p>
 
           <div className="bg-white rounded-3xl p-4 pb-5 mb-8 shadow-2xl text-gray-900 border border-white/20">
             <div className="flex items-center justify-center gap-1.5 mb-2 opacity-60">
@@ -52,7 +52,7 @@ export const OrderSummaryModal = ({ order, onDone }) => {
             Go Back Home <ArrowRight className="w-4 h-4" />
           </button>
 
-          <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mt-8 opacity-80">
+          <p className="text-gray-800 text-[9px] font-bold uppercase tracking-widest mt-8">
             ID: {order?.orderId || order?.displayOrderId || 'FOD-1234'}
           </p>
         </motion.div>

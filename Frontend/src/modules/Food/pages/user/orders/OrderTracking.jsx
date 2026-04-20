@@ -402,6 +402,19 @@ const transformOrderForTracking = (apiOrder, previousOrder = null, explicitResta
     platformFee: apiOrder?.pricing?.platformFee || apiOrder?.platformFee || 0,
     discount: apiOrder?.pricing?.discount || apiOrder?.discount || 0,
     subtotal: apiOrder?.pricing?.subtotal || apiOrder?.subtotal || 0,
+    note: typeof apiOrder?.note === "string" ? apiOrder.note : (previousOrder?.note || ""),
+    restaurantNote:
+      typeof apiOrder?.restaurantNote === "string"
+        ? apiOrder.restaurantNote
+        : (previousOrder?.restaurantNote || ""),
+    customerNote:
+      typeof apiOrder?.customerNote === "string"
+        ? apiOrder.customerNote
+        : (previousOrder?.customerNote || ""),
+    sendCutlery:
+      typeof apiOrder?.sendCutlery === "boolean"
+        ? apiOrder.sendCutlery
+        : previousOrder?.sendCutlery,
     dueAmount,
     paymentMethod: apiOrder?.paymentMethod || apiOrder?.payment?.method || previousOrder?.paymentMethod || null,
     payment: apiOrder?.payment || previousOrder?.payment || null,
@@ -805,6 +818,31 @@ export default function OrderTracking() {
     return `${minutes}:${String(seconds).padStart(2, '0')}`
   }, [editWindowRemainingMs])
 
+  const normalizedBackendOrderStatus = useMemo(
+    () => String(order?.orderStatus || order?.status || "").toLowerCase(),
+    [order?.orderStatus, order?.status],
+  )
+
+  const isCancelledOrder = useMemo(
+    () =>
+      isFoodOrderCancelledStatus(normalizedBackendOrderStatus) ||
+      orderStatus === "cancelled",
+    [normalizedBackendOrderStatus, orderStatus],
+  )
+
+  const isDeliveredLikeOrder = useMemo(
+    () =>
+      orderStatus === "delivered" ||
+      ["delivered", "completed"].includes(normalizedBackendOrderStatus) ||
+      Boolean(order?.deliveredAt),
+    [orderStatus, normalizedBackendOrderStatus, order?.deliveredAt],
+  )
+
+  const canShowCancelOrderAction = useMemo(
+    () => !isAdminAccepted && !isCancelledOrder && !isDeliveredLikeOrder,
+    [isAdminAccepted, isCancelledOrder, isDeliveredLikeOrder],
+  )
+
   const handleCallRestaurant = (e) => {
     // Prevent event bubbling if necessary
     if (e && e.stopPropagation) e.stopPropagation();
@@ -1069,12 +1107,12 @@ export default function OrderTracking() {
       return;
     }
 
-    if (order.status === 'cancelled') {
+    if (isCancelledOrder) {
       toast.error('Order is already cancelled');
       return;
     }
 
-    if (order.status === 'delivered') {
+    if (isDeliveredLikeOrder) {
       toast.error('Cannot cancel a delivered order');
       return;
     }
@@ -1767,7 +1805,7 @@ export default function OrderTracking() {
           </div>
         </motion.div>
 
-        {!isAdminAccepted && orderStatus !== 'cancelled' && (
+        {canShowCancelOrderAction && (
           <motion.div
             className="bg-white rounded-xl shadow-sm overflow-hidden"
             initial={{ opacity: 0, y: 20 }}
@@ -1787,23 +1825,23 @@ export default function OrderTracking() {
 
       {/* Cancel Order Dialog */}
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <DialogContent className="sm:max-w-xl w-[95%] max-w-[600px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-xl w-[95%] max-w-[600px] p-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-5 pb-3 border-b border-gray-100">
             <DialogTitle className="text-xl font-bold text-gray-900">
               Cancel Order
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-5 py-6 px-2">
+          <div className="space-y-5 px-6 py-5">
             <div className="space-y-2 w-full">
               <Textarea
                 value={cancellationReason}
                 onChange={(e) => setCancellationReason(e.target.value)}
                 placeholder="e.g., Changed my mind, Wrong address, etc."
-                className="w-full min-h-[100px] resize-none border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-200 focus:outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed disabled:border-gray-200"
+                className="w-full min-h-[120px] resize-none border-2 border-gray-300 rounded-xl px-5 py-4 text-sm leading-6 focus:border-red-500 focus:ring-2 focus:ring-red-200 focus:outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed disabled:border-gray-200"
                 disabled={isCancelling}
               />
             </div>
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-3 pt-1">
               <Button
                 variant="outline"
                 onClick={() => {

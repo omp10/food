@@ -1155,6 +1155,8 @@ export default function OrdersMain() {
               scheduledAt: orderToPopup.scheduledAt,
               estimatedDeliveryTime: orderToPopup.estimatedDeliveryTime || 30,
               note: orderToPopup.note || "",
+              restaurantNote: orderToPopup.restaurantNote || "",
+              customerNote: orderToPopup.customerNote || "",
               sendCutlery: orderToPopup.sendCutlery,
               paymentMethod:
                 orderToPopup.paymentMethod ||
@@ -1265,6 +1267,20 @@ export default function OrdersMain() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const getOrderNoteForRestaurant = (order) => {
+    if (!order) return "";
+    const noteCandidate =
+      order?.notes?.restaurant ||
+      order?.notes?.customer ||
+      order.restaurantNote ||
+      order.customerNote ||
+      order.note ||
+      order.specialInstructions ||
+      order.instructions ||
+      "";
+    return String(noteCandidate || "").trim();
+  };
+
   const getAcceptSliderMetrics = () => {
     const sliderWidth = acceptSliderRef.current?.offsetWidth || 320;
     const handleWidth = 56;
@@ -1368,9 +1384,17 @@ export default function OrdersMain() {
     // No need to manually refresh here as the component polls every 10 seconds
   };
 
-  // Handle reject order
-  const handleRejectClick = () => {
+  const handleCancelOrderClick = () => {
     setShowRejectPopup(true);
+  };
+
+  // Help CTA from new-order modal
+  const handleNeedHelpClick = () => {
+    const currentOrder = popupOrder || newOrder || null;
+    const orderId =
+      currentOrder?.orderMongoId || currentOrder?.orderId || currentOrder?._id || "";
+    const qs = orderId ? `?orderId=${encodeURIComponent(String(orderId))}` : "";
+    navigate(`/food/restaurant/help-centre/support${qs}`);
   };
 
   const handleRejectConfirm = async () => {
@@ -1463,38 +1487,23 @@ export default function OrdersMain() {
 
   // Handle PDF download
   const handlePrint = async () => {
-    if (!newOrder) {
+    const orderToPrint = popupOrder || newOrder;
+    if (!orderToPrint) {
       debugWarn("No order data available for PDF generation");
       return;
     }
 
     try {
-      // Create new PDF document
       const doc = new jsPDF();
 
-      // Set font
-      doc.setFont("helvetica", "bold");
-
-      // Header
-      doc.setFontSize(20);
-      doc.text("Order Receipt", 105, 20, { align: "center" });
-
-      // Restaurant name
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "normal");
-      doc.text(orderToPrint.restaurantName || "Restaurant", 105, 30, {
-        align: "center",
-      });
-
-      // Order details
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text(`Order ID: ${orderToPrint.orderId || "N/A"}`, 20, 45);
-      doc.setFont("helvetica", "normal");
+      const formatMoney = (value) => {
+        const numberValue = Number(value);
+        return `Rs. ${(Number.isFinite(numberValue) ? numberValue : 0).toFixed(2)}`;
+      };
 
       const orderDate = orderToPrint.createdAt
         ? new Date(orderToPrint.createdAt).toLocaleString("en-GB", {
-            day: "numeric",
+            day: "2-digit",
             month: "short",
             year: "numeric",
             hour: "2-digit",
@@ -1502,120 +1511,145 @@ export default function OrdersMain() {
           })
         : new Date().toLocaleString("en-GB");
 
-      doc.text(`Date: ${orderDate}`, 20, 52);
+      const items = Array.isArray(orderToPrint.items) ? orderToPrint.items : [];
+      const lineItems = items.map((item) => {
+        const qty = Number(item?.quantity ?? item?.qty ?? 1);
+        const safeQty = Number.isFinite(qty) && qty > 0 ? qty : 1;
+        const unitPrice = Number(
+          item?.price ?? item?.unitPrice ?? item?.itemPrice ?? item?.food?.price ?? 0,
+        );
+        const safePrice = Number.isFinite(unitPrice) ? unitPrice : 0;
+        return {
+          name: item?.name || item?.food?.name || "Item",
+          qty: safeQty,
+          price: safePrice,
+          total: safePrice * safeQty,
+        };
+      });
 
-      // Customer address
-      if (orderToPrint.customerAddress) {
+      const computedItemsTotal = lineItems.reduce((sum, item) => sum + item.total, 0);
+      const fallbackTotal = getPopupOrderTotal(orderToPrint);
+      const grandTotal = fallbackTotal > 0 ? fallbackTotal : computedItemsTotal;
+
+      const rawPaymentMethod =
+        orderToPrint?.paymentMethod || orderToPrint?.payment?.method || "";
+      const normalizedPaymentMethod = String(rawPaymentMethod).toLowerCase().trim();
+      const paymentLabel =
+        normalizedPaymentMethod === "cod" || normalizedPaymentMethod === "cash"
+          ? "Cash on Delivery"
+          : "Online";
+
+      const addressText =
+        typeof orderToPrint.customerAddress === "string"
+          ? orderToPrint.customerAddress
+          : [
+              orderToPrint.customerAddress?.street,
+              orderToPrint.customerAddress?.area,
+              orderToPrint.customerAddress?.city,
+              orderToPrint.customerAddress?.state,
+              orderToPrint.customerAddress?.pincode,
+            ]
+              .filter(Boolean)
+              .join(", ");
+
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, 210, 28, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("Order Receipt", 14, 17);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text(orderToPrint.restaurantName || "Restaurant", 14, 24);
+
+      doc.setTextColor(17, 24, 39);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text(`Order ID: ${orderToPrint.orderId || "N/A"}`, 14, 38);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Date: ${orderDate}`, 14, 45);
+      doc.text(`Payment: ${paymentLabel}`, 14, 52);
+
+      let yPos = 62;
+      if (addressText) {
         doc.setFont("helvetica", "bold");
-        doc.text("Delivery Address:", 20, 62);
+        doc.text("Delivery address", 14, yPos);
         doc.setFont("helvetica", "normal");
-        const addressText =
-          [
-            orderToPrint.customerAddress.street,
-            orderToPrint.customerAddress.city,
-            orderToPrint.customerAddress.state,
-          ]
-            .filter(Boolean)
-            .join(", ") || "Address not available";
-        const addressLines = doc.splitTextToSize(addressText, 170);
-        doc.text(addressLines, 20, 69);
+        const addressLines = doc.splitTextToSize(addressText, 180);
+        doc.text(addressLines, 14, yPos + 6);
+        yPos += 6 + addressLines.length * 5 + 5;
       }
 
-      // Items table
-      let yPos = 85;
-      if (orderToPrint.items && orderToPrint.items.length > 0) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Items:", 20, yPos);
-        yPos += 8;
+      autoTable(doc, {
+        startY: yPos,
+        head: [["Item", "Qty", "Unit Price", "Line Total"]],
+        body:
+          lineItems.length > 0
+            ? lineItems.map((item) => [
+                item.name,
+                String(item.qty),
+                formatMoney(item.price),
+                formatMoney(item.total),
+              ])
+            : [["No items", "-", "-", "-"]],
+        theme: "grid",
+        headStyles: {
+          fillColor: [15, 23, 42],
+          textColor: 255,
+          fontStyle: "bold",
+          halign: "left",
+        },
+        bodyStyles: {
+          textColor: [31, 41, 55],
+        },
+        styles: { fontSize: 9, cellPadding: 2.5 },
+        columnStyles: {
+          0: { cellWidth: 95 },
+          1: { cellWidth: 20, halign: "center" },
+          2: { cellWidth: 35, halign: "right" },
+          3: { cellWidth: 40, halign: "right" },
+        },
+      });
 
-        // Prepare table data
-        const tableData = orderToPrint.items.map((item) => [
-          item.name || "Item",
-          item.quantity || 1,
-          `₹${(item.price || 0).toFixed(2)}`,
-          `₹${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`,
-        ]);
+      yPos = (doc.lastAutoTable?.finalY || yPos) + 8;
+      doc.setDrawColor(229, 231, 235);
+      doc.line(14, yPos, 196, yPos);
+      yPos += 8;
 
-        autoTable(doc, {
-          startY: yPos,
-          head: [["Item", "Qty", "Price", "Total"]],
-          body: tableData,
-          theme: "striped",
-          headStyles: {
-            fillColor: [0, 0, 0],
-            textColor: 255,
-            fontStyle: "bold",
-          },
-          styles: { fontSize: 9 },
-          columnStyles: {
-            0: { cellWidth: 80 },
-            1: { cellWidth: 30, halign: "center" },
-            2: { cellWidth: 35, halign: "right" },
-            3: { cellWidth: 35, halign: "right" },
-          },
-        });
-
-        yPos = doc.lastAutoTable.finalY + 10;
-      }
-
-      // Total
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
-      doc.text(`Total: ₹${(orderToPrint.total || 0).toFixed(2)}`, 20, yPos);
+      doc.text("Grand Total", 14, yPos);
+      doc.text(formatMoney(grandTotal), 196, yPos, { align: "right" });
 
-      // Payment status
-      yPos += 10;
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.text(
-        `Payment Status: ${orderToPrint.status === "confirmed" ? "Paid" : "Pending"}`,
-        20,
-        yPos,
-      );
-
-      // Estimated delivery time
-      if (orderToPrint.estimatedDeliveryTime) {
-        yPos += 8;
-        doc.text(
-          `Estimated Delivery: ${orderToPrint.estimatedDeliveryTime} minutes`,
-          20,
-          yPos,
-        );
-      }
-
-      // Notes
-      if (orderToPrint.note) {
-        yPos += 10;
-        doc.setFont("helvetica", "bold");
-        doc.text("Note:", 20, yPos);
-        doc.setFont("helvetica", "normal");
-        const noteLines = doc.splitTextToSize(orderToPrint.note, 170);
-        doc.text(noteLines, 20, yPos + 7);
-      }
-
-      // Cutlery preference
-      yPos += 15;
-      doc.setFont("helvetica", "normal");
-      doc.text(
+      yPos += 9;
+      const cutleryLabel =
         orderToPrint.sendCutlery === false
-          ? "? Don't send cutlery"
-          : "? Send cutlery requested",
-        20,
-        yPos,
-      );
+          ? "Cutlery preference: Do not send cutlery"
+          : "Cutlery preference: Send cutlery";
+      doc.text(cutleryLabel, 14, yPos);
 
-      // Footer
+      const orderNote = getOrderNoteForRestaurant(orderToPrint);
+      if (orderNote) {
+        yPos += 8;
+        doc.setFont("helvetica", "bold");
+        doc.text("Restaurant note", 14, yPos);
+        doc.setFont("helvetica", "normal");
+        const noteLines = doc.splitTextToSize(orderNote, 180);
+        doc.text(noteLines, 14, yPos + 6);
+      }
+
       const pageHeight = doc.internal.pageSize.height;
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "italic");
+      doc.setFontSize(8.5);
+      doc.setTextColor(107, 114, 128);
       doc.text(
         `Generated on ${new Date().toLocaleString("en-GB")}`,
-        105,
+        196,
         pageHeight - 10,
-        { align: "center" },
+        { align: "right" },
       );
 
-      // Download PDF
       const fileName = `Order-${orderToPrint.orderId || "Receipt"}-${Date.now()}.pdf`;
       doc.save(fileName);
 
@@ -2042,19 +2076,19 @@ export default function OrdersMain() {
         {showNewOrderPopup && (
 
             <motion.div
-              className="fixed inset-0 z-[60] bg-blue-900/50 flex items-center justify-center p-4"
+              className="fixed inset-0 z-[60] bg-blue-900/50 flex items-end justify-center p-3 pb-20 sm:items-center sm:p-4 sm:pb-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}>
               <motion.div
-                className="w-[95%] max-w-md max-h-[calc(100vh-2rem)] bg-white rounded-[2rem] shadow-2xl overflow-hidden p-1 flex flex-col"
+                className="w-[96%] max-w-md max-h-[calc(100dvh-9.5rem)] sm:max-h-[calc(100dvh-2rem)] bg-white rounded-[1.25rem] sm:rounded-[2rem] shadow-2xl overflow-hidden p-1 flex flex-col"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 onClick={(e) => e.stopPropagation()}>
                 {/* Header */}
-                <div className="px-4 py-3 bg-white border-b border-gray-200 flex items-center justify-between">
+                <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-white border-b border-gray-200 flex items-center justify-between">
                   <div className="flex-1">
                     <h3 className="text-base font-bold text-gray-900">
                       {(popupOrder || newOrder)?.orderId || "#Order"}
@@ -2084,7 +2118,7 @@ export default function OrdersMain() {
                 </div>
 
                 {/* Content */}
-                <div className="px-4 pt-4 pb-4 flex-1 overflow-y-auto min-h-0">
+                <div className="px-3 pt-2.5 pb-3 sm:px-4 sm:pt-3 sm:pb-5 flex-1 overflow-y-auto min-h-0 overscroll-contain">
                   {/* Scheduled Indicator */}
                   {(popupOrder || newOrder)?.scheduledAt && (
                     <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-3">
@@ -2130,6 +2164,17 @@ export default function OrdersMain() {
                         : "Just now"}
                     </p>
                   </div>
+
+                  {getOrderNoteForRestaurant(popupOrder || newOrder) && (
+                    <div className="mb-3 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+                        Restaurant note
+                      </p>
+                      <p className="mt-1 text-sm leading-5 text-blue-900">
+                        {getOrderNoteForRestaurant(popupOrder || newOrder)}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Details Accordion */}
                   <div className="mb-4">
@@ -2305,11 +2350,11 @@ export default function OrdersMain() {
                   </div>
                 </div>
 
-                <div className="px-4 pb-4 pt-3 border-t border-gray-200 bg-white">
-                  <div className="space-y-3">
+                <div className="sticky bottom-0 z-10 px-3 pt-2.5 pb-[calc(0.6rem+env(safe-area-inset-bottom))] sm:px-4 sm:pt-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-gray-200 bg-white">
+                  <div className="space-y-2.5 sm:space-y-3">
                     <div
                       ref={acceptSliderRef}
-                      className="relative h-14 rounded-2xl overflow-hidden select-none touch-pan-y"
+                      className="relative h-12 sm:h-14 rounded-2xl overflow-hidden select-none touch-pan-y"
                       style={{ background: BRAND_THEME.gradients.primary }}>
                       <motion.div
                         className="absolute inset-y-0 left-0"
@@ -2365,10 +2410,17 @@ export default function OrdersMain() {
                     </div>
 
                     <button
-                      onClick={handleRejectClick}
+                      onClick={handleCancelOrderClick}
                       disabled={isAcceptingOrder}
-                      className="w-full bg-white border-2 border-red-500 text-red-600 py-3 rounded-lg font-semibold text-sm hover:bg-red-50 transition-colors disabled:opacity-60">
-                      Reject Order
+                      className="w-full rounded-lg border border-red-400 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60">
+                      Cancel order
+                    </button>
+
+                    <button
+                      onClick={handleNeedHelpClick}
+                      disabled={isAcceptingOrder}
+                      className="w-full text-center text-xs sm:text-sm text-gray-500 underline underline-offset-2 hover:text-gray-700 transition-colors disabled:opacity-60">
+                      Need help with this order
                     </button>
                   </div>
                 </div>
@@ -3522,4 +3574,5 @@ function EmptyState({ message = "Temporarily closed" }) {
     </div>
   );
 }
+
 

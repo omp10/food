@@ -1233,6 +1233,7 @@ export async function createOrder(userId, dto) {
       },
     ],
     note: dto.note || "",
+    restaurantNote: dto.restaurantNote || "",
     sendCutlery: dto.sendCutlery !== false,
     deliveryFleet: orderType === "food" ? dto.deliveryFleet || "standard" : "quick",
     scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : null,
@@ -1819,6 +1820,57 @@ export async function cancelOrder(orderId, userId, reason) {
     }
   } catch (err) {
     logger.warn(`cancelOrder socket emit failed: ${err?.message || err}`);
+  }
+
+  return order.toObject();
+}
+
+export async function updateOrderInstructions(orderId, userId, instructions) {
+  const identity = buildOrderIdentityFilter(orderId);
+  if (!identity) throw new ValidationError("Order id required");
+
+  const normalizedInstructions = String(instructions ?? "").trim();
+  if (normalizedInstructions.length > 500) {
+    throw new ValidationError("Instructions cannot exceed 500 characters");
+  }
+
+  const order = await FoodOrder.findOne({
+    ...identity,
+    userId: new mongoose.Types.ObjectId(userId),
+  });
+  if (!order) throw new NotFoundError("Order not found");
+
+  const blockedStatuses = new Set([
+    "delivered",
+    "cancelled_by_user",
+    "cancelled_by_restaurant",
+    "cancelled_by_user_unavailable",
+    "cancelled_by_admin",
+  ]);
+  if (blockedStatuses.has(String(order.orderStatus || "").toLowerCase())) {
+    throw new ValidationError("Cannot update instructions for this order");
+  }
+
+  order.note = normalizedInstructions;
+  await order.save();
+
+  try {
+    const io = getIO();
+    if (io) {
+      const payload = {
+        orderMongoId: order._id?.toString?.(),
+        orderId: order.orderId,
+        orderStatus: order.orderStatus,
+        note: order.note || "",
+      };
+      io.to(rooms.user(order.userId)).emit("order_status_update", payload);
+      io.to(rooms.restaurant(order.restaurantId)).emit("order_status_update", payload);
+      if (order.dispatch?.deliveryPartnerId) {
+        io.to(rooms.delivery(order.dispatch.deliveryPartnerId)).emit("order_status_update", payload);
+      }
+    }
+  } catch (err) {
+    logger.warn(`updateOrderInstructions socket emit failed: ${err?.message || err}`);
   }
 
   return order.toObject();

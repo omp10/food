@@ -491,6 +491,13 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
   const isDropArrivalSlideDisabled = !isWithinRange || isDropArrivalLockedByWait;
   const waitMinutes = String(Math.floor(responseWaitSecondsLeft / 60)).padStart(2, '0');
   const waitSeconds = String(responseWaitSecondsLeft % 60).padStart(2, '0');
+  const deliveryInstructionText = pickFirstText(
+    activeOrder?.note,
+    activeOrder?.customerNote,
+    activeOrder?.instructions,
+    activeOrder?.specialInstructions,
+    activeOrder?.deliveryInstructions,
+  );
 
   useEffect(() => {
     const shouldLockScroll =
@@ -1156,16 +1163,16 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                 {(tripStatus === 'PICKED_UP' || tripStatus === 'REACHED_DROP') && (
                   <div className="absolute bottom-4 inset-x-0 z-[120] px-4">
                     {tripStatus === 'PICKED_UP' ? (
-                      <div className="bg-white rounded-[3rem] p-8 shadow-[0_-20px_80px_rgba(0,0,0,0.4)] border border-gray-100 flex flex-col items-center">
+                      <div className="bg-white rounded-[2.5rem] p-6 shadow-[0_-20px_80px_rgba(0,0,0,0.4)] border border-gray-100 flex flex-col items-center">
                         {/* Handle / Minimize */}
-                        <div className="w-full flex justify-center pb-4 pt-0 -mt-2">
+                        <div className="w-full flex justify-center pb-2 pt-0 -mt-2">
                           <button onClick={() => setIsModalMinimized(true)} className="p-1 hover:bg-gray-100 active:scale-95 transition-all rounded-full flex flex-col items-center">
                             <ChevronDown className="w-6 h-6 text-gray-400 stroke-[3]" />
                           </button>
                         </div>
-                        <div className="flex justify-between w-full items-center mb-6 px-1 text-left">
-                          <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                        <div className="flex justify-between w-full items-center mb-4 px-1 text-left">
+                          <div className="flex items-center gap-3">
+                            <div className="w-14 h-14 rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
                               <img
                                 src={activeOrder?.user?.logo || activeOrder?.user?.profileImage || 'https://cdn-icons-png.flaticon.com/512/1275/1275302.png'}
                                 className="w-full h-full object-cover"
@@ -1173,7 +1180,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                               />
                             </div>
                             <div>
-                              <h3 className="text-gray-950 text-xl font-bold">Handover Drop</h3>
+                              <h3 className="text-gray-950 text-lg font-bold">Handover Drop</h3>
                               <p className={`text-[10px] font-bold uppercase tracking-widest mt-0.5 ${isWithinRange ? 'text-green-600' : 'text-orange-500'}`}>
                                 {isWithinRange ? 'Ready - Confirm Drop Arrival' : `${(distanceToTarget / 1000).toFixed(1)} km • ${eta || '--'} min to drop`}
                               </p>
@@ -1181,7 +1188,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                           </div>
                         </div>
 
-                        <div className="w-full mb-6 rounded-3xl border border-blue-100 bg-blue-50/70 p-4">
+                        <div className="w-full mb-4 rounded-3xl border border-blue-100 bg-blue-50/70 p-3.5">
                           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-2">Contact User</p>
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
@@ -1205,7 +1212,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                           </div>
                         </div>
 
-                        <div className="w-full mb-6 rounded-3xl border border-amber-100 bg-amber-50 p-4">
+                        <div className="w-full mb-4 rounded-3xl border border-amber-100 bg-amber-50 p-3.5">
                           <div className="flex items-center justify-between gap-3">
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700">Waiting Timer</p>
                             <p className="text-sm font-black text-amber-800">
@@ -1232,7 +1239,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                         </div>
 
                         {isResponseWaitCompleted && (
-                          <div className="w-full mb-6 rounded-2xl border border-green-100 bg-green-50 p-4">
+                          <div className="w-full mb-4 rounded-2xl border border-green-100 bg-green-50 p-3.5">
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-green-700 mb-1">
                               Next Step Unlocked
                             </p>
@@ -1243,14 +1250,14 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                         )}
 
                         {/* Customer Instructions Panel */}
-                        {activeOrder?.note && (
-                          <div className="w-full bg-orange-50 border border-orange-100 rounded-3xl p-5 mb-8 flex gap-4 items-start shadow-sm mx-2">
-                            <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-orange-500 shadow-sm shrink-0 border border-orange-50">
-                              <Package className="w-5 h-5" />
+                        {deliveryInstructionText && (
+                          <div className="w-full bg-orange-50 border border-orange-100 rounded-3xl p-3.5 mb-4 flex gap-3 items-start shadow-sm">
+                            <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center text-orange-500 shadow-sm shrink-0 border border-orange-50">
+                              <Package className="w-4 h-4" />
                             </div>
                             <div className="flex-1">
-                              <p className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] mb-1.5 opacity-80">Drop Message</p>
-                              <p className="text-sm font-bold text-gray-950 leading-relaxed capitalize">"{activeOrder.note}"</p>
+                              <p className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] mb-1 opacity-80">Delivery Instruction</p>
+                              <p className="text-sm font-bold text-gray-950 leading-relaxed capitalize">"{deliveryInstructionText}"</p>
                             </div>
                           </div>
                         )}
@@ -1270,30 +1277,6 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                       </div>
                     ) : (
                       <div className="w-full bg-white rounded-[2rem] p-5 shadow-[0_-20px_60px_rgba(0,0,0,0.25)] border border-gray-100">
-                        <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 mb-4">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 mb-2">Contact User</p>
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="text-sm font-bold text-gray-900 truncate">{customerContact.name || 'Customer'}</p>
-                              <p className="text-xs font-semibold text-gray-600">
-                                {isCustomerContactLoading ? 'Fetching phone...' : (customerContact.phone || 'Phone not available')}
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={handleContactUserCall}
-                              disabled={!customerContact.dialPhone}
-                              className={`shrink-0 inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all ${customerContact.dialPhone
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 active:scale-95'
-                                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                }`}
-                            >
-                              <Phone className="w-3.5 h-3.5" />
-                              {hasContactAttempted ? 'Call Attempted' : 'Contact Customer'}
-                            </button>
-                          </div>
-                        </div>
-
                         {!hasContactAttempted ? (
                           <button
                             type="button"

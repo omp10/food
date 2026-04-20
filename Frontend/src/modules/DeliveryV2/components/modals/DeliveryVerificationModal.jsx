@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, DollarSign, CheckCircle2, 
-  QrCode, Loader2, Info, X, RefreshCw, Package
+  QrCode, Loader2, Info, X, RefreshCw
 } from 'lucide-react';
 import { deliveryAPI } from '@food/api';
 import { toast } from 'sonner';
@@ -19,36 +19,6 @@ const Backdrop = ({ onClose }) => (
     onClick={onClose}
   />
 );
-
-const DeliveryInstructionsPanel = ({ note }) => {
-  const text = String(note || '').trim()
-  if (!text) return null
-
-  return (
-    <div className="w-full rounded-3xl mb-4 overflow-hidden border shadow-sm" style={{ borderColor: BRAND_THEME.colors.brand.primarySoft }}>
-      <div className="px-5 py-3 flex items-center justify-between" style={{ background: BRAND_THEME.gradients.primary }}>
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 bg-white/20 rounded-2xl flex items-center justify-center text-white">
-            <Package className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] font-black text-white uppercase tracking-[0.2em]">
-              Delivery instruction
-            </p>
-            <p className="text-[11px] font-semibold text-white/90">
-              Read before handover
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className="px-5 py-3" style={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}>
-        <p className="text-[13px] font-bold text-gray-950 leading-relaxed wrap-break-word">
-          “{text}”
-        </p>
-      </div>
-    </div>
-  )
-}
 
 const OtpModal = ({ order, onVerified, onClose }) => {
   const [otp, setOtp] = useState(['', '', '', '']);
@@ -124,8 +94,6 @@ const OtpModal = ({ order, onVerified, onClose }) => {
            </div>
            <button onClick={onClose} className="p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600"><X className="w-5 h-5"/></button>
         </div>
-
-        <DeliveryInstructionsPanel note={order?.note} />
 
         <div className="flex justify-center gap-2 mb-6">
           {otp.map((digit, i) => (
@@ -244,8 +212,6 @@ const PaymentModal = ({ order, otpString, onComplete, onClose }) => {
              </div>
              <button onClick={onClose} className="p-2 bg-gray-50 rounded-full text-gray-400 hover:text-gray-600"><X className="w-5 h-5"/></button>
           </div>
-
-          <DeliveryInstructionsPanel note={order?.note} />
 
           <div className="bg-amber-50 rounded-[2rem] p-5 border border-amber-100 mb-6">
              <div className="flex justify-between items-center mb-4">

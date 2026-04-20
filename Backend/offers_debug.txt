@@ -354,3 +354,37 @@
 [2026-04-20T15:42:54.233Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
 
 [2026-04-20T15:42:54.732Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T16:36:22.553Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T16:36:23.028Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T16:38:56.031Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T16:38:56.412Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T16:39:05.290Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T16:39:05.614Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T16:43:56.595Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T16:43:56.636Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T16:44:12.631Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T16:44:12.943Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T16:51:37.239Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T16:51:37.568Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T17:05:23.942Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T17:05:24.291Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T17:05:34.783Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T17:26:31.304Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37
+
+[2026-04-20T17:26:31.705Z] auth header: Present, req.user: {"userId":"69d49be6868036e30fb25e37","role":"USER"}, userId: 69d49be6868036e30fb25e37

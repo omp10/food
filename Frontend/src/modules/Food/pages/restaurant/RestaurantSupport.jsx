@@ -4,6 +4,7 @@ import useRestaurantBackNavigation from "@food/hooks/useRestaurantBackNavigation
 import { ChevronLeft, Loader2, Send } from "lucide-react"
 import { restaurantAPI } from "@food/api"
 import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
+import BRAND_THEME from "@/config/brandTheme"
 import { toast } from "sonner"
 
 const CATEGORY_OPTIONS = [
