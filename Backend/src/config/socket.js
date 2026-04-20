@@ -6,6 +6,21 @@ import { getFirebaseDB } from './firebase.js';
 
 let io = null;
 
+function resolveSocketCorsOrigin(rawOrigin) {
+    if (!rawOrigin || rawOrigin === '*') return '*';
+    if (Array.isArray(rawOrigin)) return rawOrigin;
+    if (typeof rawOrigin !== 'string') return '*';
+
+    const origins = rawOrigin
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean);
+
+    if (origins.length === 0) return '*';
+    if (origins.length === 1) return origins[0];
+    return origins;
+}
+
 function logDeliverySocket(message, extra = {}) {
     const suffix = Object.keys(extra).length ? ` ${JSON.stringify(extra)}` : '';
     logger.info(`[DeliverySocket] ${message}${suffix}`);
@@ -42,9 +57,14 @@ const roomNames = {
  * @returns {Promise<Server>}
  */
 export const initSocket = async (server) => {
+    const allowedSocketOrigins = resolveSocketCorsOrigin(config.socketCorsOrigin);
+    logger.info('[DeliverySocket] Initializing Socket.IO CORS', {
+        allowedOrigins: allowedSocketOrigins,
+    });
+
     io = new Server(server, {
         cors: {
-            origin: config.socketCorsOrigin,
+            origin: allowedSocketOrigins,
             methods: ['GET', 'POST']
         }
     });
