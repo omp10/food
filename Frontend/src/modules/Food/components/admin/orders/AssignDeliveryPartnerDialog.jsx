@@ -30,7 +30,87 @@ const isPartnerOnline = (partner) => {
   const state = String(partner?.availabilityStatus || "").toLowerCase()
   if (state === "online") return true
   if (state === "offline") return false
+  if (partner?.availability?.isOnline === true) return true
+  if (partner?.availability?.isOnline === false) return false
   return Boolean(partner?.isOnline)
+}
+
+const normalizeLabel = (value) => String(value || "").trim().toLowerCase()
+
+const getPartnerZoneId = (partner) =>
+  normalizeId(partner?.zoneId?._id) ||
+  normalizeId(partner?.zoneId) ||
+  normalizeId(partner?.zone?._id) ||
+  normalizeId(partner?.zone)
+
+const getPartnerZoneLabel = (partner) =>
+  normalizeLabel(
+    partner?.zoneId?.name ||
+      partner?.zoneId?.zoneName ||
+      partner?.zoneId?.serviceLocation ||
+      partner?.zone?.name ||
+      partner?.zone?.zoneName ||
+      partner?.zone?.serviceLocation ||
+      partner?.zone ||
+      "",
+  )
+
+const parseCoords = (coords = []) => {
+  if (!Array.isArray(coords) || coords.length < 2) return null
+  let lat = null
+  let lng = null
+  if (coords[0] > -180 && coords[0] < 180 && coords[1] > -90 && coords[1] < 90) {
+    lng = Number(coords[0])
+    lat = Number(coords[1])
+  } else {
+    lat = Number(coords[0])
+    lng = Number(coords[1])
+  }
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null
+  return { lat, lng }
+}
+
+const getZonePoint = (coord = {}) => {
+  if (Array.isArray(coord) && coord.length >= 2) return parseCoords(coord)
+  const lat = Number(coord?.latitude ?? coord?.lat)
+  const lng = Number(coord?.longitude ?? coord?.lng)
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null
+  return { lat, lng }
+}
+
+const isPointInsidePolygon = (point, polygon = []) => {
+  if (!point || !Array.isArray(polygon) || polygon.length < 3) return false
+  let inside = false
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = Number(polygon[i]?.lng)
+    const yi = Number(polygon[i]?.lat)
+    const xj = Number(polygon[j]?.lng)
+    const yj = Number(polygon[j]?.lat)
+    const intersect =
+      yi > point.lat !== yj > point.lat &&
+      point.lng < ((xj - xi) * (point.lat - yi)) / ((yj - yi) || Number.EPSILON) + xi
+    if (intersect) inside = !inside
+  }
+  return inside
+}
+
+const getPartnerPoint = (partner = {}) => {
+  const availabilityCoords = partner?.availability?.currentLocation?.coordinates
+  const locationCoords = partner?.location?.coordinates
+  const currentCoords = partner?.currentLocation?.coordinates
+  return parseCoords(availabilityCoords) || parseCoords(locationCoords) || parseCoords(currentCoords) || null
+}
+
+const partnerMatchesZone = (partner, zoneId, zoneLabel) => {
+  const partnerZoneId = getPartnerZoneId(partner)
+  if (partnerZoneId && zoneId && partnerZoneId === zoneId) return true
+
+  const partnerZoneLabel = getPartnerZoneLabel(partner)
+  if (partnerZoneLabel && zoneLabel && partnerZoneLabel === zoneLabel) return true
+
+  return false
 }
 
 export default function AssignDeliveryPartnerDialog({
@@ -50,6 +130,16 @@ export default function AssignDeliveryPartnerDialog({
     normalizeId(order?.originalOrder?.zoneId) ||
     normalizeId(order?.originalOrder?.restaurantId?.zoneId?._id) ||
     normalizeId(order?.originalOrder?.restaurantId?.zoneId)
+  const orderZoneLabel = normalizeLabel(
+    order?.zoneName ||
+      order?.originalOrder?.zoneId?.name ||
+      order?.originalOrder?.zoneId?.zoneName ||
+      order?.originalOrder?.zoneId?.serviceLocation ||
+      order?.originalOrder?.restaurantId?.zoneId?.name ||
+      order?.originalOrder?.restaurantId?.zoneId?.zoneName ||
+      order?.originalOrder?.restaurantId?.zoneId?.serviceLocation ||
+      "",
+  )
 
   useEffect(() => {
     if (!isOpen) {
@@ -68,13 +158,51 @@ export default function AssignDeliveryPartnerDialog({
     const loadPartners = async () => {
       try {
         setIsLoading(true)
-        const response = await adminAPI.getDeliveryPartners({
-          page: 1,
-          limit: 1000,
-          zoneId: orderZoneId,
+        const [zoneScopedResponse, allPartnersResponse, zonesResponse] = await Promise.all([
+          adminAPI.getDeliveryPartners({
+            page: 1,
+            limit: 1000,
+            zoneId: orderZoneId,
+            includeAvailability: true,
+          }),
+          adminAPI.getDeliveryPartners({
+            page: 1,
+            limit: 1000,
+            includeAvailability: true,
+          }),
+          adminAPI.getZones({ page: 1, limit: 1000, isActive: true }),
+        ])
+
+        const zoneScopedList = zoneScopedResponse?.data?.data?.deliveryPartners || []
+        const allPartners = allPartnersResponse?.data?.data?.deliveryPartners || []
+        const zones = zonesResponse?.data?.data?.zones || []
+
+        const matchedZone =
+          zones.find((zone) => normalizeId(zone?._id || zone?.id) === orderZoneId) ||
+          zones.find((zone) => normalizeLabel(zone?.name || zone?.zoneName || zone?.serviceLocation) === orderZoneLabel) ||
+          null
+
+        const zonePolygon = Array.isArray(matchedZone?.coordinates)
+          ? matchedZone.coordinates.map(getZonePoint).filter(Boolean)
+          : []
+
+        const fallbackSameZone = allPartners.filter((partner) =>
+          partnerMatchesZone(partner, orderZoneId, orderZoneLabel),
+        )
+        const fallbackInsideZone = allPartners.filter((partner) => {
+          if (zonePolygon.length < 3) return false
+          const point = getPartnerPoint(partner)
+          return isPointInsidePolygon(point, zonePolygon)
         })
-        const list = response?.data?.data?.deliveryPartners || []
-        setDeliveryPartners(list)
+
+        const mergedById = new Map()
+        for (const partner of [...zoneScopedList, ...fallbackSameZone, ...fallbackInsideZone]) {
+          const id = String(partner?._id || "")
+          if (!id) continue
+          mergedById.set(id, partner)
+        }
+
+        setDeliveryPartners(Array.from(mergedById.values()))
       } catch (error) {
         toast.error(error?.response?.data?.message || "Failed to load delivery partners")
         setDeliveryPartners([])
@@ -84,7 +212,7 @@ export default function AssignDeliveryPartnerDialog({
     }
 
     loadPartners()
-  }, [isOpen, orderZoneId])
+  }, [isOpen, orderZoneId, orderZoneLabel])
 
   const handleAssign = async () => {
     if (!order?.orderMongoId || !selectedPartnerId) return
