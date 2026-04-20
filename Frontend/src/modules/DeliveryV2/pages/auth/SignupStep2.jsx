@@ -41,6 +41,28 @@ const sanitizeUploadedDocs = (docs) => ({
   drivingLicensePhoto: sanitizeUploadedDocValue(docs?.drivingLicensePhoto)
 })
 
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ""))
+    reader.onerror = () => reject(new Error("Failed to read file"))
+    reader.readAsDataURL(file)
+  })
+
+const dataUrlToFile = (dataUrl, fileName = "document.jpg") => {
+  if (!dataUrl || typeof dataUrl !== "string" || !dataUrl.startsWith("data:")) return null
+  const parts = dataUrl.split(",")
+  if (parts.length < 2) return null
+  const mimeMatch = parts[0].match(/data:(.*?);base64/)
+  const mimeType = mimeMatch?.[1] || "image/jpeg"
+  const binary = atob(parts[1])
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return new File([bytes], fileName, { type: mimeType })
+}
+
 const getFriendlyRegistrationError = (error) => {
   const rawMessage =
     error?.response?.data?.message ||
@@ -116,6 +138,28 @@ export default function SignupStep2() {
     sessionStorage.setItem("deliverySignupDocs", JSON.stringify(uploadedDocs))
   }, [uploadedDocs])
 
+  useEffect(() => {
+    const restored = {}
+    Object.keys(createEmptyUploadedDocs()).forEach((docType) => {
+      const uploaded = uploadedDocs?.[docType]
+      const dataUrl =
+        (typeof uploaded === "string" && uploaded.startsWith("data:") && uploaded) ||
+        (uploaded?.dataUrl && String(uploaded.dataUrl).startsWith("data:") && uploaded.dataUrl) ||
+        (uploaded?.url && String(uploaded.url).startsWith("data:") && uploaded.url) ||
+        null
+      if (!dataUrl) return
+      const nextFile = dataUrlToFile(
+        dataUrl,
+        uploaded?.fileName || `${docType}-${Date.now()}.jpg`,
+      )
+      if (nextFile) restored[docType] = nextFile
+    })
+
+    if (Object.keys(restored).length > 0) {
+      setDocuments((prev) => ({ ...prev, ...restored }))
+    }
+  }, [uploadedDocs])
+
   const previewUrlsRefs = useRef({});
 
   useEffect(() => {
@@ -132,6 +176,7 @@ export default function SignupStep2() {
     const uploaded = uploadedDocs[docType]
     if (typeof uploaded === "string") return uploaded
     if (uploaded?.url) return uploaded.url
+    if (uploaded?.dataUrl) return uploaded.dataUrl
 
     const localFile = documents[docType]
     if (localFile instanceof File) {
@@ -160,9 +205,24 @@ export default function SignupStep2() {
       return
     }
 
-    setDocuments((prev) => ({ ...prev, [docType]: file }))
-    setUploadedDocs((prev) => ({ ...prev, [docType]: { file: true } }))
-    toast.success(`${docType.replace(/([A-Z])/g, " $1").trim()} selected`)
+    try {
+      const dataUrl = await fileToDataUrl(file)
+      setDocuments((prev) => ({ ...prev, [docType]: file }))
+      setUploadedDocs((prev) => ({
+        ...prev,
+        [docType]: {
+          dataUrl,
+          url: dataUrl,
+          fileName: file.name,
+          mimeType: file.type,
+          size: file.size
+        }
+      }))
+      toast.success(`${docType.replace(/([A-Z])/g, " $1").trim()} selected`)
+    } catch (err) {
+      debugError("Failed to process selected file:", err)
+      toast.error("Failed to load selected image")
+    }
   }
 
   const handleTakeCameraPhoto = (docType, label) => {
@@ -194,7 +254,12 @@ export default function SignupStep2() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!documents.profilePhoto || !documents.aadharPhoto || !documents.panPhoto || !documents.drivingLicensePhoto) {
+    const profilePhotoFile = documents.profilePhoto || dataUrlToFile(uploadedDocs?.profilePhoto?.dataUrl || uploadedDocs?.profilePhoto?.url || "", uploadedDocs?.profilePhoto?.fileName || "profile-photo.jpg")
+    const aadharPhotoFile = documents.aadharPhoto || dataUrlToFile(uploadedDocs?.aadharPhoto?.dataUrl || uploadedDocs?.aadharPhoto?.url || "", uploadedDocs?.aadharPhoto?.fileName || "aadhar-photo.jpg")
+    const panPhotoFile = documents.panPhoto || dataUrlToFile(uploadedDocs?.panPhoto?.dataUrl || uploadedDocs?.panPhoto?.url || "", uploadedDocs?.panPhoto?.fileName || "pan-photo.jpg")
+    const drivingLicensePhotoFile = documents.drivingLicensePhoto || dataUrlToFile(uploadedDocs?.drivingLicensePhoto?.dataUrl || uploadedDocs?.drivingLicensePhoto?.url || "", uploadedDocs?.drivingLicensePhoto?.fileName || "driving-license-photo.jpg")
+
+    if (!profilePhotoFile || !aadharPhotoFile || !panPhotoFile || !drivingLicensePhotoFile) {
       toast.error("Please upload all required documents")
       return
     }
@@ -233,10 +298,10 @@ export default function SignupStep2() {
     }
     if (details.panNumber) formData.append("panNumber", details.panNumber)
     if (details.aadharNumber) formData.append("aadharNumber", details.aadharNumber)
-    formData.append("profilePhoto", documents.profilePhoto)
-    formData.append("aadharPhoto", documents.aadharPhoto)
-    formData.append("panPhoto", documents.panPhoto)
-    formData.append("drivingLicensePhoto", documents.drivingLicensePhoto)
+    formData.append("profilePhoto", profilePhotoFile)
+    formData.append("aadharPhoto", aadharPhotoFile)
+    formData.append("panPhoto", panPhotoFile)
+    formData.append("drivingLicensePhoto", drivingLicensePhotoFile)
 
     // Try to get FCM token before registering
     let fcmToken = null;
