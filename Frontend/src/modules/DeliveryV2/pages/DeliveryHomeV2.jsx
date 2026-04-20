@@ -428,11 +428,15 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
 
   const isResponseWaitActive = !!responseWaitEndsAt && responseWaitSecondsLeft > 0;
   const isResponseWaitCompleted = hasContactAttempted && !!responseWaitEndsAt && responseWaitSecondsLeft <= 0;
+  const isDropArrivalLockedByWait =
+    ['PICKED_UP', 'REACHED_DROP'].includes(tripStatus) && hasContactAttempted && isResponseWaitActive;
+  const isDropArrivalSlideDisabled = !isWithinRange || isDropArrivalLockedByWait;
   const waitMinutes = String(Math.floor(responseWaitSecondsLeft / 60)).padStart(2, '0');
   const waitSeconds = String(responseWaitSecondsLeft % 60).padStart(2, '0');
 
   useEffect(() => {
-    const shouldLockScroll = tripStatus === 'REACHED_DROP' && hasContactAttempted && isResponseWaitActive;
+    const shouldLockScroll =
+      ['PICKED_UP', 'REACHED_DROP'].includes(tripStatus) && hasContactAttempted && isResponseWaitActive;
     if (!shouldLockScroll) return undefined;
 
     const previousOverflow = document.body.style.overflow;
@@ -1120,7 +1124,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                                 }`}
                             >
                               <Phone className="w-3.5 h-3.5" />
-                              {hasContactAttempted ? 'Called User' : 'Call User'}
+                              {hasContactAttempted ? 'Call Attempted' : 'Contact Customer'}
                             </button>
                           </div>
                         </div>
@@ -1137,7 +1141,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                               ? 'Wait time complete. Next step: reach drop location to continue.'
                               : hasContactAttempted
                                 ? 'Please wait here until countdown completes.'
-                                : 'Call user to start 10-second wait timer.'}
+                                : 'Tap after calling the customer to start the 10-second wait timer.'}
                           </p>
                           {hasContactAttempted && (
                             <button
@@ -1174,10 +1178,15 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                             </div>
                           </div>
                         )}
+                        {isDropArrivalLockedByWait && (
+                          <p className="w-full mb-3 text-center text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">
+                            Complete waiting timer to unlock arrival confirmation
+                          </p>
+                        )}
                         <ActionSlider
                           label="Slide to Confirm Arrival"
                           successLabel="Drop Reached"
-                          disabled={!isWithinRange}
+                          disabled={isDropArrivalSlideDisabled}
                           onConfirm={reachDrop}
                           containerStyle={{ backgroundColor: BRAND_THEME.colors.brand.primarySoft }}
                           style={{ background: BRAND_THEME.gradients.primary }}
@@ -1204,7 +1213,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                                 }`}
                             >
                               <Phone className="w-3.5 h-3.5" />
-                              {hasContactAttempted ? 'Called User' : 'Call User'}
+                              {hasContactAttempted ? 'Call Attempted' : 'Contact Customer'}
                             </button>
                           </div>
                         </div>
