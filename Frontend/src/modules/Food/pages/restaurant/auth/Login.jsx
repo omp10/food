@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { Input } from "@food/components/ui/input"
 import { Button } from "@food/components/ui/button"
+import { getCachedSettings, loadBusinessSettings } from "@food/utils/businessSettings"
 import BRAND_THEME from "@/config/brandTheme"
 
 import { restaurantAPI } from "@food/api"
@@ -11,7 +12,38 @@ export default function RestaurantLogin() {
   const [phone, setPhone] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [logoUrl, setLogoUrl] = useState("")
   const isValid = phone.replace(/\D/g, "").length === 10
+
+  useEffect(() => {
+    const syncBranding = async () => {
+      const cached = getCachedSettings()
+      if (cached?.logo?.url) {
+        setLogoUrl(cached.logo.url)
+      }
+
+      try {
+        const settings = await loadBusinessSettings()
+        if (settings?.logo?.url) {
+          setLogoUrl(settings.logo.url)
+        }
+      } catch {
+        // no-op: keep fallback icon
+      }
+    }
+
+    syncBranding()
+
+    const handleSettingsUpdate = () => {
+      const cached = getCachedSettings()
+      setLogoUrl(cached?.logo?.url || "")
+    }
+
+    window.addEventListener("businessSettingsUpdated", handleSettingsUpdate)
+    return () => {
+      window.removeEventListener("businessSettingsUpdated", handleSettingsUpdate)
+    }
+  }, [])
 
   const handleSendOTP = async () => {
     if (!isValid) {
@@ -20,18 +52,18 @@ export default function RestaurantLogin() {
     }
     setError("")
     setIsLoading(true)
-    
+
     try {
       const formattedPhone = `+91${phone}`
       await restaurantAPI.sendOTP(formattedPhone, "login")
-      
+
       sessionStorage.setItem("restaurantAuthData", JSON.stringify({
         method: "phone",
         phone: formattedPhone,
         isSignUp: false
       }))
       sessionStorage.setItem("restaurantLoginPhone", formattedPhone)
-      
+
       navigate("/food/restaurant/otp")
     } catch (err) {
       const message = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Failed to send verification code. Please try again."
@@ -45,8 +77,17 @@ export default function RestaurantLogin() {
     <div className="min-h-screen flex items-center justify-center bg-white px-4 py-10">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-gray-100 p-8 space-y-6">
         <div className="text-center space-y-2">
-          <div className="mx-auto h-14 w-14 rounded-2xl flex items-center justify-center" style={{ background: BRAND_THEME.gradients.primary }}>
-            <span className="text-white text-2xl">🛵</span>
+          <div className="mx-auto h-20 w-20 rounded-2xl flex items-center justify-center overflow-hidden">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt="Company logo"
+                className="h-16 w-16 object-contain"
+                onError={() => setLogoUrl("")}
+              />
+            ) : (
+              <span className="text-white text-xl font-semibold">R</span>
+            )}
           </div>
           <h1 className="text-xl font-semibold text-gray-900">Restaurant Login</h1>
           <p className="text-sm text-gray-500">Continue with your phone number</p>
@@ -69,7 +110,7 @@ export default function RestaurantLogin() {
             />
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
-          <p className="text-xs text-gray-500">We’ll send a verification code via SMS.</p>
+          <p className="text-xs text-gray-500">We'll send a verification code via SMS.</p>
         </div>
 
         <Button
