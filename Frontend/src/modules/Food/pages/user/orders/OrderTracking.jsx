@@ -268,12 +268,49 @@ const getCustomerCoordsFromApiOrder = (apiOrder, previousOrder = null) => {
   return null
 }
 
+const toFiniteNumber = (value) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+const getDueAmountFromOrder = (apiOrder, previousOrder = null) => {
+  const directDueCandidates = [
+    apiOrder?.pricing?.previousDue,
+    apiOrder?.previousDue,
+    apiOrder?.dueAmount,
+    apiOrder?.pricing?.dueAmount,
+    apiOrder?.noResponseMeta?.dueAmount,
+  ]
+
+  for (const candidate of directDueCandidates) {
+    const amount = toFiniteNumber(candidate)
+    if (amount !== null && amount > 0) return amount
+  }
+
+  // Fallback: infer due from payable amount when backend omits explicit previousDue.
+  const payableAmount = toFiniteNumber(apiOrder?.payment?.amountDue)
+  const orderTotal = toFiniteNumber(
+    apiOrder?.pricing?.total ??
+      apiOrder?.totalAmount ??
+      apiOrder?.total ??
+      previousOrder?.totalAmount ??
+      previousOrder?.total
+  )
+  if (payableAmount !== null && orderTotal !== null && payableAmount > orderTotal) {
+    return payableAmount - orderTotal
+  }
+
+  const previousDue = toFiniteNumber(previousOrder?.dueAmount)
+  return previousDue !== null && previousDue > 0 ? previousDue : 0
+}
+
 const transformOrderForTracking = (apiOrder, previousOrder = null, explicitRestaurantCoords = null, explicitRestaurantAddress = null) => {
   const restaurantCoords = explicitRestaurantCoords || getRestaurantCoordsFromOrder(apiOrder, previousOrder?.restaurantLocation?.coordinates)
   const restaurantAddress = getRestaurantAddressFromOrder(apiOrder, previousOrder, explicitRestaurantAddress)
   // API returns `deliveryAddress`; some paths use `address`
   const addr = apiOrder?.address || apiOrder?.deliveryAddress || {}
   const customerCoordsResolved = getCustomerCoordsFromApiOrder(apiOrder, previousOrder)
+  const dueAmount = getDueAmountFromOrder(apiOrder, previousOrder)
 
   return {
     id: apiOrder?.orderId || apiOrder?._id,
@@ -343,6 +380,7 @@ const transformOrderForTracking = (apiOrder, previousOrder = null, explicitResta
     platformFee: apiOrder?.pricing?.platformFee || apiOrder?.platformFee || 0,
     discount: apiOrder?.pricing?.discount || apiOrder?.discount || 0,
     subtotal: apiOrder?.pricing?.subtotal || apiOrder?.subtotal || 0,
+    dueAmount,
     paymentMethod: apiOrder?.paymentMethod || apiOrder?.payment?.method || previousOrder?.paymentMethod || null,
     payment: apiOrder?.payment || previousOrder?.payment || null,
     // Preserve delivery OTP code received via socket event.
@@ -1855,6 +1893,13 @@ export default function OrderTracking() {
                 <span className="text-gray-600">Item Total</span>
                 <span className="text-gray-900 font-medium">₹{Number(order?.subtotal || 0).toFixed(2)}</span>
               </div>
+
+              {Number(order?.dueAmount) > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Previous Due</span>
+                  <span className="text-gray-900 font-medium">₹{Number(order.dueAmount).toFixed(2)}</span>
+                </div>
+              )}
 
               {Number(order?.packagingFee) > 0 && (
                 <div className="flex justify-between items-center text-sm">
