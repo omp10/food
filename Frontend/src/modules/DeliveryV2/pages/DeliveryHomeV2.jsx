@@ -39,6 +39,8 @@ import useNotificationInbox from "@food/hooks/useNotificationInbox";
 
 const USER_RESPONSE_WAIT_SECONDS = 10;
 const NO_RESPONSE_BACKEND_STATUS = 'cancelled_by_user_unavailable';
+const INCOMING_ORDER_STORAGE_KEY = 'delivery_v2_incoming_order';
+const INCOMING_ORDER_TTL_MS = 2 * 60 * 1000;
 
 const pickFirstText = (...values) => {
   for (const value of values) {
@@ -167,6 +169,61 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
   const lastContactFetchOrderIdRef = useRef(null);
 
   const isLoggingOut = useRef(false);
+  const getOrderIdentity = useCallback((orderLike) => (
+    String(
+      orderLike?.orderMongoId ||
+      orderLike?._id ||
+      orderLike?.orderId ||
+      orderLike?.id ||
+      ''
+    ).trim()
+  ), []);
+
+  const persistIncomingOrder = useCallback((orderLike) => {
+    const orderId = getOrderIdentity(orderLike);
+    if (!orderId) return;
+    try {
+      localStorage.setItem(
+        INCOMING_ORDER_STORAGE_KEY,
+        JSON.stringify({
+          savedAt: Date.now(),
+          order: orderLike,
+        }),
+      );
+    } catch {
+      // Ignore storage errors.
+    }
+  }, [getOrderIdentity]);
+
+  const clearPersistedIncomingOrder = useCallback(() => {
+    try {
+      localStorage.removeItem(INCOMING_ORDER_STORAGE_KEY);
+    } catch {
+      // Ignore storage errors.
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(INCOMING_ORDER_STORAGE_KEY);
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw);
+      const savedAt = Number(parsed?.savedAt || 0);
+      const savedOrder = parsed?.order || null;
+      if (!savedOrder || Date.now() - savedAt > INCOMING_ORDER_TTL_MS) {
+        clearPersistedIncomingOrder();
+        return;
+      }
+
+      if (!activeOrder) {
+        setIncomingOrder(savedOrder);
+      }
+    } catch {
+      clearPersistedIncomingOrder();
+    }
+  }, [activeOrder, clearPersistedIncomingOrder]);
+
   const handleLogout = useCallback(() => {
     if (isLoggingOut.current) return;
     isLoggingOut.current = true;
@@ -176,6 +233,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
     localStorage.removeItem('delivery_refreshToken');
     localStorage.removeItem('delivery_authenticated');
     localStorage.removeItem('delivery_user');
+    localStorage.removeItem(INCOMING_ORDER_STORAGE_KEY);
 
     // 2. Alert user and redirect
     toast.error("Session Expired", { description: "Please log in again." });
@@ -726,13 +784,18 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
     return () => clearInterval(pingInterval);
   }, [isOnline]);
 
-  useEffect(() => { if (newOrder) setIncomingOrder(newOrder); }, [newOrder]);
+  useEffect(() => {
+    if (!newOrder) return;
+    setIncomingOrder(newOrder);
+    persistIncomingOrder(newOrder);
+  }, [newOrder, persistIncomingOrder]);
 
   useEffect(() => {
     if (activeOrder && incomingOrder) {
       setIncomingOrder(null);
+      clearPersistedIncomingOrder();
     }
-  }, [activeOrder, incomingOrder]);
+  }, [activeOrder, incomingOrder, clearPersistedIncomingOrder]);
 
   useEffect(() => {
     if (!isOnline) return;
@@ -777,6 +840,7 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
         });
 
         if (!cancelled && nextIncomingOrder) {
+          persistIncomingOrder(nextIncomingOrder);
           setIncomingOrder((prev) => {
             const prevId = prev?.orderId || prev?._id || prev?.orderMongoId;
             const nextId =
@@ -802,17 +866,19 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
       cancelled = true;
       window.clearInterval(poller);
     };
-  }, [activeOrder, currentTab, isOnline, isSocketConnected, setActiveOrder]);
+  }, [activeOrder, currentTab, isOnline, isSocketConnected, setActiveOrder, persistIncomingOrder]);
 
   useEffect(() => {
     if (orderStatusUpdate) {
       if (orderStatusUpdate.status === 'cancelled') {
         toast.error('Order cancelled');
+        setIncomingOrder(null);
+        clearPersistedIncomingOrder();
         resetTrip();
       }
       clearOrderStatusUpdate();
     }
-  }, [orderStatusUpdate, resetTrip, clearOrderStatusUpdate]);
+  }, [orderStatusUpdate, resetTrip, clearOrderStatusUpdate, clearPersistedIncomingOrder]);
 
 
   const handleCenterMap = () => {
@@ -1053,13 +1119,23 @@ export default function DeliveryHomeV2({ tab = 'feed' }) {
                 {incomingOrder && (
                   <NewOrderModal
                     order={incomingOrder}
-                    onAccept={(o) => { acceptOrder(o); setIncomingOrder(null); clearNewOrder(); }}
+                    onAccept={async (o) => {
+                      try {
+                        await acceptOrder(o);
+                        setIncomingOrder(null);
+                        clearPersistedIncomingOrder();
+                        clearNewOrder();
+                      } catch {
+                        // Keep modal open so rider can retry before auto-timeout unassign.
+                      }
+                    }}
                     onReject={(o, reasonType) => {
                       const orderToReject = o || incomingOrder;
                       if (orderToReject) {
                         rejectOrder(orderToReject, reasonType);
                       }
                       setIncomingOrder(null);
+                      clearPersistedIncomingOrder();
                       clearNewOrder();
                     }}
                     onMinimize={() => setIsModalMinimized(true)}

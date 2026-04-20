@@ -620,6 +620,13 @@ export const useRestaurantNotifications = () => {
     // Listen for order status updates
     socketRef.current.on('order_status_update', (data) => {
       debugLog('?? Order status update:', data);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('restaurantOrderStatusUpdated', {
+            detail: data || {},
+          }),
+        );
+      }
       const status = String(data?.orderStatus || data?.status || '').toLowerCase();
       if (status.includes('cancel')) {
         const orderId = String(

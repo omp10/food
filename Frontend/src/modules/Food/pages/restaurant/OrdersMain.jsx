@@ -94,9 +94,8 @@ const formatOrderDateTime = (dateInput) => {
   }) + `, ${timeStr}`;
 };
 
-const isDispatchAccepted = (orderLike) =>
-  String(orderLike?.dispatch?.status || orderLike?.dispatchStatus || "")
-    .toLowerCase() === "accepted" || Boolean(orderLike?.dispatch?.acceptedAt);
+const getDispatchPartnerId = (orderLike) =>
+  orderLike?.deliveryPartnerId || orderLike?.dispatch?.deliveryPartnerId || null;
 
 const transformOrderForList = (order) => ({
   orderId: order.orderId || order._id,
@@ -113,10 +112,9 @@ const transformOrderForList = (order) => ({
   photoUrl: order.items?.[0]?.image || null,
   photoAlt: order.items?.[0]?.name || "Order",
   paymentMethod: order.paymentMethod || order.payment?.method || null,
-  deliveryPartnerId: isDispatchAccepted(order)
-    ? (order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null)
-    : null,
+  deliveryPartnerId: getDispatchPartnerId(order),
   dispatchStatus: order.dispatch?.status || null,
+  deliveryState: order.deliveryState || null,
   preparingTimestamp: order.tracking?.preparing?.timestamp
     ? new Date(order.tracking.preparing.timestamp)
     : new Date(order.createdAt || Date.now()),
@@ -556,7 +554,7 @@ function CancelledOrders({ onSelectOrder, refreshToken = 0 }) {
   );
 }
 
-function AllOrders({ onSelectOrder, onCancel }) {
+function AllOrders({ onSelectOrder, onCancel, refreshToken = 0 }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -1073,6 +1071,33 @@ export default function OrdersMain() {
 
   const [ordersRefreshToken, setOrdersRefreshToken] = useState(0);
   const requestOrdersRefresh = () => setOrdersRefreshToken((t) => t + 1);
+
+  useEffect(() => {
+    const handleRestaurantOrderStatusUpdated = (event) => {
+      const payload = event?.detail || {};
+      const hasDispatchUpdate =
+        payload?.dispatchStatus != null ||
+        payload?.dispatch_status != null;
+      const hasOrderStatusUpdate =
+        payload?.orderStatus != null || payload?.status != null;
+
+      if (hasDispatchUpdate || hasOrderStatusUpdate) {
+        requestOrdersRefresh();
+      }
+    };
+
+    window.addEventListener(
+      "restaurantOrderStatusUpdated",
+      handleRestaurantOrderStatusUpdated,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "restaurantOrderStatusUpdated",
+        handleRestaurantOrderStatusUpdated,
+      );
+    };
+  }, []);
 
   // Check for confirmed orders that haven't been shown in popup yet, or scheduled orders whose time has come
   useEffect(() => {
@@ -1716,6 +1741,7 @@ export default function OrdersMain() {
           <AllOrders
             onSelectOrder={handleSelectOrder}
             onCancel={handleCancelClick}
+            refreshToken={ordersRefreshToken}
           />
         );
       case "preparing":
@@ -2678,13 +2704,33 @@ function OrderCard({
   photoAlt,
   deliveryPartnerId,
   dispatchStatus,
+  deliveryState,
   onSelect,
   onCancel,
   onMarkReady,
   isMarkingReady = false,
 }) {
   const normalizedStatus = String(status || "").toLowerCase();
-  const isDeliveryAccepted = String(dispatchStatus || "").toLowerCase() === "accepted";
+  const dispatchStatusLower = String(dispatchStatus || "").toLowerCase();
+  const deliveryPhase = String(deliveryState?.currentPhase || "").toLowerCase();
+  const deliveryStateStatus = String(deliveryState?.status || "").toLowerCase();
+  const hasDeliveryProgressAfterAccept =
+    deliveryPhase === "at_pickup" ||
+    deliveryPhase === "en_route_to_delivery" ||
+    deliveryPhase === "at_drop" ||
+    deliveryPhase === "delivered" ||
+    deliveryStateStatus === "reached_pickup" ||
+    deliveryStateStatus === "picked_up" ||
+    deliveryStateStatus === "reached_drop" ||
+    deliveryStateStatus === "out_for_delivery" ||
+    Boolean(deliveryState?.reachedPickupAt) ||
+    Boolean(deliveryState?.pickedUpAt) ||
+    Boolean(deliveryState?.reachedDropAt) ||
+    Boolean(deliveryState?.deliveredAt);
+  const isDeliveryAccepted =
+    dispatchStatusLower === "accepted" ||
+    Boolean(deliveryState?.acceptedAt) ||
+    hasDeliveryProgressAfterAccept;
   const isReady = normalizedStatus === "ready";
   const isPreparing = normalizedStatus === "preparing";
   const statusLabel = String(status || "")
@@ -2883,10 +2929,9 @@ function PreparingOrders({
                   .join(", ") || "No items",
               photoUrl: order.items?.[0]?.image || null,
               photoAlt: order.items?.[0]?.name || "Order",
-              deliveryPartnerId: isDispatchAccepted(order)
-                ? (order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null)
-                : null,
+              deliveryPartnerId: getDispatchPartnerId(order),
               dispatchStatus: order.dispatch?.status || null,
+              deliveryState: order.deliveryState || null,
               paymentMethod:
                 order.paymentMethod || order.payment?.method || null,
             };
@@ -3135,6 +3180,7 @@ function PreparingOrders({
                 paymentMethod={order.paymentMethod}
                 deliveryPartnerId={order.deliveryPartnerId}
                 dispatchStatus={order.dispatchStatus}
+                deliveryState={order.deliveryState}
                 onSelect={onSelectOrder}
                 onCancel={onCancel}
                 onMarkReady={handleMarkReady}
@@ -3190,10 +3236,9 @@ function ReadyOrders({ onSelectOrder, refreshToken = 0 }) {
             photoUrl: order.items?.[0]?.image || null,
             photoAlt: order.items?.[0]?.name || "Order",
             paymentMethod: order.paymentMethod || order.payment?.method || null,
-            deliveryPartnerId: isDispatchAccepted(order)
-              ? (order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null)
-              : null,
+            deliveryPartnerId: getDispatchPartnerId(order),
             dispatchStatus: order.dispatch?.status || null,
+            deliveryState: order.deliveryState || null,
           }));
 
           if (isMounted) {
@@ -3307,10 +3352,9 @@ const OutForDeliveryOrders = ({ onSelectOrder, refreshToken = 0 }) => {
             photoUrl: order.items?.[0]?.image || null,
             photoAlt: order.items?.[0]?.name || "Order",
             paymentMethod: order.paymentMethod || order.payment?.method || null,
-            deliveryPartnerId: isDispatchAccepted(order)
-              ? (order.deliveryPartnerId || order.dispatch?.deliveryPartnerId || null)
-              : null,
+            deliveryPartnerId: getDispatchPartnerId(order),
             dispatchStatus: order.dispatch?.status || null,
+            deliveryState: order.deliveryState || null,
           }));
 
           if (isMounted) {
