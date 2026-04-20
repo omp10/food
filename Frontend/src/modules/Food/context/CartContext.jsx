@@ -41,6 +41,26 @@ const defaultCartContext = {
 const CartContext = createContext(defaultCartContext)
 
 const getItemOrderType = (item) => (item?.orderType === "quick" ? "quick" : "food")
+const getNormalizedFoodType = (item = {}) =>
+  String(item?.foodType || item?.type || item?.category || "")
+    .trim()
+    .toLowerCase()
+
+const isItemVeg = (item = {}) => {
+  const normalizedFoodType = getNormalizedFoodType(item)
+  if (normalizedFoodType === "veg" || normalizedFoodType === "vegetarian") return true
+  if (
+    normalizedFoodType === "non-veg" ||
+    normalizedFoodType === "non veg" ||
+    normalizedFoodType === "nonveg" ||
+    normalizedFoodType === "egg"
+  ) {
+    return false
+  }
+  if (item?.isVeg === true) return true
+  if (item?.isVeg === false) return false
+  return false
+}
 
 const normalizeCartData = (rawCart) => {
   if (!Array.isArray(rawCart)) return []
@@ -116,6 +136,7 @@ const normalizeCartData = (rawCart) => {
         restaurantId: normalizedRestaurantId,
         image: normalizedImage,
         imageUrl: normalizedImage,
+        isVeg: isItemVeg(item),
       }
     })
 }

@@ -71,6 +71,26 @@ const debugError = (...args) => {}
 const FOOD_IMAGE_FALLBACK = "https://picsum.photos/seed/food-fallback/800/600"
 const RUPEE_SYMBOL = "\u20B9"
 const RESTAURANT_DETAILS_FILTERS_STORAGE_KEY = "food-restaurant-details-filters"
+const getNormalizedFoodType = (item = {}) =>
+  String(item?.foodType || item?.type || item?.category || "")
+    .trim()
+    .toLowerCase()
+
+const isItemVeg = (item = {}) => {
+  const normalizedFoodType = getNormalizedFoodType(item)
+  if (normalizedFoodType === "veg" || normalizedFoodType === "vegetarian") return true
+  if (
+    normalizedFoodType === "non-veg" ||
+    normalizedFoodType === "non veg" ||
+    normalizedFoodType === "nonveg" ||
+    normalizedFoodType === "egg"
+  ) {
+    return false
+  }
+  if (item?.isVeg === true) return true
+  if (item?.isVeg === false) return false
+  return false
+}
 
 function RestaurantDetailsContent() {
   const { slug } = useParams()
@@ -947,7 +967,7 @@ function RestaurantDetailsContent() {
                     id: String(item.id || Date.now() + Math.random()),
                     name: item.name || "Unnamed Item",
                     inStock: item.inStock !== undefined ? item.inStock : true,
-                    isVeg: item.isVeg !== undefined ? item.isVeg : true,
+                    isVeg: isItemVeg(item),
                     stockQuantity: item.stockQuantity || "Unlimited",
                     unit: item.unit || "piece",
                     expiryDate: item.expiryDate || null,
@@ -1237,7 +1257,7 @@ function RestaurantDetailsContent() {
       restaurantId: validRestaurantId, // Use validated restaurantId
       description: item.description,
       originalPrice: item.originalPrice,
-      isVeg: item.isVeg !== false, // Add isVeg property
+      isVeg: isItemVeg(item), // Add isVeg property
       preparationTime: item.preparationTime // Add preparationTime property
     }
 

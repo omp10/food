@@ -24,6 +24,26 @@ import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
+const getNormalizedFoodType = (item = {}) =>
+  String(item?.foodType || item?.type || item?.category || "")
+    .trim()
+    .toLowerCase()
+
+const isItemVeg = (item = {}) => {
+  const normalizedFoodType = getNormalizedFoodType(item)
+  if (normalizedFoodType === "veg" || normalizedFoodType === "vegetarian") return true
+  if (
+    normalizedFoodType === "non-veg" ||
+    normalizedFoodType === "non veg" ||
+    normalizedFoodType === "nonveg" ||
+    normalizedFoodType === "egg"
+  ) {
+    return false
+  }
+  if (item?.isVeg === true) return true
+  if (item?.isVeg === false) return false
+  return false
+}
 
 
 export default function UserOrderDetails() {
@@ -340,7 +360,7 @@ export default function UserOrderDetails() {
           restaurant: restaurantName,
           restaurantId: restaurantObj._id || restaurantObj.restaurantId || currentOrder?.restaurantId,
           description: item.description || "",
-          isVeg: item.isVeg !== false,
+          isVeg: isItemVeg(item),
           quantity: Math.max(1, Number(item.quantity || item.qty) || 1),
           reorderIndex: index,
         }
@@ -448,11 +468,11 @@ export default function UserOrderDetails() {
             <div key={idx} className="flex justify-between items-start mt-2">
               <div className="flex items-center gap-2">
                 <div
-                  className={`w-3 h-3 border ${item.isVeg ? "border-green-600" : "border-red-600"
+                  className={`w-3 h-3 border ${isItemVeg(item) ? "border-green-600" : "border-red-600"
                     } flex items-center justify-center p-[1px]`}
                 >
                   <div
-                    className={`w-full h-full rounded-full ${item.isVeg ? "bg-green-600" : "bg-red-600"
+                    className={`w-full h-full rounded-full ${isItemVeg(item) ? "bg-green-600" : "bg-red-600"
                       }`}
                   />
                 </div>

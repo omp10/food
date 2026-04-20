@@ -273,6 +273,27 @@ const toFiniteNumber = (value) => {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+const getNormalizedFoodType = (item = {}) =>
+  String(item?.foodType || item?.type || item?.category || "")
+    .trim()
+    .toLowerCase()
+
+const isItemVeg = (item = {}) => {
+  const normalizedFoodType = getNormalizedFoodType(item)
+  if (normalizedFoodType === "veg" || normalizedFoodType === "vegetarian") return true
+  if (
+    normalizedFoodType === "non-veg" ||
+    normalizedFoodType === "non veg" ||
+    normalizedFoodType === "nonveg" ||
+    normalizedFoodType === "egg"
+  ) {
+    return false
+  }
+  if (item?.isVeg === true) return true
+  if (item?.isVeg === false) return false
+  return false
+}
+
 const getDueAmountFromOrder = (apiOrder, previousOrder = null) => {
   const directDueCandidates = [
     apiOrder?.pricing?.previousDue,
@@ -357,7 +378,8 @@ const transformOrderForTracking = (apiOrder, previousOrder = null, explicitResta
       name: item.name,
       variantName: item.variantName || '',
       quantity: item.quantity,
-      price: item.price
+      price: item.price,
+      isVeg: isItemVeg(item)
     })) || previousOrder?.items || [],
     total: apiOrder?.pricing?.total || previousOrder?.total || 0,
     // Backend canonical field is orderStatus; keep legacy `status` for UI compatibility.
@@ -1732,8 +1754,8 @@ export default function OrderTracking() {
                 <div className="mt-2 space-y-1">
                   {order?.items?.map((item, index) => (
                     <div key={index} className="flex items-center gap-2 text-sm text-gray-600">
-                      <span className="w-4 h-4 rounded border border-green-600 flex items-center justify-center">
-                        <span className="w-2 h-2 rounded-full bg-green-600" />
+                      <span className={`w-4 h-4 rounded border ${isItemVeg(item) ? "border-green-600" : "border-red-600"} flex items-center justify-center`}>
+                        <span className={`w-2 h-2 rounded-full ${isItemVeg(item) ? "bg-green-600" : "bg-red-600"}`} />
                       </span>
                       <span>{item.quantity} x {item.name}{item.variantName ? ` (${item.variantName})` : ""}</span>
                     </div>
@@ -1868,8 +1890,8 @@ export default function OrderTracking() {
                 {order?.items?.map((item, index) => (
                   <div key={index} className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 flex-1">
-                      <div className="w-5 h-5 rounded border border-green-600 flex items-center justify-center mt-0.5 shrink-0">
-                        <div className="w-2.5 h-2.5 rounded-full bg-green-600" />
+                      <div className={`w-5 h-5 rounded border ${isItemVeg(item) ? "border-green-600" : "border-red-600"} flex items-center justify-center mt-0.5 shrink-0`}>
+                        <div className={`w-2.5 h-2.5 rounded-full ${isItemVeg(item) ? "bg-green-600" : "bg-red-600"}`} />
                       </div>
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900 leading-tight">{item.name}</p>

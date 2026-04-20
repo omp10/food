@@ -9,6 +9,26 @@ import BRAND_THEME from "@/config/brandTheme"
 const debugLog = (...args) => {}
 const debugWarn = (...args) => {}
 const debugError = (...args) => {}
+const getNormalizedFoodType = (item = {}) =>
+  String(item?.foodType || item?.type || item?.category || "")
+    .trim()
+    .toLowerCase()
+
+const isItemVeg = (item = {}) => {
+  const normalizedFoodType = getNormalizedFoodType(item)
+  if (normalizedFoodType === "veg" || normalizedFoodType === "vegetarian") return true
+  if (
+    normalizedFoodType === "non-veg" ||
+    normalizedFoodType === "non veg" ||
+    normalizedFoodType === "nonveg" ||
+    normalizedFoodType === "egg"
+  ) {
+    return false
+  }
+  if (item?.isVeg === true) return true
+  if (item?.isVeg === false) return false
+  return false
+}
 
 const isDispatchAccepted = (orderLike) =>
   String(orderLike?.dispatch?.status || orderLike?.dispatchStatus || "")
@@ -300,7 +320,7 @@ export default function Orders() {
                 price: item.price || 0,
                 image: item.image || null,
                 description: item.description || null,
-                isVeg: item.isVeg !== undefined ? item.isVeg : (item.category === 'veg' || item.type === 'veg'),
+                isVeg: isItemVeg(item),
                 _id: item._id || item.id,
                 id: item.id || item._id
               })),
@@ -448,7 +468,7 @@ export default function Orders() {
           restaurant: order.restaurant || "Restaurant",
           restaurantId: order.restaurantId,
           description: item.description || "",
-          isVeg: item.isVeg !== false,
+          isVeg: isItemVeg(item),
           quantity: Math.max(1, Number(item.quantity) || 1),
           reorderIndex: index,
         }
@@ -839,7 +859,7 @@ Order again from this restaurant in the ${companyName} app.`
                 <div className="px-4 py-2 space-y-2">
                   {order.items && order.items.length > 0 ? (
                     order.items.map((item, idx) => {
-                      const isVeg = item.isVeg !== undefined ? item.isVeg : (item.category === 'veg' || item.type === 'veg')
+                      const isVeg = isItemVeg(item)
                       const itemName = item.name || item.foodName || 'Item'
                       const itemQuantity = item.quantity || 1
                       const itemPrice = item.price || 0
