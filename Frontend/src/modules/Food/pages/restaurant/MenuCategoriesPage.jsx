@@ -79,12 +79,4 @@ export default function MenuCategoriesPage() {
   )
 }
 
-/* ORIGINAL CODE - COMMENTED OUT
-export default function MenuCategoriesPage() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const goBack = useRestaurantBackNavigation()
-  /* REST OF THE ORIGINAL CODE IS COMMENTED OUT - SEE END OF FILE */
-}
-*/
 

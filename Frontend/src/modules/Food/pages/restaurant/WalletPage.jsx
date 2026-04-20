@@ -12,20 +12,6 @@ import {
   ShoppingBag,
   Store,
   Menu,
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useNavigate } from "react-router-dom"
-import Lenis from "lenis"
-import BottomNavOrders from "@food/components/restaurant/BottomNavOrders"
-import { 
-  Wallet, 
-  DollarSign, 
-  Hand, 
-  SlidersHorizontal,
-  Home,
-  ShoppingBag,
-  Store,
-  Menu,
   Clock,
   CheckCircle,
   TrendingUp,
@@ -632,10 +618,36 @@ export default function WalletPage() {
                 <Button
                   className="w-full text-white font-semibold py-3 rounded-lg text-base md:text-lg"
                   style={{ backgroundColor: BRAND_THEME.colors.brand.primary }}
+                  disabled={!withdrawAmount || submitting}
                   onClick={async () => {
-                    if (withdrawAmount && !submitting) {
-                      const amount = parseFloat(withdrawAmount)
-                      if (amount > 0 && amount <= balances.withdrawalBalance) {
+                    if (!withdrawAmount || submitting) return
+
+                    const amount = parseFloat(withdrawAmount)
+                    if (!Number.isFinite(amount) || amount <= 0 || amount > balances.withdrawalBalance) return
+
+                    try {
+                      setSubmitting(true)
+                      await restaurantAPI.createWithdrawalRequest(amount)
+                      await fetchData()
+                      setWithdrawAmount("")
+                      setShowPaymentDropdown(false)
+                      setShowWithdrawModal(false)
+                    } catch (error) {
+                      console.error("Error creating withdrawal request:", error)
+                    } finally {
+                      setSubmitting(false)
+                    }
+                  }}
+                >
+                  {submitting ? "Submitting..." : "Request Withdraw"}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Balance Adjust Modal */}
       <AnimatePresence>
         {showAdjustModal && (
           <motion.div
@@ -679,7 +691,7 @@ export default function WalletPage() {
                 >
                   Ok
                 </Button>
-            </div>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -689,8 +701,6 @@ export default function WalletPage() {
       {!showWithdrawModal && (
         <BottomNavOrders />
       )}
-      
-      {/* Menu Overlay */}
     </div>
   )
 }
