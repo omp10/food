@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { X, Search, Clock, Loader2 } from "lucide-react"
 import { Button } from "@food/components/ui/button"
 import { Input } from "@food/components/ui/input"
-import { restaurantAPI } from "@food/api"
+import { searchAPI } from "@/services/api"
 import BRAND_THEME from "@/config/brandTheme"
 
 const SEARCH_HISTORY_KEY = "user_recent_searches_v1"
@@ -13,10 +13,10 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
   const { brand } = BRAND_THEME.colors
   const navigate = useNavigate()
   const inputRef = useRef(null)
-  const [allFoods, setAllFoods] = useState([])
   const [filteredFoods, setFilteredFoods] = useState([])
   const [recentSuggestions, setRecentSuggestions] = useState([])
   const [loadingFoods, setLoadingFoods] = useState(false)
+  const searchRequestIdRef = useRef(0)
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -41,49 +41,7 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
       setRecentSuggestions([])
     }
 
-    const getImageUrl = (value) => {
-      if (!value) return ""
-      if (typeof value === "string") return value
-      if (typeof value === "object") {
-        return (
-          value.url ||
-          value.secure_url ||
-          value.imageUrl ||
-          value.image ||
-          value.src ||
-          ""
-        )
-      }
-      return ""
-    }
-
-    const fetchDishesFromDB = async () => {
-      setLoadingFoods(true)
-      try {
-        const dishesRes = await restaurantAPI.getPublicDishes({ limit: 800 })
-        const dishes =
-          dishesRes?.data?.data?.dishes ||
-          dishesRes?.data?.dishes ||
-          []
-
-        const normalized = (Array.isArray(dishes) ? dishes : [])
-          .filter((dish) => dish?.name)
-          .map((dish, index) => ({
-            id: dish?.id || dish?._id || `dish-${index}`,
-            name: String(dish.name).trim(),
-            image: getImageUrl(dish?.image),
-          }))
-
-        setAllFoods(normalized)
-      } catch {
-        setAllFoods([])
-      } finally {
-        setLoadingFoods(false)
-      }
-    }
-
     loadRecentSuggestions()
-    fetchDishesFromDB()
   }, [isOpen])
 
   useEffect(() => {
@@ -105,15 +63,59 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
   }, [isOpen, onClose])
 
   useEffect(() => {
-    if (searchValue.trim() === "") {
-      setFilteredFoods(allFoods)
-    } else {
-      const filtered = allFoods.filter((food) =>
-        food.name.toLowerCase().includes(searchValue.toLowerCase())
-      )
-      setFilteredFoods(filtered)
+    if (!isOpen) return
+
+    const term = searchValue.trim()
+    if (!term) {
+      setFilteredFoods([])
+      setLoadingFoods(false)
+      return
     }
-  }, [searchValue, allFoods])
+
+    const requestId = ++searchRequestIdRef.current
+    const timer = setTimeout(async () => {
+      setLoadingFoods(true)
+      try {
+        const res = await searchAPI.unifiedSearch({ q: term, limit: 60 })
+        const restaurants = res?.data?.data?.restaurants || []
+        const normalizedFoods = restaurants
+          .map((item, index) => {
+            if (item?.matchType === "food" && item?.matchedDish) {
+              return {
+                id: item?.matchedDishId || `${item?._id || "restaurant"}-dish-${index}`,
+                name: String(item.matchedDish).trim(),
+                image: item?.matchedDishImage || item?.image || item?.profileImage || "",
+              }
+            }
+
+            if (item?.restaurantName) {
+              return {
+                id: item?._id || `restaurant-${index}`,
+                name: String(item.restaurantName).trim(),
+                image: item?.image || item?.profileImage || "",
+              }
+            }
+
+            return null
+          })
+          .filter(Boolean)
+
+        if (searchRequestIdRef.current === requestId) {
+          setFilteredFoods(normalizedFoods)
+        }
+      } catch {
+        if (searchRequestIdRef.current === requestId) {
+          setFilteredFoods([])
+        }
+      } finally {
+        if (searchRequestIdRef.current === requestId) {
+          setLoadingFoods(false)
+        }
+      }
+    }, 250)
+
+    return () => clearTimeout(timer)
+  }, [isOpen, searchValue])
 
   const saveRecentSearch = (term) => {
     const value = String(term || "").trim()
@@ -135,7 +137,7 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
     e.preventDefault()
     if (searchValue.trim()) {
       saveRecentSearch(searchValue)
-      navigate(`/user/search?q=${encodeURIComponent(searchValue.trim())}`)
+      navigate(`/food/user/search?q=${encodeURIComponent(searchValue.trim())}`)
       onClose()
       onSearchChange("")
     }
@@ -143,7 +145,7 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
 
   const handleFoodClick = (food) => {
     saveRecentSearch(food.name)
-    navigate(`/user/search?q=${encodeURIComponent(food.name)}`)
+    navigate(`/food/user/search?q=${encodeURIComponent(food.name)}`)
     onClose()
     onSearchChange("")
   }
@@ -221,7 +223,7 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
           }}
         >
           <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">
-            {searchValue.trim() === "" ? "All Dishes" : `Search Results (${filteredFoods.length})`}
+            {searchValue.trim() === "" ? "Search Results (0)" : `Search Results (${filteredFoods.length})`}
           </h3>
           {filteredFoods.length > 0 ? (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
@@ -267,10 +269,10 @@ export default function SearchOverlay({ isOpen, onClose, searchValue, onSearchCh
                 <>
                   <Search className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <p className="text-gray-600 dark:text-gray-400 text-base sm:text-lg font-semibold">
-                    {searchValue.trim() ? `No results found for "${searchValue}"` : "No dishes found in database"}
+                    {searchValue.trim() ? `No results found for "${searchValue}"` : "Search for dishes to see results"}
                   </p>
                   <p className="text-sm sm:text-base text-gray-500 dark:text-gray-500 mt-2">
-                    {searchValue.trim() ? "Try a different search term" : "Add menu items in restaurant menus to show here"}
+                    {searchValue.trim() ? "Try a different search term" : "Start typing to search dishes"}
                   </p>
                 </>
               )}

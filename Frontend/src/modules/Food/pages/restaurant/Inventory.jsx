@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Search,
@@ -793,6 +793,10 @@ export default function Inventory() {
 
   const categoryRefs = useRef({})
   const addonImageInputRef = useRef(null)
+  const approvalSnapshotRef = useRef("")
+  const hasLoadedMenuOnceRef = useRef(false)
+  const addonApprovalSnapshotRef = useRef("")
+  const hasLoadedAddonsOnceRef = useRef(false)
 
   // Swipe gesture refs
   const touchStartX = useRef(0)
@@ -851,160 +855,205 @@ export default function Inventory() {
     fetchRestaurantProfile()
   }, [])
 
-  // Fetch menu items from API and convert to inventory format
-  useEffect(() => {
-    const fetchMenuData = async () => {
-      try {
-        setLoadingInventory(true)
-        
-        // Fetch menu from API
-        const menuResponse = await restaurantAPI.getMenu()
-        
-        if (menuResponse.data && menuResponse.data.success && menuResponse.data.data && menuResponse.data.data.menu) {
-          const menuSections = menuResponse.data.data.menu.sections || []
-          
-          // Convert menu sections to inventory categories
-          const convertedCategories = menuSections.map((section, sectionIndex) => {
-            // Collect all items from section and subsections
-            const allItems = []
-            
-            // Add direct items from section
-            if (Array.isArray(section.items)) {
-              section.items.forEach(item => {
-                  allItems.push({
-                  id: String(item.id || Date.now() + Math.random()),
-                  name: item.name || "Unnamed Item",
-                  description: item.description || "",
-                  image: item.image || "",
-                  images: item.image ? [item.image] : [],
-                  price: item.price ?? "",
-                  variants: Array.isArray(item.variants) ? item.variants : (Array.isArray(item.variations) ? item.variations : []),
-                  category: section.name || "",
-                  categoryId: section.categoryId || section.id || "",
-                  inStock: item.isAvailable !== undefined ? item.isAvailable : true,
-                  isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
-                  isVeg: item.foodType === "Veg",
-                  foodType: item.foodType || "Non-Veg",
-                  approvalStatus: String(item.approvalStatus || "approved").toLowerCase(),
-                  rejectionReason: item.rejectionReason || "",
-                  // Backend menu is generated from food_items and currently doesn't persist "recommended".
-                  // Keep as a local UI preference keyed by food item id.
-                  isRecommended: Boolean(recommendedMap?.[String(item.id)]),
-                  stockQuantity: item.stock || "Unlimited",
-                  unit: item.itemSizeUnit || "piece",
-                  expiryDate: null,
-                  lastRestocked: null,
-                })
+  const fetchMenuData = useCallback(async ({ silent = false } = {}) => {
+    try {
+      if (!silent) setLoadingInventory(true)
+
+      // Fetch menu from API
+      const menuResponse = await restaurantAPI.getMenu()
+
+      if (menuResponse.data && menuResponse.data.success && menuResponse.data.data && menuResponse.data.data.menu) {
+        const menuSections = menuResponse.data.data.menu.sections || []
+
+        // Convert menu sections to inventory categories
+        const convertedCategories = menuSections.map((section, sectionIndex) => {
+          // Collect all items from section and subsections
+          const allItems = []
+
+          // Add direct items from section
+          if (Array.isArray(section.items)) {
+            section.items.forEach(item => {
+              allItems.push({
+                id: String(item.id || Date.now() + Math.random()),
+                name: item.name || "Unnamed Item",
+                description: item.description || "",
+                image: item.image || "",
+                images: item.image ? [item.image] : [],
+                price: item.price ?? "",
+                variants: Array.isArray(item.variants) ? item.variants : (Array.isArray(item.variations) ? item.variations : []),
+                category: section.name || "",
+                categoryId: section.categoryId || section.id || "",
+                inStock: item.isAvailable !== undefined ? item.isAvailable : true,
+                isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
+                isVeg: item.foodType === "Veg",
+                foodType: item.foodType || "Non-Veg",
+                approvalStatus: String(item.approvalStatus || "approved").toLowerCase(),
+                rejectionReason: item.rejectionReason || "",
+                // Backend menu is generated from food_items and currently doesn't persist "recommended".
+                // Keep as a local UI preference keyed by food item id.
+                isRecommended: Boolean(recommendedMap?.[String(item.id)]),
+                stockQuantity: item.stock || "Unlimited",
+                unit: item.itemSizeUnit || "piece",
+                expiryDate: null,
+                lastRestocked: null,
               })
-            }
-            
-            // Add items from subsections
-            if (Array.isArray(section.subsections)) {
-              section.subsections.forEach(subsection => {
-                if (Array.isArray(subsection.items)) {
-                  subsection.items.forEach(item => {
+            })
+          }
+
+          // Add items from subsections
+          if (Array.isArray(section.subsections)) {
+            section.subsections.forEach(subsection => {
+              if (Array.isArray(subsection.items)) {
+                subsection.items.forEach(item => {
                   allItems.push({
-                  id: String(item.id || Date.now() + Math.random()),
-                  name: item.name || "Unnamed Item",
-                  description: item.description || "",
-                  image: item.image || "",
-                  images: item.image ? [item.image] : [],
-                  price: item.price ?? "",
-                  variants: Array.isArray(item.variants) ? item.variants : (Array.isArray(item.variations) ? item.variations : []),
-                  category: section.name || subsection.name || "",
-                  categoryId: section.categoryId || section.id || "",
-                  inStock: item.isAvailable !== undefined ? item.isAvailable : true,
-                  isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
-                  isVeg: item.foodType === "Veg",
-                  foodType: item.foodType || "Non-Veg",
-                  approvalStatus: String(item.approvalStatus || "approved").toLowerCase(),
-                  rejectionReason: item.rejectionReason || "",
-                  isRecommended: Boolean(recommendedMap?.[String(item.id)]),
-                  stockQuantity: item.stock || "Unlimited",
-                  unit: item.itemSizeUnit || "piece",
-                  expiryDate: null,
-                  lastRestocked: null,
-                })
+                    id: String(item.id || Date.now() + Math.random()),
+                    name: item.name || "Unnamed Item",
+                    description: item.description || "",
+                    image: item.image || "",
+                    images: item.image ? [item.image] : [],
+                    price: item.price ?? "",
+                    variants: Array.isArray(item.variants) ? item.variants : (Array.isArray(item.variations) ? item.variations : []),
+                    category: section.name || subsection.name || "",
+                    categoryId: section.categoryId || section.id || "",
+                    inStock: item.isAvailable !== undefined ? item.isAvailable : true,
+                    isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
+                    isVeg: item.foodType === "Veg",
+                    foodType: item.foodType || "Non-Veg",
+                    approvalStatus: String(item.approvalStatus || "approved").toLowerCase(),
+                    rejectionReason: item.rejectionReason || "",
+                    isRecommended: Boolean(recommendedMap?.[String(item.id)]),
+                    stockQuantity: item.stock || "Unlimited",
+                    unit: item.itemSizeUnit || "piece",
+                    expiryDate: null,
+                    lastRestocked: null,
                   })
-                }
-              })
-            }
-            
-            // Use category's isEnabled from menu API, not calculated from items
-            // Category toggle should be independent of item toggles
-            // Menu snapshots are disabled on backend; treat category toggle as derived from items (all in stock).
-            const categoryInStock = allItems.length > 0 ? allItems.every(i => i.inStock) : true
-            const itemCount = allItems.length
-            
-            return {
-              id: section.id || `category-${sectionIndex}`,
-              name: section.name || "Unnamed Category",
-              description: section.description || "",
-              itemCount: itemCount,
-              inStock: categoryInStock,
-              items: allItems,
-              order: section.order !== undefined ? section.order : sectionIndex,
-            }
-          })
-
-          const nowMs = Date.now()
-          const withStockRules = convertedCategories.map((category) => {
-            const ruledItems = (category.items || []).map((item) => {
-              const rule = stockRules?.[String(item.id)] || null
-              const isActiveRule =
-                rule &&
-                (rule.mode === "manual" ||
-                  (rule.resumeAt && new Date(rule.resumeAt).getTime() > nowMs))
-
-              if (!isActiveRule) return item
-              return {
-                ...item,
-                inStock: false,
-                isAvailable: false,
-                stockRule: rule,
+                })
               }
             })
+          }
 
+          // Menu snapshots are disabled on backend; treat category toggle as derived from items (all in stock).
+          const categoryInStock = allItems.length > 0 ? allItems.every(i => i.inStock) : true
+          const itemCount = allItems.length
+
+          return {
+            id: section.id || `category-${sectionIndex}`,
+            name: section.name || "Unnamed Category",
+            description: section.description || "",
+            itemCount: itemCount,
+            inStock: categoryInStock,
+            items: allItems,
+            order: section.order !== undefined ? section.order : sectionIndex,
+          }
+        })
+
+        const nowMs = Date.now()
+        const withStockRules = convertedCategories.map((category) => {
+          const ruledItems = (category.items || []).map((item) => {
+            const rule = stockRules?.[String(item.id)] || null
+            const isActiveRule =
+              rule &&
+              (rule.mode === "manual" ||
+                (rule.resumeAt && new Date(rule.resumeAt).getTime() > nowMs))
+
+            if (!isActiveRule) return item
             return {
-              ...category,
-              items: ruledItems,
-              itemCount: ruledItems.length,
-              inStock: ruledItems.length > 0 ? ruledItems.every((item) => item.inStock) : true,
+              ...item,
+              inStock: false,
+              isAvailable: false,
+              stockRule: rule,
             }
           })
-          
-          setCategories(withStockRules)
-          setExpandedCategories(withStockRules.map(c => c.id))
-        } else {
-          // Empty menu - start fresh
-          setCategories([])
-          setExpandedCategories([])
+
+          return {
+            ...category,
+            items: ruledItems,
+            itemCount: ruledItems.length,
+            inStock: ruledItems.length > 0 ? ruledItems.every((item) => item.inStock) : true,
+          }
+        })
+
+        const snapshot = withStockRules
+          .flatMap((category) =>
+            (category.items || []).map((item) => `${item.id}:${String(item.approvalStatus || "").toLowerCase()}`)
+          )
+          .sort()
+          .join("|")
+        const previousSnapshot = approvalSnapshotRef.current
+
+        setCategories(withStockRules)
+        setExpandedCategories((prev) => {
+          const ids = withStockRules.map((c) => c.id)
+          if (!prev || prev.length === 0) return ids
+          const preserved = prev.filter((id) => ids.includes(id))
+          return preserved.length > 0 ? preserved : ids
+        })
+
+        if (hasLoadedMenuOnceRef.current && silent && previousSnapshot && previousSnapshot !== snapshot) {
+          toast.success("Inventory updated: item approval status changed")
         }
-      } catch (error) {
-        // Only log and show toast if it's not a network/timeout error
-        if (error.code !== 'ERR_NETWORK' && error.code !== 'ECONNABORTED' && !error.message?.includes('timeout')) {
-        debugError('Error fetching menu data:', error)
-          toast.error('Failed to load menu data')
-        } else if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-          // Silently handle network errors - backend is not running
-          // The axios interceptor already handles these with proper error messages
-        }
+        approvalSnapshotRef.current = snapshot
+        hasLoadedMenuOnceRef.current = true
+      } else {
         setCategories([])
         setExpandedCategories([])
-      } finally {
-        setLoadingInventory(false)
+        approvalSnapshotRef.current = ""
+        hasLoadedMenuOnceRef.current = true
+      }
+    } catch (error) {
+      // Only log and show toast if it's not a network/timeout error
+      if (error.code !== 'ERR_NETWORK' && error.code !== 'ECONNABORTED' && !error.message?.includes('timeout')) {
+        debugError('Error fetching menu data:', error)
+        if (!silent) toast.error('Failed to load menu data')
+      }
+      if (!silent) {
+        setCategories([])
+        setExpandedCategories([])
+      }
+    } finally {
+      if (!silent) setLoadingInventory(false)
+    }
+  }, [recommendedMap, stockRules])
+
+  // Initial/explicit refresh.
+  useEffect(() => {
+    fetchMenuData()
+  }, [fetchMenuData])
+
+  // Auto refresh inventory so admin approval changes reflect without manual reload.
+  useEffect(() => {
+    if (activeTab !== "all-items") return
+
+    const interval = setInterval(() => {
+      fetchMenuData({ silent: true })
+    }, 10000)
+
+    const handleFocus = () => {
+      fetchMenuData({ silent: true })
+    }
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        fetchMenuData({ silent: true })
       }
     }
-    
-    fetchMenuData()
-  }, [recommendedMap])
+
+    window.addEventListener("focus", handleFocus)
+    document.addEventListener("visibilitychange", handleVisibility)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener("focus", handleFocus)
+      document.removeEventListener("visibilitychange", handleVisibility)
+    }
+  }, [fetchMenuData, activeTab])
 
   // Note: Menu items are now displayed from menu API
   // Stock status updates should be managed through the menu API, not inventory API
   // Auto-save disabled since we're displaying menu data, not inventory data
 
   // Fetch add-ons when add-ons tab is active
-  const fetchAddons = async (showLoading = true) => {
+  const fetchAddons = useCallback(async ({ showLoading = true, silent = false } = {}) => {
     try {
       if (showLoading) setLoadingAddons(true)
       const response = await restaurantAPI.getAddons()
@@ -1021,21 +1070,61 @@ export default function Inventory() {
         return Number.isFinite(fromId) ? fromId : 0
       }
       const sortedAddons = [...data].sort((a, b) => getAddonCreatedMs(b) - getAddonCreatedMs(a))
+      const snapshot = sortedAddons
+        .map((addon) => `${String(addon.id || addon._id || "")}:${String(addon.approvalStatus || "").toLowerCase()}`)
+        .sort()
+        .join("|")
+      const previousSnapshot = addonApprovalSnapshotRef.current
+
       setAddons(sortedAddons)
+
+      if (hasLoadedAddonsOnceRef.current && silent && previousSnapshot && previousSnapshot !== snapshot) {
+        toast.success("Add-ons updated: approval status changed")
+      }
+      addonApprovalSnapshotRef.current = snapshot
+      hasLoadedAddonsOnceRef.current = true
     } catch (error) {
       debugError('Error fetching add-ons:', error)
-      toast.error('Failed to load add-ons')
+      if (!silent) toast.error('Failed to load add-ons')
       setAddons([])
     } finally {
       if (showLoading) setLoadingAddons(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     if (activeTab === "add-ons") {
-      fetchAddons(true)
+      fetchAddons({ showLoading: true })
     }
-  }, [activeTab])
+  }, [activeTab, fetchAddons])
+
+  // Auto refresh add-ons so approval changes are reflected without manual reload.
+  useEffect(() => {
+    if (activeTab !== "add-ons") return
+
+    const interval = setInterval(() => {
+      fetchAddons({ showLoading: false, silent: true })
+    }, 10000)
+
+    const handleFocus = () => {
+      fetchAddons({ showLoading: false, silent: true })
+    }
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        fetchAddons({ showLoading: false, silent: true })
+      }
+    }
+
+    window.addEventListener("focus", handleFocus)
+    document.addEventListener("visibilitychange", handleVisibility)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener("focus", handleFocus)
+      document.removeEventListener("visibilitychange", handleVisibility)
+    }
+  }, [activeTab, fetchAddons])
 
   // Persist active tab
   useEffect(() => {
@@ -1145,7 +1234,7 @@ export default function Inventory() {
       toast.success("Add-on submitted to admin for approval")
       resetAddonForm()
       setIsAddAddonOpen(false)
-      fetchAddons(true)
+      fetchAddons({ showLoading: true })
     } catch (error) {
       debugError("Error saving add-on:", error)
       toast.error(error?.response?.data?.message || "Failed to save add-on")

@@ -54,17 +54,28 @@ export default function SignupStep1() {
     /^[A-Za-z][A-Za-z\s]*[A-Za-z]$/.test(value.trim())
 
   const isValidEmailValue = (value) => {
-    const normalizedValue = value.trim()
-    if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/.test(normalizedValue)) {
+    const normalizedValue = String(value || "").trim().toLowerCase()
+    if (!/^[a-z0-9._%+\-]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,10}$/.test(normalizedValue)) {
       return false
     }
 
-    const [, domain = ""] = normalizedValue.split("@")
-    const normalizedDomain = domain.toLowerCase()
-
-    if (normalizedDomain.startsWith("gmail.") && normalizedDomain !== "gmail.com") {
-      return false
-    }
+    const tld = normalizedValue.split(".").pop()
+    if (!tld) return false
+    const allowedTlds = new Set([
+      "com",
+      "in",
+      "net",
+      "org",
+      "edu",
+      "gov",
+      "io",
+      "biz",
+      "info",
+      "me",
+      "ai",
+      "app",
+    ])
+    if (!allowedTlds.has(tld)) return false
 
     return true
   }
@@ -134,7 +145,7 @@ export default function SignupStep1() {
     }
 
     if (formData.email && !isValidEmailValue(formData.email)) {
-      newErrors.email = "Enter a valid email address. Gmail must be gmail.com"
+      newErrors.email = "Enter a valid email address (example: name@gmail.com)"
     }
 
     if (!formData.address.trim()) {

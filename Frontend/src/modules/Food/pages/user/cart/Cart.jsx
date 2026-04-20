@@ -324,7 +324,19 @@ export default function Cart() {
     if (normalized === "other") return "Other"
     return label || "Saved address"
   }
-  const sanitizeRecipientPhone = (value) => String(value || "").replace(/[^\d+]/g, "").slice(0, 14)
+  const sanitizeRecipientName = (value) =>
+    String(value || "")
+      .replace(/[^A-Za-z\s.'-]/g, "")
+      .replace(/\s{2,}/g, " ")
+      .trimStart()
+  const isValidRecipientName = (value) =>
+    /^[A-Za-z][A-Za-z\s.'-]*$/.test(String(value || "").trim())
+  const sanitizeRecipientPhone = (value) => {
+    const digits = String(value || "").replace(/\D/g, "")
+    if (digits.length <= 10) return digits
+    return digits.slice(-10)
+  }
+  const isValidRecipientPhone = (value) => /^[6-9]\d{9}$/.test(sanitizeRecipientPhone(value))
   const savedAddress = getDefaultAddress()
   const selectedAddress = addresses.find((addr) => getAddressId(addr) && getAddressId(addr) === selectedAddressId)
 
@@ -384,8 +396,14 @@ export default function Cart() {
   }, [deliveryAddressMode, currentLocationAddress, selectedAddress, savedAddress])
 
   const hasSavedAddress = Boolean(defaultAddress && formatFullAddress(defaultAddress))
-  const recipientName = String(recipientDetails.name || "").trim() || userProfile?.name || "Your Name"
-  const recipientPhone = sanitizeRecipientPhone(recipientDetails.phone || "") || userProfile?.phone || ""
+  const recipientName =
+    sanitizeRecipientName(recipientDetails.name || "") ||
+    sanitizeRecipientName(userProfile?.name || "") ||
+    "Your Name"
+  const recipientPhone =
+    sanitizeRecipientPhone(recipientDetails.phone || "") ||
+    sanitizeRecipientPhone(userProfile?.phone || "") ||
+    ""
   const selectedAddressCoordinates = defaultAddress?.location?.coordinates
   const zoneLocation = selectedAddressCoordinates?.length === 2
     ? {
@@ -420,7 +438,7 @@ export default function Cart() {
 
       const stored = JSON.parse(raw)
       setRecipientDetails({
-        name: stored?.name || "",
+        name: sanitizeRecipientName(stored?.name || ""),
         phone: sanitizeRecipientPhone(stored?.phone || ""),
       })
       setIsEditingRecipient(Boolean(stored?.isEditingRecipient))
@@ -434,8 +452,8 @@ export default function Cart() {
 
   useEffect(() => {
     setRecipientDetails((prev) => ({
-      name: prev.name || userProfile?.name || "",
-      phone: prev.phone || userProfile?.phone || "",
+      name: prev.name || sanitizeRecipientName(userProfile?.name || "") || "",
+      phone: prev.phone || sanitizeRecipientPhone(userProfile?.phone || "") || "",
     }))
   }, [userProfile?.name, userProfile?.phone])
 
@@ -2655,7 +2673,30 @@ export default function Cart() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setIsEditingRecipient((prev) => !prev)}
+                    onClick={() => {
+                      if (isEditingRecipient) {
+                        const cleanName = sanitizeRecipientName(recipientDetails.name || "")
+                        const cleanPhone = sanitizeRecipientPhone(recipientDetails.phone || "")
+
+                        if (cleanName && !isValidRecipientName(cleanName)) {
+                          toast.error("Recipient name should contain letters only")
+                          return
+                        }
+
+                        if (cleanPhone && !isValidRecipientPhone(cleanPhone)) {
+                          toast.error("Phone number must be a valid 10-digit mobile number")
+                          return
+                        }
+
+                        setRecipientDetails((prev) => ({
+                          ...prev,
+                          name: cleanName,
+                          phone: cleanPhone,
+                        }))
+                      }
+
+                      setIsEditingRecipient((prev) => !prev)
+                    }}
                     className="text-xs md:text-sm font-semibold whitespace-nowrap"
                     style={{ color: BRAND_THEME.colors.brand.primary }}
                   >
@@ -2675,7 +2716,7 @@ export default function Cart() {
                         onChange={(e) =>
                           setRecipientDetails((prev) => ({
                             ...prev,
-                            name: e.target.value,
+                            name: sanitizeRecipientName(e.target.value),
                           }))
                         }
                         placeholder="Enter recipient name"
@@ -2690,12 +2731,18 @@ export default function Cart() {
                       <input
                         type="tel"
                         value={recipientDetails.phone}
+                        maxLength={10}
                         onChange={(e) =>
                           setRecipientDetails((prev) => ({
                             ...prev,
                             phone: sanitizeRecipientPhone(e.target.value),
                           }))
                         }
+                        onKeyDown={(e) => {
+                          const allowed = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Enter"]
+                          if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) e.preventDefault()
+                          if (/^\d$/.test(e.key) && (recipientDetails.phone || "").length >= 10) e.preventDefault()
+                        }}
                         placeholder="Enter recipient phone"
                         className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#111111] px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none"
                         style={{ borderColor: `${BRAND_THEME.colors.brand.primary}33`, outlineColor: BRAND_THEME.colors.brand.primary }}

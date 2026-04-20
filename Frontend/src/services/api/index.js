@@ -2383,4 +2383,11 @@ export const orderAPI = {
 };
 
 export const heroBannerAPI = createStubAPI();
-export const publicAPI = createStubAPI();
+export const publicAPI = {
+  getTerms: () => apiClient.get(API_ENDPOINTS.ADMIN.TERMS_PUBLIC),
+  getPrivacy: () => apiClient.get(API_ENDPOINTS.ADMIN.PRIVACY_PUBLIC),
+  getAbout: () => apiClient.get(API_ENDPOINTS.ADMIN.ABOUT_PUBLIC),
+  getRefund: () => apiClient.get(API_ENDPOINTS.ADMIN.REFUND_PUBLIC),
+  getShipping: () => apiClient.get(API_ENDPOINTS.ADMIN.SHIPPING_PUBLIC),
+  getCancellation: () => apiClient.get(API_ENDPOINTS.ADMIN.CANCELLATION_PUBLIC),
+};

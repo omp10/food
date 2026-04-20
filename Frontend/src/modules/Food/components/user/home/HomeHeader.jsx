@@ -5,7 +5,6 @@ import {
   Navigation,
   ChevronDown,
   Search,
-  Mic,
   Bookmark,
   Bell,
   BellOff,
@@ -360,12 +359,6 @@ export default function HomeHeader({
                   {placeholders?.[placeholderIndex] || "Search for food..."}
                 </motion.span>
               </AnimatePresence>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-[1px] h-[16px] bg-blue-200" />
-              <div className="h-[28px] w-[28px] rounded-full flex items-center justify-center bg-blue-50">
-                <Mic className="h-[14px] w-[14px]" strokeWidth={2.3} style={{ color: header.searchIcon }} />
-              </div>
             </div>
           </div>
 

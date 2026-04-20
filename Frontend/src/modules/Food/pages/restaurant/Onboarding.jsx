@@ -47,8 +47,11 @@ const ONBOARDING_STORAGE_KEY = "restaurant_onboarding_data"
 const PAN_NUMBER_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]$/
 const GST_NUMBER_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/
 const FSSAI_NUMBER_REGEX = /^\d{14}$/
+const OWNER_NAME_REGEX = /^[A-Za-z][A-Za-z\s.'-]*$/
+const INDIAN_MOBILE_REGEX = /^[6-9]\d{9}$/
+const PINCODE_REGEX = /^\d{6}$/
 const BANK_ACCOUNT_NUMBER_REGEX = /^\d{9,18}$/
-const IFSC_CODE_REGEX = /^[A-Z0-9]{11}$/
+const IFSC_CODE_REGEX = /^[A-Z]{4}0[A-Z0-9]{6}$/
 const ACCOUNT_HOLDER_NAME_REGEX = /^[A-Za-z ]+$/
 const GST_LEGAL_NAME_REGEX = /^[A-Za-z ]+$/
 const FEATURED_DISH_NAME_REGEX = /^[A-Za-z ]+$/
@@ -80,6 +83,33 @@ const isUploadableFile = (value) => {
 }
 
 const normalizePhoneDigits = (value) => String(value || "").replace(/\D/g, "").slice(-15)
+
+const isValidOwnerEmail = (value) => {
+  const email = String(value || "").trim().toLowerCase()
+  // Strict email format: local-part + valid domain labels + TLD.
+  if (!/^[a-z0-9._%+\-]+@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,10}$/.test(email)) {
+    return false
+  }
+
+  const tld = email.split(".").pop()
+  if (!tld) return false
+  const allowedTlds = new Set([
+    "com",
+    "in",
+    "net",
+    "org",
+    "edu",
+    "gov",
+    "io",
+    "biz",
+    "info",
+    "me",
+    "ai",
+    "app",
+  ])
+  if (!allowedTlds.has(tld)) return false
+  return true
+}
 
 const getVerifiedPhoneFromStoredRestaurant = () => {
   try {
@@ -790,17 +820,21 @@ export default function RestaurantOnboarding() {
     }
     if (!step1.ownerName?.trim()) {
       errors.push("Owner name is required")
+    } else if (!OWNER_NAME_REGEX.test(step1.ownerName.trim())) {
+      errors.push("Owner full name must contain letters only (numbers are not allowed)")
     }
     if (!step1.ownerEmail?.trim()) {
       errors.push("Owner email is required")
-    } else if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(step1.ownerEmail.trim())) {
-      errors.push("Please enter a valid email address")
+    } else if (!isValidOwnerEmail(step1.ownerEmail)) {
+      errors.push("Please enter a valid email address (example: owner@example.com)")
     }
     if (!step1.ownerPhone?.trim()) {
       errors.push("Owner phone number is required")
     }
     if (!step1.primaryContactNumber?.trim()) {
       errors.push("Primary contact number is required")
+    } else if (!INDIAN_MOBILE_REGEX.test(step1.primaryContactNumber.trim())) {
+      errors.push("Primary contact number must be a valid 10-digit mobile number")
     }
     if (!step1.zoneId?.trim()) {
       errors.push("Service zone is required")
@@ -810,6 +844,11 @@ export default function RestaurantOnboarding() {
     }
     if (!step1.location?.city?.trim()) {
       errors.push("City is required")
+    }
+    if (!step1.location?.pincode?.trim()) {
+      errors.push("Pincode is required")
+    } else if (!PINCODE_REGEX.test(step1.location.pincode.trim())) {
+      errors.push("Pincode must be exactly 6 digits")
     }
 
     return errors
@@ -967,7 +1006,7 @@ export default function RestaurantOnboarding() {
     if (!step3.ifscCode?.trim()) {
       errors.push("IFSC code is required")
     } else if (!IFSC_CODE_REGEX.test(step3.ifscCode.trim().toUpperCase())) {
-      errors.push("IFSC code must contain exactly 11 alphanumeric characters")
+      errors.push("IFSC code must be in proper format (e.g., SBIN0001234)")
     }
     if (!step3.accountHolderName?.trim()) {
       errors.push("Account holder name is required")
@@ -1214,7 +1253,10 @@ export default function RestaurantOnboarding() {
             <Label className="text-xs text-gray-700">Full name*</Label>
             <Input
               value={step1.ownerName || ""}
-              onChange={(e) => setStep1({ ...step1, ownerName: e.target.value })}
+              onChange={(e) => {
+                const sanitized = e.target.value.replace(/\d/g, "")
+                setStep1({ ...step1, ownerName: sanitized })
+              }}
               className="mt-1 bg-white text-sm text-black placeholder-black"
               placeholder="Owner full name"
               disabled={!isEditing}
@@ -1225,7 +1267,10 @@ export default function RestaurantOnboarding() {
             <Input
               type="email"
               value={step1.ownerEmail || ""}
-              onChange={(e) => setStep1({ ...step1, ownerEmail: e.target.value })}
+              onChange={(e) => {
+                const sanitizedEmail = e.target.value.replace(/\s+/g, "").toLowerCase()
+                setStep1({ ...step1, ownerEmail: sanitizedEmail })
+              }}
               className="mt-1 bg-white text-sm text-black placeholder-black"
               placeholder="owner@example.com"
               disabled={!isEditing}
@@ -1383,12 +1428,27 @@ export default function RestaurantOnboarding() {
             />
             <Input
               value={step1.location?.pincode || ""}
-              onChange={(e) =>
+              onChange={(e) => {
+                const pincode = e.target.value.replace(/\D/g, "").slice(0, 6)
                 setStep1({
                   ...step1,
-                  location: { ...step1.location, pincode: e.target.value },
+                  location: { ...step1.location, pincode },
                 })
-              }
+              }}
+              onKeyDown={(e) => {
+                const allowed = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Enter"]
+                if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) e.preventDefault()
+                if (/^\d$/.test(e.key) && (step1.location?.pincode || "").length >= 6) e.preventDefault()
+              }}
+              onPaste={(e) => {
+                e.preventDefault()
+                const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6)
+                setStep1({
+                  ...step1,
+                  location: { ...step1.location, pincode: pasted },
+                })
+              }}
+              inputMode="numeric"
               className="bg-white text-sm"
               placeholder="Pincode"
             />
@@ -2103,14 +2163,19 @@ export default function RestaurantOnboarding() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             value={step3.ifscCode || ""}
-            onChange={(e) =>
+            onChange={(e) => {
+              const normalized = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 11)
+              const enforcedFormat =
+                normalized.length >= 5
+                  ? `${normalized.slice(0, 4)}0${normalized.slice(5)}`
+                  : normalized
               setStep3({
                 ...step3,
-                ifscCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 11),
+                ifscCode: enforcedFormat,
               })
-            }
+            }}
             className="bg-white text-sm"
-            placeholder="IFSC code"
+            placeholder="IFSC code (e.g., SBIN0001234)"
           />
           <Select
             value={step3.accountType || ""}
