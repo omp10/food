@@ -104,11 +104,7 @@ export default function HomeHeader({
 
   const theme = activeTab === "quick" ? quickTheme(quickThemeColor) : foodTheme;
   const isFood = activeTab === "food";
-  const isScrolledFoodHeader =
-    compact &&
-    isFood &&
-    Boolean(scrolledHeaderColor) &&
-    scrolledHeaderColor !== "transparent";
+  const isScrolledFoodHeader = isFood && Boolean(compact);
   const stickyFoodBackground =
     compact && isFood
       ? scrolledHeaderColor || "transparent"
@@ -117,12 +113,12 @@ export default function HomeHeader({
     savedAddressText || location?.area || location?.city || "Select Location";
   const locationSubtitle =
     location?.address || location?.city || "Tap to choose delivery location";
-  const headerTextClass = isScrolledFoodHeader ? "text-slate-900" : "text-white";
-  const headerSubtleTextClass = isScrolledFoodHeader ? "text-slate-500" : "text-white/80";
+  const headerTextClass = isScrolledFoodHeader ? "text-slate-900 dark:text-white" : "text-white";
+  const headerSubtleTextClass = isScrolledFoodHeader ? "text-slate-500 dark:text-slate-400" : "text-white/80";
   const floatingIconButtonClass = isScrolledFoodHeader
-    ? "bg-slate-100 border border-slate-200"
+    ? "bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10"
     : "bg-black/18 border border-white/18";
-  const floatingIconClass = isScrolledFoodHeader ? "text-slate-700" : "text-white";
+  const floatingIconClass = isScrolledFoodHeader ? "text-slate-700 dark:text-white" : "text-white";
   const { brand, semantic } = BRAND_THEME.colors;
   const { header, searchOverlay } = BRAND_THEME.tokens;
 

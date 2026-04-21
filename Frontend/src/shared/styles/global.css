@@ -24,26 +24,65 @@
   --card-foreground: #0f172a;
   --popover: #ffffff;
   --popover-foreground: #0f172a;
-  --primary: #005128;
+  --primary: #2979fb;
   --primary-foreground: #ffffff;
   --secondary: #f1f5f9;
   --secondary-foreground: #334155;
   --muted: #f8fafc;
   --muted-foreground: #64748b;
-  --accent: #e6f0e9;
-  --accent-foreground: #005128;
+  --accent: #eaf2ff;
+  --accent-foreground: #1e5ed8;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: #ccdfd1;
+  --border: #d9e7ff;
   --input: #f8fafc;
-  --ring: #005128;
+  --ring: #2979fb;
   --sidebar: #ffffff;
   --sidebar-foreground: #0f172a;
-  --sidebar-primary: #005128;
+  --sidebar-primary: #2979fb;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f1f5f9;
   --sidebar-accent-foreground: #334155;
-  --sidebar-border: #ccdfd1;
-  --sidebar-ring: #005128;
+  --sidebar-border: #d9e7ff;
+  --sidebar-ring: #2979fb;
+  
+  /* Date Picker Colors */
+  --date-picker-bg: #ffffff;
+  --date-picker-text: #111827;
+  --date-picker-icon: #6b7280;
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+  --primary: #2979fb;
+  --primary-foreground: #ffffff;
+  --secondary: #334155;
+  --secondary-foreground: #f1f5f9;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e3a8a;
+  --accent-foreground: #bfdbfe;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: #334155;
+  --input: #1e293b;
+  --ring: #2979fb;
+  --sidebar: #1e293b;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #2979fb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #334155;
+  --sidebar-accent-foreground: #f1f5f9;
+  --sidebar-border: #334155;
+  --sidebar-ring: #2979fb;
+  
+  /* Date Picker Colors - Dark Mode */
+  --date-picker-bg: #1a1a1a;
+  --date-picker-text: #ffffff;
+  --date-picker-icon: #9ca3af;
 }
 
 @theme inline {
@@ -78,17 +117,17 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --color-brand-50: #e6f0e9;
-  --color-brand-100: #ccdfd1;
-  --color-brand-200: #99c0a4;
-  --color-brand-300: #66a076;
-  --color-brand-400: #338149;
-  --color-brand-500: #005128;
-  --color-brand-600: #004924;
-  --color-brand-700: #004120;
-  --color-brand-800: #00391c;
-  --color-brand-900: #003118;
-  --color-brand-950: #002914;
+  --color-brand-50: #eaf2ff;
+  --color-brand-100: #d9e7ff;
+  --color-brand-200: #bdd6ff;
+  --color-brand-300: #8ebcff;
+  --color-brand-400: #5aa2ff;
+  --color-brand-500: #2979fb;
+  --color-brand-600: #1e5ed8;
+  --color-brand-700: #1749ad;
+  --color-brand-800: #11357f;
+  --color-brand-900: #0d275f;
+  --color-brand-950: #08183a;
 
   --color-success-50: #ecfdf3;
   --color-success-100: #dcfce7;
@@ -108,26 +147,26 @@
   --card-foreground: #f8fafc;
   --popover: #1a1a1a;
   --popover-foreground: #f8fafc;
-  --primary: #4ade80;
-  --primary-foreground: #002914;
+  --primary: #5aa2ff;
+  --primary-foreground: #08183a;
   --secondary: #1f2937;
   --secondary-foreground: #f8fafc;
   --muted: #1f2937;
   --muted-foreground: #94a3b8;
-  --accent: #064e3b;
-  --accent-foreground: #d1fae5;
+  --accent: #172554;
+  --accent-foreground: #dbeafe;
   --destructive: oklch(0.704 0.191 22.216);
   --border: rgb(255 255 255 / 10%);
   --input: rgb(255 255 255 / 15%);
-  --ring: #4ade80;
+  --ring: #5aa2ff;
   --sidebar: #1a1a1a;
   --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #4ade80;
-  --sidebar-primary-foreground: #002914;
+  --sidebar-primary: #5aa2ff;
+  --sidebar-primary-foreground: #08183a;
   --sidebar-accent: #1f2937;
   --sidebar-accent-foreground: #f8fafc;
   --sidebar-border: rgb(255 255 255 / 10%);
-  --sidebar-ring: #4ade80;
+  --sidebar-ring: #5aa2ff;
 }
 
 @layer base {
@@ -136,6 +175,27 @@
   }
   body {
     @apply bg-background text-foreground m-0 min-h-screen;
+  }
+
+  /* Global Dark Mode Input Fix - Broadest Possible Scope */
+  .dark input,
+  .dark textarea,
+  .dark select,
+  .dark [role="combobox"] {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    background-color: transparent !important;
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    color: #9ca3af !important;
+    -webkit-text-fill-color: #9ca3af !important;
+    opacity: 1 !important;
+  }
+
+  .dark .MuiSvgIcon-root {
+    color: #ffffff !important;
   }
 }
 

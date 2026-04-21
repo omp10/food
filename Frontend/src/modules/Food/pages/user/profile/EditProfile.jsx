@@ -181,12 +181,55 @@ export default function EditProfile() {
 
   const validateEmail = (value) => {
     if (!value) return ""
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? "" : "Please enter a valid email"
+    // More strict email validation
+    // Must have valid format: username@domain.extension
+    // Domain must be at least 2 characters
+    // Extension must be at least 2 characters (rejects .co, .c, etc.)
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!emailRegex.test(value)) return "Email should be in proper format"
+    
+    // Additional check: domain part should have valid characters
+    const parts = value.split('@')
+    if (parts.length !== 2) return "Email should be in proper format"
+    
+    const domain = parts[1]
+    // Check if domain has at least one dot and valid extension
+    const domainParts = domain.split('.')
+    if (domainParts.length < 2) return "Email should be in proper format"
+    
+    // Check if extension is at least 2 characters and not just numbers
+    const extension = domainParts[domainParts.length - 1]
+    if (extension.length < 2 || /^\d+$/.test(extension)) return "Email should be in proper format"
+    
+    // Check for common typos in popular domains
+    const commonDomains = ['gmail', 'yahoo', 'outlook', 'hotmail', 'icloud']
+    const domainName = domainParts[0].toLowerCase()
+    const isCommonDomain = commonDomains.some(d => domainName.includes(d))
+    
+    if (isCommonDomain) {
+      // For common domains, check if it's spelled correctly
+      const validExtensions = ['com', 'co.in', 'in', 'org', 'net']
+      const fullExtension = domainParts.slice(1).join('.')
+      if (!validExtensions.includes(fullExtension)) {
+        return "Email should be in proper format"
+      }
+    }
+    
+    return ""
   }
 
   const validateMobile = (value) => {
     if (!value) return ""
     return /^\d{10}$/.test(value) ? "" : "Mobile number must be 10 digits"
+  }
+
+  const validateName = (value) => {
+    if (!value) return ""
+    // Check if name contains any numbers
+    if (/\d/.test(value)) return "Name should not contain numbers"
+    // Check if name has at least 2 characters
+    if (value.trim().length < 2) return "Name should be at least 2 characters"
+    return ""
   }
 
   const validateDateOfBirth = (value) => {
@@ -200,7 +243,10 @@ export default function EditProfile() {
     let normalizedValue = value
     let errorMessage = ""
 
-    if (field === "mobile") {
+    if (field === "name") {
+      normalizedValue = String(value || "").trim()
+      errorMessage = validateName(normalizedValue)
+    } else if (field === "mobile") {
       normalizedValue = String(value || "").replace(/\D/g, "").slice(0, 10)
       errorMessage = validateMobile(normalizedValue)
     } else if (field === "email") {
@@ -215,7 +261,7 @@ export default function EditProfile() {
       [field]: normalizedValue
     }))
 
-    if (field === "mobile" || field === "email" || field === "dateOfBirth") {
+    if (field === "name" || field === "mobile" || field === "email" || field === "dateOfBirth") {
       setFieldErrors((prev) => ({
         ...prev,
         [field]: errorMessage
@@ -312,6 +358,7 @@ export default function EditProfile() {
 
   const validateForm = () => {
     const nextErrors = {
+      name: validateName(formData.name),
       mobile: validateMobile(formData.mobile),
       email: validateEmail(formData.email),
       dateOfBirth: validateDateOfBirth(formData.dateOfBirth),
@@ -535,20 +582,26 @@ export default function EditProfile() {
                         '& .MuiOutlinedInput-root': {
                           height: '48px',
                           borderRadius: '8px',
+                          backgroundColor: '#ffffff !important',
                           '& fieldset': {
-                            borderColor: '#d1d5db',
+                            borderColor: '#d1d5db !important',
                           },
                           '&:hover fieldset': {
-                            borderColor: '#9ca3af',
+                            borderColor: '#9ca3af !important',
                           },
                           '&.Mui-focused fieldset': {
-                            borderColor: BRAND_THEME.tokens.profile.fieldFocus,
+                            borderColor: BRAND_THEME.tokens.profile.fieldFocus + ' !important',
                             borderWidth: '1px',
                           },
                         },
                         '& .MuiInputBase-input': {
                           padding: '12px 14px',
                           fontSize: '16px',
+                          color: '#111827 !important',
+                          WebkitTextFillColor: '#111827 !important',
+                        },
+                        '& .MuiSvgIcon-root': {
+                          color: '#6b7280 !important',
                         },
                       },
                     },
@@ -576,20 +629,26 @@ export default function EditProfile() {
                         '& .MuiOutlinedInput-root': {
                           height: '48px',
                           borderRadius: '8px',
+                          backgroundColor: '#ffffff !important',
                           '& fieldset': {
-                            borderColor: '#d1d5db',
+                            borderColor: '#d1d5db !important',
                           },
                           '&:hover fieldset': {
-                            borderColor: '#9ca3af',
+                            borderColor: '#9ca3af !important',
                           },
                           '&.Mui-focused fieldset': {
-                            borderColor: BRAND_THEME.tokens.profile.fieldFocus,
+                            borderColor: BRAND_THEME.tokens.profile.fieldFocus + ' !important',
                             borderWidth: '1px',
                           },
                         },
                         '& .MuiInputBase-input': {
                           padding: '12px 14px',
                           fontSize: '16px',
+                          color: '#111827 !important',
+                          WebkitTextFillColor: '#111827 !important',
+                        },
+                        '& .MuiSvgIcon-root': {
+                          color: '#6b7280 !important',
                         },
                       },
                     },

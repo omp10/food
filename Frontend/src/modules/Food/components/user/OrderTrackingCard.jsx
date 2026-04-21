@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import BRAND_THEME from "@/config/brandTheme";
 
 const CookingAnimation = memo(() => (
-  <div className="relative w-12 h-12 flex items-center justify-center rounded-xl bg-blue-50 border border-blue-100 overflow-visible shadow-[0_4px_15px_rgba(41,121,251,0.16)] shrink-0">
+  <div className="relative w-12 h-12 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 overflow-visible shadow-[0_4px_15px_rgba(41,121,251,0.16)] dark:shadow-none shrink-0">
     <div className="absolute -top-3 flex gap-1.5">
       <motion.div animate={{ opacity: [0, 0.8, 0], y: [0, -8, -12], scale: [0.8, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0, ease: "easeOut" }} className="w-1.5 h-3 bg-blue-400/60 rounded-full blur-[1px]" />
       <motion.div animate={{ opacity: [0, 0.8, 0], y: [0, -10, -15], scale: [0.8, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity, delay: 0.5, ease: "easeOut" }} className="w-1.5 h-3 bg-blue-400/60 rounded-full blur-[1px]" />
@@ -372,25 +372,25 @@ function OrderTrackingCardInner({ hasBottomNav = true }) {
               `/orders/${orderRouteId}`,
             )
           }
-          className="relative bg-white/95 backdrop-blur-xl rounded-[20px] p-4 shadow-[0_8px_30px_rgba(41,121,251,0.16)] border border-blue-100/70 overflow-visible cursor-pointer group"
+          className="relative bg-white/95 dark:bg-[#1a1a1a]/95 backdrop-blur-xl rounded-[20px] p-4 shadow-[0_8px_30px_rgba(41,121,251,0.16)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] border border-blue-100/70 dark:border-white/10 overflow-visible cursor-pointer group"
         >
           {/* Subtle gradient background mesh */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50/60 via-white/50 to-white/85 opacity-70 pointer-events-none rounded-[20px]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50/60 via-white/50 to-white/85 dark:from-blue-900/20 dark:via-transparent dark:to-transparent opacity-70 pointer-events-none rounded-[20px]" />
           
           <button 
              onClick={(e) => { e.stopPropagation(); setDismissedKey(currentOrderKey); }}
-             className="absolute top-2 right-2 p-1.5 rounded-full bg-blue-50/80 text-blue-400 hover:text-blue-600 hover:bg-blue-100/80 transition-colors z-20 shadow-sm"
+             className="absolute top-2 right-2 p-1.5 rounded-full bg-blue-50/80 dark:bg-white/10 text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 hover:bg-blue-100/80 dark:hover:bg-white/20 transition-colors z-20 shadow-sm"
           >
             <X className="w-3.5 h-3.5 pointer-events-none" />
           </button>
 
           <div className="flex items-center gap-4 relative z-10 w-full">
-            <CookingAnimation />
+            <CookingAnimation className="dark:invert" />
 
             <div className="flex-1 min-w-0 pr-4">
-              <p className="text-gray-900 font-bold text-base md:text-lg truncate tracking-tight">{restaurantName}</p>
+              <p className="text-gray-900 dark:text-white font-bold text-base md:text-lg truncate tracking-tight">{restaurantName}</p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <p className="text-gray-500 font-medium text-xs md:text-sm truncate">{statusText}</p>
+                <p className="text-gray-500 dark:text-gray-400 font-medium text-xs md:text-sm truncate">{statusText}</p>
                 <ChevronRight className="w-3.5 h-3.5 shrink-0 group-hover:translate-x-1 transition-transform" style={{ color: BRAND_THEME.colors.brand.primary }} />
               </div>
             </div>
