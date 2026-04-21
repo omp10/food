@@ -1829,7 +1829,7 @@ export default function OrdersMain() {
     >
       {/* Restaurant Navbar - Sticky at top */}
       <div className="sticky top-0 z-50 bg-white">
-        <RestaurantNavbar showNotifications={true} />
+        <RestaurantNavbar showNotifications={true} showSearch={false} />
       </div>
 
       {/* Top Filter Bar - Sticky below navbar */}
