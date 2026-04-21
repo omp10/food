@@ -338,7 +338,7 @@ export default function HomeHeader({
 
           <div className="flex items-center gap-2">
           <div
-            className="flex-1 rounded-[12px] h-[46px] flex items-center px-3 cursor-pointer relative overflow-hidden bg-white shadow-[0_6px_18px_rgba(15,23,42,0.10)]"
+            className="flex-1 rounded-[12px] h-[46px] flex items-center px-3 cursor-pointer relative overflow-hidden bg-white dark:bg-gray-800 shadow-[0_6px_18px_rgba(15,23,42,0.10)] dark:shadow-[0_6px_18px_rgba(0,0,0,0.3)]"
             onClick={handleSearchFocus}
           >
             <div
@@ -354,7 +354,7 @@ export default function HomeHeader({
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -12, opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="absolute inset-0 whitespace-nowrap leading-[22px] text-[12.5px] font-medium text-slate-400"
+                  className="absolute inset-0 whitespace-nowrap leading-[22px] text-[12.5px] font-medium text-slate-400 dark:text-slate-500"
                 >
                   {placeholders?.[placeholderIndex] || "Search for food..."}
                 </motion.span>

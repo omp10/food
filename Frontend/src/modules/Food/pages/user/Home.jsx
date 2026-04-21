@@ -313,8 +313,8 @@ const RestaurantImageCarousel = React.memo(
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}>
         {showShimmer && !isImageUnavailable && Boolean(renderSrc) && (
-          <div className="absolute inset-0 z-[1] overflow-hidden bg-gray-200">
-            <div className="h-full w-full animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200" />
+          <div className="absolute inset-0 z-[1] overflow-hidden bg-gray-200 dark:bg-gray-800">
+            <div className="h-full w-full animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800" />
           </div>
         )}
 
@@ -357,8 +357,8 @@ const RestaurantImageCarousel = React.memo(
         </div>
 
         {isImageUnavailable && (
-          <div className="absolute inset-0 z-[2] flex items-center justify-center bg-gray-100">
-            <span className="text-xs text-gray-500">Image unavailable</span>
+          <div className="absolute inset-0 z-[2] flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+            <span className="text-xs text-gray-500 dark:text-gray-400">Image unavailable</span>
           </div>
         )}
 

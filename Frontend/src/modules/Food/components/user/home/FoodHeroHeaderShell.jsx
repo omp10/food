@@ -30,11 +30,8 @@ export default function FoodHeroHeaderShell({
       <div
         ref={stickyHeaderRef}
         className={`md:hidden fixed top-0 left-0 right-0 overflow-x-clip z-[80] transition-all duration-300 ${
-          hasScrolledPastBanner ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          hasScrolledPastBanner ? "opacity-100 pointer-events-auto bg-white dark:bg-gray-900" : "opacity-0 pointer-events-none"
         }`}
-        style={{
-          backgroundColor: scrolledHeaderColor,
-        }}
       >
         <HomeHeader
           activeTab="food"

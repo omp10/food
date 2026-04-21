@@ -728,25 +728,25 @@ Order again from this restaurant in the ${companyName} app.`
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-10 font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-10 font-sans">
       {/* Header */}
-      <div className="bg-white p-4 flex items-center shadow-sm sticky top-0 z-10">
+      <div className="bg-white dark:bg-gray-800 p-4 flex items-center shadow-sm sticky top-0 z-10">
         <Link to="/food/user">
-          <ArrowLeft className="w-6 h-6 text-gray-700 cursor-pointer" />
+          <ArrowLeft className="w-6 h-6 text-gray-700 dark:text-gray-300 cursor-pointer" />
         </Link>
-        <h1 className="ml-4 text-xl font-semibold text-gray-800">Your Orders</h1>
+        <h1 className="ml-4 text-xl font-semibold text-gray-800 dark:text-gray-100">Your Orders</h1>
       </div>
 
       {/* Search Bar */}
-      <div className="p-4 bg-white mt-1">
-        <div className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm">
+      <div className="p-4 bg-white dark:bg-gray-800 mt-1">
+        <div className="flex items-center bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 shadow-sm">
           <Search className="w-5 h-5" style={{ color: BRAND_THEME.tokens.orders.primaryText }} />
           <input
             type="text"
             placeholder="Search by restaurant or dish"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 ml-3 outline-none text-gray-600 placeholder-gray-400"
+            className="flex-1 ml-3 outline-none text-gray-600 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 bg-transparent"
           />
         </div>
       </div>
@@ -754,8 +754,8 @@ Order again from this restaurant in the ${companyName} app.`
       {/* Orders List */}
       <div className="px-4 py-2 space-y-4">
         {filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-            <p className="text-gray-600">No orders found matching your search</p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
+            <p className="text-gray-600 dark:text-gray-400">No orders found matching your search</p>
           </div>
         ) : (
           filteredOrders.map((order) => {
@@ -785,12 +785,12 @@ Order again from this restaurant in the ${companyName} app.`
             const location = order.restaurantLocation || `${order.address?.city || ''}, ${order.address?.state || ''}`.trim() || 'Location not available'
 
             return (
-              <div key={order.id} className="relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div key={order.id} className="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                 {/* Card Header: Restaurant Info */}
                 <div className="flex items-start justify-between p-4 pb-2">
                   <div className="flex gap-3">
                     {/* Restaurant Image */}
-                    <div className="w-14 h-14 rounded-lg bg-gray-200 overflow-hidden flex-shrink-0">
+                    <div className="w-14 h-14 rounded-lg bg-gray-200 dark:bg-gray-700 overflow-hidden flex-shrink-0">
                       <img
                         src={restaurantImage}
                         alt={order.restaurant}
@@ -802,20 +802,20 @@ Order again from this restaurant in the ${companyName} app.`
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-800 text-lg leading-tight">{order.restaurant}</h3>
-                      <p className="text-[11px] text-gray-500 mt-0.5">
-                        Order ID: <span className="font-semibold text-gray-700">{order.orderId || order.id}</span>
+                      <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-lg leading-tight">{order.restaurant}</h3>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                        Order ID: <span className="font-semibold text-gray-700 dark:text-gray-300">{order.orderId || order.id}</span>
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">{location}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{location}</p>
                       {order.deliveryPartnerName && (
-                        <p className="text-xs text-gray-600 mt-1">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                           <span className="font-medium">Delivery:</span> {order.deliveryPartnerName}
                           {order.deliveryPartnerPhone && ` | ${order.deliveryPartnerPhone}`}
                         </p>
                       )}
                       {order.restaurantId && (
                         <Link to={`/food/user/restaurants/${order.restaurantId}`}>
-                          <button className="text-xs font-medium flex items-center mt-1 hover:text-blue-700" style={{ color: BRAND_THEME.tokens.orders.primaryText }}>
+                          <button className="text-xs font-medium flex items-center mt-1 hover:text-blue-700 dark:hover:text-blue-400" style={{ color: BRAND_THEME.tokens.orders.primaryText }}>
                             View menu <span className="ml-0.5">&gt;</span>
                           </button>
                         </Link>
@@ -826,26 +826,26 @@ Order again from this restaurant in the ${companyName} app.`
                   <button
                     type="button"
                     onClick={() => toggleMenuForOrder(order.id)}
-                    className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
-                    <MoreVertical className="w-5 h-5 text-gray-400" />
+                    <MoreVertical className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                   </button>
                 </div>
 
                 {/* Three-dots dropdown menu */}
                 {activeMenuOrderId === order.id && (
-                  <div className="absolute right-3 top-10 z-20 w-40 rounded-xl bg-white shadow-lg border border-gray-100 py-1 text-xs">
+                  <div className="absolute right-3 top-10 z-20 w-40 rounded-xl bg-white dark:bg-gray-700 shadow-lg border border-gray-100 dark:border-gray-600 py-1 text-xs">
                     <button
                       type="button"
                       onClick={() => handleShareRestaurant(order)}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-50 text-gray-800"
+                      className="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200"
                     >
                       Share restaurant
                     </button>
                     <button
                       type="button"
                       onClick={() => handleViewOrderDetails(order)}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-50 text-gray-800"
+                      className="w-full text-left px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200"
                     >
                       Order details
                     </button>
@@ -853,7 +853,7 @@ Order again from this restaurant in the ${companyName} app.`
                 )}
 
                 {/* Separator */}
-                <div className="border-t border-dashed border-gray-200 mx-4 my-1"></div>
+                <div className="border-t border-dashed border-gray-200 dark:border-gray-700 mx-4 my-1"></div>
 
                 {/* Items List */}
                 <div className="px-4 py-2 space-y-2">
@@ -870,7 +870,7 @@ Order again from this restaurant in the ${companyName} app.`
                         <div key={item._id || item.id || item.itemId || idx} className="flex items-start gap-3">
                           {/* Item Image */}
                           {itemImage && (
-                            <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                            <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden flex-shrink-0">
                               <img
                                 src={itemImage}
                                 alt={itemName}
@@ -889,20 +889,20 @@ Order again from this restaurant in the ${companyName} app.`
                                 <div className={`w-full h-full rounded-full ${isVeg ? 'bg-green-600' : 'bg-red-600'}`}></div>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <span className="text-sm text-gray-800 font-medium block">
+                                <span className="text-sm text-gray-800 dark:text-gray-200 font-medium block">
                                   {itemQuantity} x {itemName}
                                 </span>
                                 {item.variantName ? (
-                                  <p className="text-xs text-gray-500 mt-0.5">{item.variantName}</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{item.variantName}</p>
                                 ) : null}
                                 {item.description && (
-                                  <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{item.description}</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">{item.description}</p>
                                 )}
                               </div>
                               <div className="text-right flex-shrink-0">
-                                <span className="text-sm font-semibold text-gray-800">{"\u20B9"}{itemTotal.toFixed(2)}</span>
+                                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{"\u20B9"}{itemTotal.toFixed(2)}</span>
                                 {itemQuantity > 1 && (
-                                  <p className="text-xs text-gray-500">{"\u20B9"}{itemPrice.toFixed(2)} each</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">{"\u20B9"}{itemPrice.toFixed(2)} each</p>
                                 )}
                               </div>
                             </div>
@@ -911,53 +911,53 @@ Order again from this restaurant in the ${companyName} app.`
                       )
                     })
                   ) : (
-                    <p className="text-sm text-gray-500">No items found</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No items found</p>
                   )}
                 </div>
 
                 {/* Order Summary Section */}
-                <div className="px-4 py-3 bg-gray-50 rounded-lg mx-4 mb-2">
+                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg mx-4 mb-2">
                   <div className="space-y-1.5">
                     {order.subtotal > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-600">Subtotal</span>
-                        <span className="text-gray-800 font-medium">{"\u20B9"}{order.subtotal.toFixed(2)}</span>
+                        <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                        <span className="text-gray-800 dark:text-gray-200 font-medium">{"\u20B9"}{order.subtotal.toFixed(2)}</span>
                       </div>
                     )}
                     {order.deliveryFee > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-600">Delivery Fee</span>
-                        <span className="text-gray-800 font-medium">{"\u20B9"}{order.deliveryFee.toFixed(2)}</span>
+                        <span className="text-gray-600 dark:text-gray-400">Delivery Fee</span>
+                        <span className="text-gray-800 dark:text-gray-200 font-medium">{"\u20B9"}{order.deliveryFee.toFixed(2)}</span>
                       </div>
                     )}
                     {order.tax > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-600">Tax</span>
-                        <span className="text-gray-800 font-medium">{"\u20B9"}{order.tax.toFixed(2)}</span>
+                        <span className="text-gray-600 dark:text-gray-400">Tax</span>
+                        <span className="text-gray-800 dark:text-gray-200 font-medium">{"\u20B9"}{order.tax.toFixed(2)}</span>
                       </div>
                     )}
                     {order.pricing?.platformFee > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-600">Platform Fee</span>
-                        <span className="text-gray-800 font-medium">{"\u20B9"}{order.pricing.platformFee.toFixed(2)}</span>
+                        <span className="text-gray-600 dark:text-gray-400">Platform Fee</span>
+                        <span className="text-gray-800 dark:text-gray-200 font-medium">{"\u20B9"}{order.pricing.platformFee.toFixed(2)}</span>
                       </div>
                     )}
                     {order.pricing?.discount > 0 && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-green-600">Discount</span>
-                        <span className="text-green-600 font-medium">-{"\u20B9"}{order.pricing.discount.toFixed(2)}</span>
+                        <span className="text-green-600 dark:text-green-400">Discount</span>
+                        <span className="text-green-600 dark:text-green-400 font-medium">-{"\u20B9"}{order.pricing.discount.toFixed(2)}</span>
                       </div>
                     )}
                     {order.pricing?.couponCode && (
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-600">Coupon Applied</span>
-                        <span className="text-gray-800 font-medium">{order.pricing.couponCode}</span>
+                        <span className="text-gray-600 dark:text-gray-400">Coupon Applied</span>
+                        <span className="text-gray-800 dark:text-gray-200 font-medium">{order.pricing.couponCode}</span>
                       </div>
                     )}
-                    <div className="border-t border-gray-200 pt-1.5 mt-1.5">
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-1.5 mt-1.5">
                       <div className="flex justify-between">
-                        <span className="text-sm font-semibold text-gray-800">Total</span>
-                        <span className="text-base font-bold text-gray-900">{"\u20B9"}{order.total.toFixed(2)}</span>
+                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Total</span>
+                        <span className="text-base font-bold text-gray-900 dark:text-gray-100">{"\u20B9"}{order.total.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
