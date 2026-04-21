@@ -2847,7 +2847,7 @@ function OrderCard({
               <p className="text-[11px] text-gray-500 mt-1">{customerName}</p>
             </div>
 
-            <div className="flex flex-col items-end gap-1">
+            <div className="flex flex-col items-end gap-1" style={{ paddingRight: isPreparing && onCancel ? '32px' : '0' }}>
               <span
                 className={`inline-flex items-start gap-1 px-2 py-1 rounded-full text-[11px] font-medium border text-right whitespace-normal break-words max-w-[140px] leading-tight ${
                   isReady

@@ -694,6 +694,14 @@ export default function OrderTracking() {
   const resolveOrderFromList = useCallback((id) => stableOpsRef.current.resolveOrderFromList(id), [])
   const fetchOrderDetailsWithFallback = useCallback((opts) => stableOpsRef.current.fetchOrderDetailsWithFallback(opts), [])
 
+  const handleBackToOrders = useCallback(() => {
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate("/food/orders")
+  }, [navigate])
+
   // Clear OTP when order is finalized.
   useEffect(() => {
     if (!order) return
@@ -841,6 +849,14 @@ export default function OrderTracking() {
   const canShowCancelOrderAction = useMemo(
     () => !isAdminAccepted && !isCancelledOrder && !isDeliveredLikeOrder,
     [isAdminAccepted, isCancelledOrder, isDeliveredLikeOrder],
+  )
+  const hasDeliveryInstructions = useMemo(
+    () => Boolean(String(order?.note || "").trim()),
+    [order?.note],
+  )
+  const canManageDeliveryInstructions = useMemo(
+    () => !isCancelledOrder && !isDeliveredLikeOrder,
+    [isCancelledOrder, isDeliveredLikeOrder],
   )
 
   const handleCallRestaurant = (e) => {
@@ -1161,6 +1177,14 @@ export default function OrderTracking() {
   };
 
   const handleUpdateInstructions = async () => {
+    if (!canManageDeliveryInstructions) {
+      toast.error("Delivery instructions can only be added for active orders");
+      return;
+    }
+    if (hasDeliveryInstructions) {
+      toast.error("Delivery instructions can only be added once");
+      return;
+    }
     try {
       setIsUpdatingInstructions(true);
       const response = await orderAPI.updateOrderInstructions(resolvedLookupId || orderId, deliveryInstructions);
@@ -1282,7 +1306,7 @@ export default function OrderTracking() {
         <div className="max-w-lg mx-auto text-center py-20">
           <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-4">Order Not Found</h1>
           <p className="text-gray-600 mb-6">{error || 'The order you\'re looking for doesn\'t exist.'}</p>
-          <Link to="/orders">
+          <Link to="/food/orders">
             <Button>Back to Orders</Button>
           </Link>
         </div>
@@ -1432,7 +1456,7 @@ export default function OrderTracking() {
             aria-label="Back to orders"
             className="w-10 h-10 flex items-center justify-center rounded-full bg-white/80 text-black shadow-sm"
             whileTap={{ scale: 0.9 }}
-            onClick={() => navigate("/orders")}
+            onClick={handleBackToOrders}
           >
             <ArrowLeft className="w-6 h-6" />
           </motion.button>
@@ -1635,6 +1659,7 @@ export default function OrderTracking() {
 
         {/* Delivery Partner Safety */}
         <motion.button
+          onClick={() => navigate("/food/profile/delivery-safety")}
           className="w-full bg-white rounded-xl p-4 shadow-sm flex items-center gap-3"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1735,15 +1760,25 @@ export default function OrderTracking() {
             })()}
             showArrow={false}
           />
-          <SectionItem
-            icon={MessageSquare}
-            title={order?.note ? "Edit delivery instructions" : "Add delivery instructions"}
-            subtitle={order?.note ? order.note.substring(0, 35) + (order.note.length > 35 ? "..." : "") : ""}
-            onClick={() => {
-              setDeliveryInstructions(order?.note || "");
-              setIsInstructionsModalOpen(true);
-            }}
-          />
+          {canManageDeliveryInstructions && !hasDeliveryInstructions && (
+            <SectionItem
+              icon={MessageSquare}
+              title="Add delivery instructions"
+              subtitle=""
+              onClick={() => {
+                setDeliveryInstructions("");
+                setIsInstructionsModalOpen(true);
+              }}
+            />
+          )}
+          {canManageDeliveryInstructions && hasDeliveryInstructions && (
+            <SectionItem
+              icon={MessageSquare}
+              title="Delivery instructions added"
+              subtitle={order.note.substring(0, 35) + (order.note.length > 35 ? "..." : "")}
+              showArrow={false}
+            />
+          )}
         </motion.div>
 
         {/* Restaurant Section */}
@@ -2054,4 +2089,3 @@ export default function OrderTracking() {
     </div>
   )
 }
-

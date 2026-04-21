@@ -21,41 +21,42 @@ const getNormalizedUserPath = (pathname) => {
 
 const resolveBackPath = ({ pathname, search, state }) => {
   const normalizedPath = getNormalizedUserPath(pathname)
+  const userAwarePath = normalizedPath.replace(/^\/user(?=\/|$)/, "")
   const explicitBackPath = toFoodPath(state?.backTo) || toFoodPath(state?.from)
   const searchParams = new URLSearchParams(search || "")
 
   if (
-    normalizedPath === "/user/profile/payments/new" ||
-    /^\/user\/profile\/payments\/[^/]+\/edit$/.test(normalizedPath)
+    userAwarePath === "/profile/payments/new" ||
+    /^\/profile\/payments\/[^/]+\/edit$/.test(userAwarePath)
   ) {
     return "/food/user/profile/payments"
   }
 
   if (
-    /^\/user\/profile\/(edit|favorites|support|coupons|about|report-safety-emergency|accessibility|logout|refer-earn|payments)$/.test(
-      normalizedPath,
+    /^\/profile\/(edit|favorites|support|coupons|about|report-safety-emergency|accessibility|logout|refer-earn|payments)$/.test(
+      userAwarePath,
     )
   ) {
     return "/food/user/profile"
   }
 
   if (
-    /^\/user\/profile\/(terms|privacy|refund|shipping|cancellation)$/.test(
-      normalizedPath,
+    /^\/profile\/(terms|privacy|refund|shipping|cancellation)$/.test(
+      userAwarePath,
     )
   ) {
     return explicitBackPath || "/food/user/profile/about"
   }
 
-  if (normalizedPath === "/user/wallet") {
+  if (userAwarePath === "/wallet") {
     return "/food/user/profile"
   }
 
-  if (normalizedPath === "/user/notifications") {
+  if (userAwarePath === "/notifications") {
     return explicitBackPath || "/food/user"
   }
 
-  if (/^\/user\/restaurants\/[^/]+$/.test(normalizedPath)) {
+  if (/^\/restaurants\/[^/]+$/.test(userAwarePath)) {
     const underParam = Number(searchParams.get("under"))
     if (Number.isFinite(underParam) && underParam > 0) {
       return "/food/under-price"
@@ -66,47 +67,47 @@ const resolveBackPath = ({ pathname, search, state }) => {
     return explicitBackPath || "/food/user"
   }
 
-  if (/^\/user\/orders\/[^/]+(\/invoice|\/details)?$/.test(normalizedPath)) {
+  if (/^\/orders\/[^/]+(\/invoice|\/details)?$/.test(userAwarePath)) {
     return "/food/user/orders"
   }
 
   if (
-    normalizedPath === "/user/cart/checkout" ||
-    normalizedPath === "/user/cart/select-address" ||
-    normalizedPath === "/user/cart/address-selector"
+    userAwarePath === "/cart/checkout" ||
+    userAwarePath === "/cart/select-address" ||
+    userAwarePath === "/cart/address-selector"
   ) {
     return "/food/user/cart"
   }
 
-  if (normalizedPath === "/user/address-selector") {
+  if (userAwarePath === "/address-selector") {
     return explicitBackPath || "/food/user"
   }
 
-  if (/^\/user\/collections\/[^/]+$/.test(normalizedPath)) {
+  if (/^\/collections\/[^/]+$/.test(userAwarePath)) {
     return "/food/user/collections"
   }
 
-  if (normalizedPath === "/user/categories") {
+  if (userAwarePath === "/categories") {
     return "/food/user"
   }
 
-  if (/^\/user\/category\/[^/]+$/.test(normalizedPath)) {
+  if (/^\/category\/[^/]+$/.test(userAwarePath)) {
     return "/food/user/categories"
   }
 
   if (
-    normalizedPath === "/user/offers" ||
-    normalizedPath === "/user/gourmet" ||
-    normalizedPath === "/user/coffee"
+    userAwarePath === "/offers" ||
+    userAwarePath === "/gourmet" ||
+    userAwarePath === "/coffee"
   ) {
     return "/food/user"
   }
 
-  if (/^\/user\/product\/[^/]+$/.test(normalizedPath)) {
+  if (/^\/product\/[^/]+$/.test(userAwarePath)) {
     return explicitBackPath || "/food/user"
   }
 
-  if (/^\/user\/complaints(\/|$)/.test(normalizedPath)) {
+  if (/^\/complaints(\/|$)/.test(userAwarePath)) {
     return explicitBackPath || "/food/user/orders"
   }
 
@@ -122,6 +123,12 @@ export default function useAppBackNavigation() {
   const location = useLocation()
 
   return useCallback(() => {
+    // Prefer true history back so user returns to the exact previous screen.
+    // For direct-entry pages (initial key), fall back to deterministic route mapping.
+    if (location?.key && location.key !== "default" && window.history.length > 1) {
+      navigate(-1)
+      return
+    }
     navigate(resolveBackPath(location))
   }, [location, navigate])
 }

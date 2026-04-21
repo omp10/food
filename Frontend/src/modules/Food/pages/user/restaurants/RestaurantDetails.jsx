@@ -49,7 +49,6 @@ import AddToCartAnimation from "@food/components/user/AddToCartAnimation"
 import { getCompanyNameAsync } from "@food/utils/businessSettings"
 import { isModuleAuthenticated } from "@food/utils/auth"
 import { getRestaurantAvailabilityStatus } from "@food/utils/restaurantAvailability"
-import useAppBackNavigation from "@food/hooks/useAppBackNavigation"
 import {
   buildCartLineId,
   getDefaultFoodVariant,
@@ -95,7 +94,7 @@ const isItemVeg = (item = {}) => {
 function RestaurantDetailsContent() {
   const { slug } = useParams()
   const navigate = useNavigate()
-  const goBack = useAppBackNavigation()
+  const goBack = () => navigate("/food/user")
   const [searchParams] = useSearchParams()
   const showOnlyUnder250 = searchParams.get('under250') === 'true'
   const underPriceLimit = useMemo(() => {
