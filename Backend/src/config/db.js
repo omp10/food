@@ -2,13 +2,26 @@ import mongoose from 'mongoose';
 import { config } from './env.js';
 import { logger } from '../utils/logger.js';
 
+let connectionPromise = null;
+
 export const connectDB = async () => {
     try {
-        const conn = await mongoose.connect(config.mongodbUri);
+        if (mongoose.connection.readyState === 1) {
+            return mongoose.connection;
+        }
+
+        if (!connectionPromise) {
+            connectionPromise = mongoose.connect(config.mongodbUri);
+        }
+
+        const conn = await connectionPromise;
         logger.info(`MongoDB connected: ${conn.connection.host}`);
+        connectionPromise = null;
+        return conn;
     } catch (error) {
+        connectionPromise = null;
         logger.error(`MongoDB connection error: ${error.message}`);
-        process.exit(1);
+        throw error;
     }
 };
 
