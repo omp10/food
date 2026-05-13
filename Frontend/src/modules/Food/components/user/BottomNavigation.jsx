@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { Tag, User, Truck } from "lucide-react"
+import { Tag, User, Truck, Utensils } from "lucide-react"
 import BRAND_THEME from "@/config/brandTheme"
 
 const UNDER_PRICE_DEFAULT_STORAGE_KEY = "food-under-price-default"
@@ -36,15 +36,18 @@ export default function BottomNavigation() {
     /^\/food\/under-\d+$/.test(pathname) ||
     /^\/food\/user\/under-\d+$/.test(pathname)
   const isProfile = pathname.startsWith("/food/profile") || pathname.startsWith("/food/user/profile")
+  const isTiffin = pathname.startsWith("/food/tiffin") || pathname.startsWith("/food/user/tiffin")
   const isDelivery =
     !isUnder250 &&
     !isProfile &&
+    !isTiffin &&
     (pathname === "/food" ||
       pathname === "/food/" ||
       pathname === "/food/user" ||
       (pathname.startsWith("/food/user") &&
         !pathname.includes("/under-") &&
-        !pathname.includes("/profile")))
+        !pathname.includes("/profile") &&
+        !pathname.includes("/tiffin")))
 
   return (
     <div
@@ -60,7 +63,7 @@ export default function BottomNavigation() {
             }`}
         >
           <Truck className={`h-5 w-5 ${isDelivery ? navigation.activeText : navigation.inactiveText}`} strokeWidth={2} />
-          <span className={`text-xs sm:text-sm font-medium ${isDelivery ? `${navigation.activeText} font-semibold` : navigation.inactiveText}`}>
+          <span className={`text-[10px] sm:text-xs font-medium ${isDelivery ? `${navigation.activeText} font-semibold` : navigation.inactiveText}`}>
             Delivery
           </span>
           {isDelivery && (
@@ -80,13 +83,36 @@ export default function BottomNavigation() {
             }`}
         >
           <Tag className={`h-5 w-5 ${isUnder250 ? navigation.activeText : navigation.inactiveText}`} strokeWidth={2} />
-          <span className={`text-xs sm:text-sm font-medium ${isUnder250 ? `${navigation.activeText} font-semibold` : navigation.inactiveText}`}>
-            Under {defaultUnderPrice}
+          <span className={`text-[10px] sm:text-xs font-medium ${isUnder250 ? `${navigation.activeText} font-semibold` : navigation.inactiveText}`}>
+            Offers
           </span>
           {isUnder250 && (
             <div className={`absolute top-0 left-0 right-0 h-0.5 ${navigation.indicator} rounded-b-full`} />
           )}
         </Link>
+
+        {/* Divider */}
+        <div className={`h-8 w-px ${navigation.divider}`} />
+
+        {/* Tiffin Tab */}
+        <Link
+          to="/food/user/tiffin"
+          className={`flex flex-1 flex-col items-center gap-1.5 px-2 sm:px-3 py-2 transition-all duration-200 relative ${isTiffin
+              ? navigation.activeText
+              : navigation.inactiveText
+            }`}
+        >
+          <Utensils className={`h-5 w-5 ${isTiffin ? navigation.activeText : navigation.inactiveText}`} strokeWidth={2} />
+          <span className={`text-[10px] sm:text-xs font-medium ${isTiffin ? `${navigation.activeText} font-semibold` : navigation.inactiveText}`}>
+            Tiffin
+          </span>
+          {isTiffin && (
+            <div className={`absolute top-0 left-0 right-0 h-0.5 ${navigation.indicator} rounded-b-full`} />
+          )}
+        </Link>
+
+        {/* Divider */}
+        <div className={`h-8 w-px ${navigation.divider}`} />
 
         {/* Profile Tab */}
         <Link
@@ -97,7 +123,7 @@ export default function BottomNavigation() {
             }`}
         >
           <User className={`h-5 w-5 ${isProfile ? navigation.activeText : navigation.inactiveText}`} />
-          <span className={`text-xs sm:text-sm font-medium ${isProfile ? `${navigation.activeText} font-semibold` : navigation.inactiveText}`}>
+          <span className={`text-[10px] sm:text-xs font-medium ${isProfile ? `${navigation.activeText} font-semibold` : navigation.inactiveText}`}>
             Profile
           </span>
           {isProfile && (
@@ -108,3 +134,4 @@ export default function BottomNavigation() {
     </div>
   )
 }
+

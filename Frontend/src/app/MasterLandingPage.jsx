@@ -39,6 +39,18 @@ const MODULES = [
     stats: "1000+ Drivers"
   },
   {
+    id: "tiffin",
+    title: "Tiffin Services",
+    description: "Homemade, healthy, and delicious tiffins delivered to your office or home daily.",
+    icon: UtensilsCrossed,
+    color: "from-amber-500 to-orange-600",
+    shadow: "shadow-amber-500/20",
+    bg: "bg-amber-50",
+    iconColor: "text-amber-600",
+    path: "/food/user/tiffin",
+    stats: "200+ Home Cooks"
+  },
+  {
     id: "quick-commerce",
     title: "Quick Commerce",
     description: "Groceries, daily essentials, and more delivered in minutes. Never wait in line again.",

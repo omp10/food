@@ -75,6 +75,10 @@ const Notifications = lazy(() => import("@food/pages/user/Notifications"))
 // Wallet
 const Wallet = lazy(() => import("@food/pages/user/Wallet"))
 
+// Tiffin
+const TiffinListing = lazy(() => import("@food/pages/user/tiffin/TiffinListing"))
+const TiffinDetail = lazy(() => import("@food/pages/user/tiffin/TiffinDetail"))
+
 // Complaints
 const SubmitComplaint = lazy(() => import("@food/pages/user/complaints/SubmitComplaint"))
 
@@ -96,6 +100,11 @@ export default function UserRouter() {
           <Route path="restaurants/:slug" element={<RestaurantDetails />} />
           <Route path="search" element={<SearchResults />} />
           <Route path="product/:id" element={<ProductDetail />} />
+
+          {/* Tiffin */}
+          <Route path="tiffin" element={<TiffinListing />} />
+          <Route path="tiffin/:id" element={<TiffinDetail />} />
+
 
           {/* Cart - Now Public */}
           <Route path="cart" element={<Cart />} />
