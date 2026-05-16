@@ -1,135 +1,60 @@
 import { Link, useLocation } from "react-router-dom"
-import { Tag, User, Truck, Utensils } from "lucide-react"
+import { Home, Layers, Calendar, Package, User } from "lucide-react"
 import BRAND_THEME from "@/config/brandTheme"
-
-const UNDER_PRICE_DEFAULT_STORAGE_KEY = "food-under-price-default"
-const DEFAULT_UNDER_PRICE_LIMIT = 250
-const resolveUnderPriceLimit = (value, fallback = DEFAULT_UNDER_PRICE_LIMIT) => {
-  const parsed = Number(value)
-  if (!Number.isFinite(parsed) || parsed <= 0) return fallback
-  return Math.round(parsed)
-}
 
 export default function BottomNavigation() {
   const location = useLocation()
   const pathname = location.pathname
   const { navigation } = BRAND_THEME.tokens
-  const routePriceMatch = pathname.match(/\/under-(\d+)$/)
-  const activeUnderPrice = routePriceMatch?.[1]
-  const defaultUnderPrice = resolveUnderPriceLimit(
-    activeUnderPrice ??
-      (typeof window !== "undefined"
-        ? window.localStorage.getItem(UNDER_PRICE_DEFAULT_STORAGE_KEY)
-        : null),
-  )
 
-  // Check active routes - support both /user/* and /* paths
-  const isUnder250 =
-    pathname === "/food/under-price" ||
-    pathname.startsWith("/food/user/under-price") ||
-    pathname === "/under-price" ||
-    pathname === "/user/under-price" ||
-    pathname === "/food/under-250" ||
-    pathname.startsWith("/food/user/under-250") ||
-    /^\/under-\d+$/.test(pathname) ||
-    /^\/user\/under-\d+$/.test(pathname) ||
-    /^\/food\/under-\d+$/.test(pathname) ||
-    /^\/food\/user\/under-\d+$/.test(pathname)
-  const isProfile = pathname.startsWith("/food/profile") || pathname.startsWith("/food/user/profile")
-  const isTiffin = pathname.startsWith("/food/tiffin") || pathname.startsWith("/food/user/tiffin")
-  const isDelivery =
-    !isUnder250 &&
-    !isProfile &&
-    !isTiffin &&
-    (pathname === "/food" ||
-      pathname === "/food/" ||
-      pathname === "/food/user" ||
-      (pathname.startsWith("/food/user") &&
-        !pathname.includes("/under-") &&
-        !pathname.includes("/profile") &&
-        !pathname.includes("/tiffin")))
+  // Check active routes
+  const isHome = pathname === "/food" || pathname === "/food/" || pathname === "/food/user" || pathname === "/food/user/"
+  const isPlans = pathname.startsWith("/food/user/plans") || pathname.startsWith("/food/plans")
+  const isCalendar = pathname.startsWith("/food/user/calendar") || pathname.startsWith("/food/calendar")
+  const isOrders = pathname.startsWith("/food/user/orders") || pathname.startsWith("/food/orders")
+  const isProfile = pathname.startsWith("/food/user/profile") || pathname.startsWith("/food/profile")
+
+  const tabs = [
+    { label: "Home", icon: Home, path: "/food/user", active: isHome },
+    { label: "Plans", icon: Layers, path: "/food/user/plans", active: isPlans },
+    { label: "Calendar", icon: Calendar, path: "/food/user/calendar", active: isCalendar },
+    { label: "Orders", icon: Package, path: "/food/user/orders", active: isOrders },
+    { label: "Profile", icon: User, path: "/food/user/profile", active: isProfile },
+  ]
 
   return (
     <div
-      className={`md:hidden fixed bottom-0 left-0 right-0 ${navigation.surface} border-t ${navigation.border} z-50 shadow-lg`}
+      className={`md:hidden fixed bottom-0 left-0 right-0 ${navigation.surface} border-t ${navigation.border} z-50 shadow-[0_-4px_16px_rgba(0,0,0,0.05)] pb-safe`}
     >
-      <div className="flex items-center justify-around h-auto px-2 sm:px-4">
-        {/* Delivery Tab */}
-        <Link
-          to="/food/user"
-          className={`flex flex-1 flex-col items-center gap-1.5 px-2 sm:px-3 py-2 transition-all duration-200 relative ${isDelivery
-              ? navigation.activeText
-              : navigation.inactiveText
-            }`}
-        >
-          <Truck className={`h-5 w-5 ${isDelivery ? navigation.activeText : navigation.inactiveText}`} strokeWidth={2} />
-          <span className={`text-[10px] sm:text-xs font-medium ${isDelivery ? `${navigation.activeText} font-semibold` : navigation.inactiveText}`}>
-            Delivery
-          </span>
-          {isDelivery && (
-            <div className={`absolute top-0 left-0 right-0 h-0.5 ${navigation.indicator} rounded-b-full`} />
-          )}
-        </Link>
-
-        {/* Divider */}
-        <div className={`h-8 w-px ${navigation.divider}`} />
-
-        {/* Under 250 Tab */}
-        <Link
-          to="/food/under-price"
-          className={`flex flex-1 flex-col items-center gap-1.5 px-2 sm:px-3 py-2 transition-all duration-200 relative ${isUnder250
-              ? navigation.activeText
-              : navigation.inactiveText
-            }`}
-        >
-          <Tag className={`h-5 w-5 ${isUnder250 ? navigation.activeText : navigation.inactiveText}`} strokeWidth={2} />
-          <span className={`text-[10px] sm:text-xs font-medium ${isUnder250 ? `${navigation.activeText} font-semibold` : navigation.inactiveText}`}>
-            Offers
-          </span>
-          {isUnder250 && (
-            <div className={`absolute top-0 left-0 right-0 h-0.5 ${navigation.indicator} rounded-b-full`} />
-          )}
-        </Link>
-
-        {/* Divider */}
-        <div className={`h-8 w-px ${navigation.divider}`} />
-
-        {/* Tiffin Tab */}
-        <Link
-          to="/food/user/tiffin"
-          className={`flex flex-1 flex-col items-center gap-1.5 px-2 sm:px-3 py-2 transition-all duration-200 relative ${isTiffin
-              ? navigation.activeText
-              : navigation.inactiveText
-            }`}
-        >
-          <Utensils className={`h-5 w-5 ${isTiffin ? navigation.activeText : navigation.inactiveText}`} strokeWidth={2} />
-          <span className={`text-[10px] sm:text-xs font-medium ${isTiffin ? `${navigation.activeText} font-semibold` : navigation.inactiveText}`}>
-            Tiffin
-          </span>
-          {isTiffin && (
-            <div className={`absolute top-0 left-0 right-0 h-0.5 ${navigation.indicator} rounded-b-full`} />
-          )}
-        </Link>
-
-        {/* Divider */}
-        <div className={`h-8 w-px ${navigation.divider}`} />
-
-        {/* Profile Tab */}
-        <Link
-          to="/food/user/profile"
-          className={`flex flex-1 flex-col items-center gap-1.5 px-2 sm:px-3 py-2 transition-all duration-200 relative ${isProfile
-              ? navigation.activeText
-              : navigation.inactiveText
-            }`}
-        >
-          <User className={`h-5 w-5 ${isProfile ? navigation.activeText : navigation.inactiveText}`} />
-          <span className={`text-[10px] sm:text-xs font-medium ${isProfile ? `${navigation.activeText} font-semibold` : navigation.inactiveText}`}>
-            Profile
-          </span>
-          {isProfile && (
-            <div className={`absolute top-0 left-0 right-0 h-0.5 ${navigation.indicator} rounded-b-full`} />
-          )}
-        </Link>
+      <div className="flex items-center justify-around h-16 px-2">
+        {tabs.map((tab) => {
+          const Icon = tab.icon
+          return (
+            <Link
+              key={tab.label}
+              to={tab.path}
+              className={`flex flex-1 flex-col items-center justify-center gap-1 h-full transition-all duration-300 relative ${
+                tab.active ? navigation.activeText : navigation.inactiveText
+              }`}
+            >
+              <div className={`p-1 rounded-xl transition-all duration-300 ${tab.active ? "bg-[#1F7A63]/10 scale-110" : ""}`}>
+                <Icon
+                  className={`h-5 w-5 ${tab.active ? "stroke-[2.5px]" : "stroke-[1.5px]"}`}
+                />
+              </div>
+              <span
+                className={`text-[10px] font-medium transition-all duration-300 ${
+                  tab.active ? "opacity-100 translate-y-0" : "opacity-70"
+                }`}
+              >
+                {tab.label}
+              </span>
+              {tab.active && (
+                <div className={`absolute -top-[1px] left-1/2 -translate-x-1/2 w-8 h-1 ${navigation.indicator} rounded-b-full shadow-[0_2px_4px_rgba(31,122,99,0.3)]`} />
+              )}
+            </Link>
+          )
+        })}
       </div>
     </div>
   )

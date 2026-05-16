@@ -337,8 +337,8 @@ export default function DesktopNavbar({ showLogo = true }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-center h-12">
                         {/* Navigation Tabs - Centered with spacing */}
-                        <div className="flex items-center space-x-24">
-                            {/* Delivery Tab */}
+                        <div className="flex items-center space-x-16 lg:space-x-20">
+                            {/* Home Tab */}
                             <Link
                                 to="/food/user"
                                 className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isDelivery
@@ -346,7 +346,7 @@ export default function DesktopNavbar({ showLogo = true }) {
                                     : navigation.inactiveText
                                     }`}
                             >
-                                <span className="text-sm font-bold tracking-wide uppercase">Delivery</span>
+                                <span className="text-sm font-bold tracking-wide uppercase">Home</span>
                                 {isDelivery && (
                                     <motion.div
                                         layoutId="navIndicator"
@@ -358,16 +358,16 @@ export default function DesktopNavbar({ showLogo = true }) {
                                 )}
                             </Link>
 
-                            {/* Quick Tab */}
+                            {/* Plans Tab */}
                             <Link
-                                to="/food/user/quick"
-                                className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isQuick
+                                to="/food/user/plans"
+                                className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${location.pathname.includes("/plans")
                                     ? navigation.activeText
                                     : navigation.inactiveText
                                     }`}
                             >
-                                <span className="text-sm font-bold tracking-wide uppercase">Quick</span>
-                                {isQuick && (
+                                <span className="text-sm font-bold tracking-wide uppercase">Plans</span>
+                                {location.pathname.includes("/plans") && (
                                     <motion.div
                                         layoutId="navIndicator"
                                         className={`absolute -bottom-3 left-0 right-0 h-0.5 ${navigation.indicator}`}
@@ -378,16 +378,36 @@ export default function DesktopNavbar({ showLogo = true }) {
                                 )}
                             </Link>
 
-                            {/* Under 250 Tab */}
+                            {/* Calendar Tab */}
                             <Link
-                                to="/food/under-price"
-                                className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${isUnder250
+                                to="/food/user/calendar"
+                                className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${location.pathname.includes("/calendar")
                                     ? navigation.activeText
                                     : navigation.inactiveText
                                     }`}
                             >
-                                <span className="text-sm font-bold tracking-wide uppercase">Under {defaultUnderPrice}</span>
-                                {isUnder250 && (
+                                <span className="text-sm font-bold tracking-wide uppercase">Calendar</span>
+                                {location.pathname.includes("/calendar") && (
+                                    <motion.div
+                                        layoutId="navIndicator"
+                                        className={`absolute -bottom-3 left-0 right-0 h-0.5 ${navigation.indicator}`}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ duration: 0.3 }}
+                                    />
+                                )}
+                            </Link>
+
+                            {/* Orders Tab */}
+                            <Link
+                                to="/food/user/orders"
+                                className={`flex flex-col items-center gap-1 px-2 py-1 transition-colors relative group ${location.pathname.includes("/orders")
+                                    ? navigation.activeText
+                                    : navigation.inactiveText
+                                    }`}
+                            >
+                                <span className="text-sm font-bold tracking-wide uppercase">Orders</span>
+                                {location.pathname.includes("/orders") && (
                                     <motion.div
                                         layoutId="navIndicator"
                                         className={`absolute -bottom-3 left-0 right-0 h-0.5 ${navigation.indicator}`}

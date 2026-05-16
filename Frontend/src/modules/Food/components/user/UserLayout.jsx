@@ -130,6 +130,15 @@ export default function UserLayout() {
   const isProfileRoot =
     normalizedPath === "/profile" ||
     normalizedPath === "/user/profile"
+  const isPlansRoot =
+    normalizedPath === "/plans" ||
+    normalizedPath === "/user/plans"
+  const isCalendarRoot =
+    normalizedPath === "/calendar" ||
+    normalizedPath === "/user/calendar"
+  const isOrdersRoot =
+    normalizedPath === "/orders" ||
+    normalizedPath === "/user/orders"
   const isUnderPriceRoute =
     normalizedPath === "/under-price" ||
     normalizedPath === "/user/under-price" ||
@@ -138,11 +147,9 @@ export default function UserLayout() {
 
   const showBottomNav = normalizedPath === "/" ||
     normalizedPath === "/user" ||
-    normalizedPath === "/under-price" ||
-    normalizedPath === "/user/under-price" ||
-    normalizedPath === "/under-250" ||
-    normalizedPath === "/user/under-250" ||
-    isUnderPriceRoute ||
+    isPlansRoot ||
+    isCalendarRoot ||
+    isOrdersRoot ||
     isProfileRoot ||
     normalizedPath === "" // Handle empty string case for root relative to /food
 

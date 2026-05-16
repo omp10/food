@@ -79,6 +79,10 @@ const Wallet = lazy(() => import("@food/pages/user/Wallet"))
 const TiffinListing = lazy(() => import("@food/pages/user/tiffin/TiffinListing"))
 const TiffinDetail = lazy(() => import("@food/pages/user/tiffin/TiffinDetail"))
 
+// New DailyMealBox Pages
+const Plans = lazy(() => import("@food/pages/user/Plans"))
+const Calendar = lazy(() => import("@food/pages/user/Calendar"))
+
 // Complaints
 const SubmitComplaint = lazy(() => import("@food/pages/user/complaints/SubmitComplaint"))
 
@@ -104,6 +108,10 @@ export default function UserRouter() {
           {/* Tiffin */}
           <Route path="tiffin" element={<TiffinListing />} />
           <Route path="tiffin/:id" element={<TiffinDetail />} />
+
+          {/* DailyMealBox Specific Routes */}
+          <Route path="plans" element={<Plans />} />
+          <Route path="calendar" element={<Calendar />} />
 
 
           {/* Cart - Now Public */}
